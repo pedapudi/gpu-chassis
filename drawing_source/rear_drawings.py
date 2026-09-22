@@ -14,17 +14,37 @@ def rear_details(parts, root, api):
     rear_elevation(rear['shape'],c,180+shift,True)
     rows=[['Feature','Dimensions and location'],['20 main PCIe apertures','15.000 wide × 103.000 high; nominal R0 corners. X centre = bracket axis. Bottom Z'+f'{196.68+shift:.3f}; top Z{299.68+shift:.3f}.'],['Bracket spacing','20.320 centre pitch; 40.640 per dual-slot card; 5.320 nominal web between 15.000 apertures.'],['20 retention bores','DIA 3.900 / R1.950 THRU, normal Z, for #6-32 clearance. Y474.080; X = bracket centre + 9.210.'],['20 nut reliefs','10.000 wide × 3.578 high, cut from Y468 to 472. Bottom Z'+f'{top-1.5-2.778-.5:.3f}; top Z{top-1.2:.3f}. Centred on screw X. Reliefs join adjacent aperture edges near the top.'],['4 side-return holes','DIA 3.400 / R1.700 THRU, normal X. Y477.200; Z'+f'{205+shift:.3f} and {290+shift:.3f}; two holes per side.']]
     table(rows,32,288,[205,W-269],10)
-    new('GPU rear panel | bracket and retention coordinate schedule',rear['name']+'::axes')
-    para('Coordinates use the chassis datum, not the outside-rear page direction. Position 1 is the smallest X. Two adjacent bracket positions form one GPU bay. All screw centres are Y474.080; the common bracket-bearing plane is Z'+f'{top:.3f}.',32,H-82,W-64,11)
-    rows=[['Position','Bracket / aperture X','Retention bore X','GPU bay']]
-    for i,(x,screw) in enumerate(zip(centres,axes),1):rows.append([i,f'{x:.3f}',f'{screw:.3f}',(i+1)//2])
-    table(rows,32,H-140,[100,260,260,130],10)
-    para('Bracket reference: 18.420 wide × 0.860 thick; narrow toe 10.190 wide × 0.860 thick. Nominal lateral coverage over each 15.000 opening is 1.710 per side. Verify card and bracket fit, socket seating height and supplier board tolerances on a physical assembly.',815,H-155,320,11)
-    para('The 15 × 103 opening is a chassis design choice. Do not substitute that dimension for the bracket envelope or the socket centre spacing. Preserve the 20.320 pitch when developing the rear blank.',815,H-310,320,11)
-    new('GPU rear panel | integral retention bend and nut clearance',rear['name']+'::bend')
+    from annotated_geometry import planar,mark
+    for start in (0,10):
+        new('GPU rear panel | numbered bracket and screw locations',rear['name']+'::axes')
+        para('Assembly coordinate view: X increases right. Position 1 has the smallest X. Numbers identify aperture centres in the adjacent schedule; bores lie on the folded shelf at Y474.080. Bracket-bearing plane Z'+f'{top:.3f}.',32,H-82,W-64,11)
+        p,lo,hi=planar(c,rear['shape'],1,469,(35,180,640,500))
+        rows=[['Position','Aperture X','Bore X','GPU bay']]
+        for i in range(start,start+10):
+            x=centres[i];xx,zz=p(x,245+shift)
+            c.setFont('Helvetica-Bold',9);c.drawCentredString(xx,zz,str(i+1))
+            rows.append([i+1,f'{x:.3f}',f'{axes[i]:.3f}',(i+2)//2])
+        table(rows,710,H-150,[65,110,110,85],10)
+        para('Each aperture is 15 × 103; centre pitch 20.320. Retention bore DIA3.9, offset +9.210 in X from its aperture. These axes do not certify the supplier backplane datum.',710,250,420,11)
     rows=[['Formed feature','Nominal specification'],['Rear web and integral upper shelf','1.200 sheet; one connected formed part. Upper shelf extends to Y481.000.'],['Top bend','90 degrees outward; inside R1.200, outside R2.400. Bend axis parallel X at Y471.400, Z'+f'{top-2.4:.3f}.'],['Tangencies','Vertical web tangent Z'+f'{top-2.4:.3f}; horizontal shelf tangent Y471.400. Flat bearing surface Z{top:.3f}.'],['Bend span','X3.500 to X415.725. Twenty nut-clearance reliefs interrupt the bend locally. Side returns retain their nominal formed geometry; tooling and corner reliefs require fabricator review.'],['Retention joint','GPU bracket 0.860; formed shelf 1.200; standard #6-32 UNC hex nut 2.778 high. A #6-32 × 1/4 inch screw projects 1.512 below the nut at nominal dimensions, without a washer. Nut top at Z'+f'{top-1.2:.3f}.'],['Nut installation','Proposed capture: fixture and weld or braze the twenty standard nuts beneath the shelf before fitting the rear panel to the tray. Protect threads and bracket seating surfaces. Qualify the capture method for tightening torque and repeated GPU service.'],['Forming access','Cut openings and nut reliefs first. Form the segmented upper shelf before the side returns; confirm tooling access on a sample. Clamp the bracket-bearing datum while attaching the toe strip.']]
-    table(rows,32,H-90,[230,W-294],11)
-    para('The bend is included in the analytic STEP and viewer. Remaining sharp sheet intersections elsewhere are nominal geometry. No developed blank, bend allowance or production tolerance is implied by the formed view.',32,195,W-64,11)
+    from annotated_geometry import context_pages
+    context_pages(api,'GPU rear panel | integral retention bend',rear['name']+'::bend',rows[1:],'Integral 1.2 mm shelf and rear web. The following enlarged section identifies the bend radius and tangencies. Capture retention nuts before installing the rear panel.',[('Rear panel and integral shelf',rear['shape'])],[(414,475,top),(414,470.2,top-1.2),(414,471.4,top),(414,471.4,top-2.4),(axes[0],474.08,top-1.2),(axes[1],474.08,top-1.2),(414,470.2,top-2.4)])
+    new('GPU rear panel | enlarged retention bend section',rear['name']+'::bend-section')
+    import cadquery as cq
+    from section_drawings import section_at
+    from annotated_geometry import edge_points,polyline,dim
+    sec=section_at(rear['shape'],0,414)
+    def p(y,z):return 130+(y-468)*25,270+(z-(top-14))*25
+    # Clip the intact section to the upper bend detail; the complete panel appears on the preceding sheets.
+    box=cq.Solid.makeBox(3,16,16,cq.Vector(413,468,top-14))
+    detail=sec.intersect(box)
+    for e in detail.Edges():polyline(c,[p(q.y,q.z) for q in edge_points(e)])
+    dim(c,p(471.4,top),p(481,top),'9.600 flat shelf',offset=-35)
+    mark(c,p(469.35,top-1.15),'Outside R2.400',(660,655))
+    mark(c,p(470.45,top-1.8),'Inside R1.200',(660,615))
+    mark(c,p(476,top),'Bracket bearing Z'+f'{top:.3f}',(660,565))
+    para('Section X414, through intact bend. Y increases right; Z increases up. Sheet 1.200; bend 90 degrees outward. Bend centre Y471.400, Z'+f'{top-2.4:.3f}. Vertical tangent at that Z; horizontal tangent Y471.400.',650,490,470,12)
+    para('Retention joint: 0.860 bracket + 1.200 shelf + 2.778 nut. A 6-32 × 1/4 inch screw projects 1.512 beyond the nut without a washer. Fit and qualify the nut capture before closing the assembly.',650,340,470,11)
     new('GPU toe receiver | engagement and factory attachment',toe['name']+'::joint')
     view(toe['shape'],(32,360,1100,335),(0,0,1),'Top (+Z): comb strip inside rear face; open notches face +Y.','toe_detail')
     rows=[['Feature','Dimensions / assembly requirement'],['Locator strip','1.500 thick; X3.500 to X412.725; Y465.000 to Y469.000. Underside Z'+f'{184.05+shift:.3f}; top Z{185.55+shift:.3f}.'],['20 open toe notches','10.790 wide in X × 1.300 deep in Y, square nominal corners; open to Y469.000. Centres use the bracket X schedule; pitch 20.320.'],['Reference toe fit','10.190 × 0.860 bracket toe: 0.600 total X clearance and 0.440 total Y clearance. The toe projects 1.000 below the strip underside.'],['Factory joint to rear web','Underside stitch fillet weld: nominal 1 mm leg × 6 mm length, at each of the 19 inter-slot midpoints. Weld along X at Y469, Z'+f'{184.05+shift:.3f}. Keep welds out of toe notches; deburr before card installation.'],['Why it remains separate','The toe datum lies above the lower edge of the rear web, so a return at that edge cannot locate the toe. A separate flat strip sets this height without forming individual lanced tabs.'],['Assembly and service','Fixture the strip at its specified coordinates relative to the bracket-bearing surface. Weld before attaching the rear panel to the tray and before coating. Inspect with a bracket gauge. The strip stays on the cartridge during GPU insertion and vertical removal.']]

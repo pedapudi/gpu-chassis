@@ -75,71 +75,41 @@ def fmt(value):
 
 
 def draw_feature_pages(a, api):
+    from annotated_geometry import planar,mark,INK,ACCENT
     c,new,para,table,view,W,H,out=api
     items=features(a['shape'])
     if not items:return []
     groups=group_features(items);name=a['name'];records=[]
     for number,rows in groups:
-        for row in rows:records.append(dict(feature=number,**row))
+        records.extend(dict(feature=number,**row) for row in rows)
     (out/'coordinates'/(name+'_features.json')).write_text(json.dumps(records,indent=2))
-    # Every printed feature family has dimensions, radius and a coordinate schedule.
-    for start in range(0,len(groups),8):
-        chunk=groups[start:start+8]
-        new(name.replace('_',' ')+' | hole and cutout sizes',name+'::features')
-        para('Dimensions are taken from the analytic formed solid. Coordinates use the assembly datum shown on the part sheet. A normal-X hole is located by Y/Z; normal-Y by X/Z; normal-Z by X/Y. Sizes are finished openings, through the local sheet unless stated.',32,H-82,W-64,10)
-        rows=[['Feature / quantity','Feature dimensions / edge radius','Normal / centre coordinates']]
-        for number,group in chunk:
-            f=group[0];size=f['size'];rad=f['radii'];label=f['kind']
-            if label=='Step boundary':detail=f'{fmt(size[0])} × {fmt(size[1])} boundary ({f["u"]} × {f["v"]}); not a through-hole pair. See formed sections for step depth.'
-            elif label=='Round hole':detail=f'DIA {fmt(2*rad[0])}; R{fmt(rad[0])}'
-            elif label=='Obround':detail=f'{fmt(max(size))} overall length along {f["u"] if size[0]>=size[1] else f["v"]} × {fmt(min(size))} width; end R{fmt(rad[0])}'
-            elif label=='Rectangle':detail=f'{fmt(size[0])} × {fmt(size[1])} ({f["u"]} × {f["v"]}); nominal R0 corners'
-            else:detail=' × '.join(fmt(n) for n in size)+f' ({f["u"]} × {f["v"]}); '+('edge R'+', R'.join(fmt(n) for n in rad) if rad else 'straight-edge profile')
-            if len(group)<=12:coords='; '.join('('+', '.join(fmt(n) for n in g['centre'])+')' for g in group)
-            else:
-                us=sorted({g['centre'][0] for g in group});vs=sorted({g['centre'][1] for g in group})
-                coords=f'{f["u"]} {fmt(min(us))} to {fmt(max(us))}; {f["v"]} {fmt(min(vs))} to {fmt(max(vs))}. See following coordinate sheet.'
-                if label=='Round hole' and rad==[4.5]:coords+=' Perforation field: 10 horizontal pitch; 8.660254 row pitch; alternating 5 offset; fastener lands omitted.'
-            rows.append([f'{number} / {len(group)} × {label}',detail,f'Normal {f["plane"]}, sheet faces {fmt(f["stations"][0])} to {fmt(f["stations"][1])}; centres ({f["u"]}, {f["v"]}): '+coords])
-        y=table(rows,32,H-145,[185,330,W-579],10)
-        para('All circular sizes above show both diameter (DIA) and radius (R). Obround length includes both semicircular ends. Profile cutouts may merge adjacent openings; their bounding size does not replace the exact profile. The numbered location views and row schedules identify each feature family.',32,y,W-64,10)
-    # Location views use a planar projection with exact circle/slot outlines and family leaders.
-    for axis in sorted({f['axis'] for f in items}):
-        axis_groups=[g for g in groups if g[1][0]['axis']==axis]
-        if not axis_groups:continue
-        f=axis_groups[0][1][0];uv=[i for i in range(3) if i!=axis]
-        new(name.replace('_',' ')+' | '+f['u']+'/'+f['v']+' feature locations',name+'::locations')
-        para(f'View normal to {f["plane"]}; {f["u"]} increases right and {f["v"]} increases up. Parallel sheet faces overlay in this projection; their normal-coordinate ranges distinguish them in the feature table. Leaders give finished sizes directly; feature numbers connect them to the coordinate tables. Dimensions in mm; use printed coordinates, do not scale.',32,H-82,W-64,10)
-        points=[]
-        for _,group in axis_groups:
-            for g in group:
-                points.extend([(g['centre'][0]-g['size'][0]/2,g['centre'][1]-g['size'][1]/2),(g['centre'][0]+g['size'][0]/2,g['centre'][1]+g['size'][1]/2)])
-        lo=[min(p[i] for p in points) for i in (0,1)];hi=[max(p[i] for p in points) for i in (0,1)]
-        scale=min(820/max(hi[0]-lo[0],20),450/max(hi[1]-lo[1],20));ox=75;oy=170
-        def p(x,y):return ox+(x-lo[0])*scale,oy+(y-lo[1])*scale
-        c.setLineWidth(.5)
-        for number,group in axis_groups:
-            for g in group:
-                x,y=p(*g['centre']);w,h=[n*scale for n in g['size']]
-                if g['kind']=='Round hole':c.circle(x,y,w/2,stroke=1,fill=0)
-                elif g['kind'] in ('Obround','Rounded rectangle'):c.roundRect(x-w/2,y-h/2,w,h,g['radii'][0]*scale,stroke=1,fill=0)
-                else:c.rect(x-w/2,y-h/2,w,h,stroke=1,fill=0)
-        # Family leaders are placed in a separate margin, avoiding the perforation field.
-        for j,(number,group) in enumerate(axis_groups):
-            g=group[-1];x,y=p(*g['centre']);endx=930;endy=H-155-j*min(61,510/max(1,len(axis_groups)))
-            c.line(x,y,endx-10,endy);c.circle(x,y,2,stroke=1,fill=0)
-            f0=group[0];size=f0['size'];r=f0['radii'];kind=f0['kind']
-            lines=[f'Feature {number}: {len(group)} ×']
-            if kind=='Step boundary':lines += [f'STEP BOUNDARY {fmt(size[0])} × {fmt(size[1])}', 'Depth: see formed sections']
-            elif kind=='Round hole':lines += [f'DIA {fmt(2*r[0])} / R{fmt(r[0])} THRU']
-            elif kind=='Obround':lines += [f'SLOT {fmt(max(size))} × {fmt(min(size))}',f'End R{fmt(r[0])}; THRU']
-            elif kind=='Rectangle':lines += [f'{fmt(size[0])} × {fmt(size[1])}', 'Nominal R0; THRU']
-            elif kind=='Rounded rectangle':lines += [f'{fmt(size[0])} × {fmt(size[1])}',f'Corner R{fmt(r[0])}; THRU']
-            else:lines += [f'Profile bounds {fmt(size[0])} × {fmt(size[1])}', 'Exact contour on formed-part view']
-            c.setFont('Helvetica',8.5)
-            for k,line in enumerate(lines):c.drawString(endx,endy-3-11*k,line)
-        c.setFont('Helvetica',9);c.drawString(75,130,f'{f["u"]} range {fmt(lo[0])} to {fmt(hi[0])}; {f["v"]} range {fmt(lo[1])} to {fmt(hi[1])}. Bounds enclose cutouts only; panel outline is on the formed-part sheet.')
-        c.drawString(75,112,'Complex profile cutouts are bounding boxes in this locator view; use the formed-part projection and STEP for their outline.')
+    planes=collections.defaultdict(list)
+    for number,rows in groups:planes[(rows[0]['axis'],tuple(rows[0]['stations']))].append((number,rows))
+    def detail(f):
+        size=f['size'];r=f['radii'];kind=f['kind']
+        if kind=='Round hole':return f'DIA {fmt(2*r[0])}; R{fmt(r[0])} THRU'
+        if kind=='Obround':return f'SLOT {fmt(max(size))} overall × {fmt(min(size))}; end R{fmt(r[0])} THRU'
+        if kind=='Rounded rectangle':return f'{fmt(size[0])} × {fmt(size[1])}; corner R{fmt(r[0])} THRU'
+        if kind=='Rectangle':return f'{fmt(size[0])} × {fmt(size[1])}; nominal R0 THRU'
+        if kind=='Step boundary':return f'{fmt(size[0])} × {fmt(size[1])} boundary; not a through-hole pair'
+        return f'Exact profile shown; bounds {fmt(size[0])} × {fmt(size[1])}; '+('edge R'+', R'.join(fmt(q) for q in r) if r else 'straight edges')
+    for (axis,stations),families in planes.items():
+        f=families[0][1][0];axes=f['u']+'/'+f['v'];station=stations[0]
+        for start in range(0,len(families),4):
+            chunk=families[start:start+4]
+            new(name.replace('_',' ')+f' | {axes} at {f["plane"]}={fmt(station)}',name+'::locations')
+            para(f'Complete physical face, including outer contour and actual cutouts. Sheet faces {f["plane"]}={fmt(stations[0])} to {fmt(stations[1])}. Opposite walls have separate views. Assembly-coordinate projection; exterior rear viewpoints are on the rear-interface sheets. Sizes are finished openings. Dimensions in mm.',32,H-82,W-64,10)
+            p,lo,hi=planar(c,a['shape'],axis,station,(35,170,650,510))
+            para(f'Face limits: {f["u"]} {fmt(lo[0])} to {fmt(hi[0])}; {f["v"]} {fmt(lo[1])} to {fmt(hi[1])}. Overall dimensions enclose this face. Feature centres below use the same axes.',45,145,610,10)
+            for j,(number,group) in enumerate(chunk):
+                g=group[-1];target=p(g['centre'][0]+g['size'][0]/2,g['centre'][1]);yy=H-145-j*145
+                mark(c,target,'Feature '+number,(710,yy))
+                y=para(f'<b>{len(group)} × {detail(g)}</b>',710,yy-12,W-750,10)
+                if len(group)<=12:
+                    coords='; '.join('('+', '.join(fmt(n) for n in q['centre'])+')' for q in group)
+                    para(f'Centres ({f["u"]}, {f["v"]}): '+coords,710,y,W-750,9)
+                else:
+                    para('Repeated pattern: centre coordinates are on the following annotated row sheets. Only listed positions are cut.',710,y,W-750,9)
     for number,group in groups:
         if len(group)<=12:continue
         f=group[0];byrow=collections.defaultdict(list)
@@ -153,8 +123,15 @@ def draw_feature_pages(a, api):
                 if j-i>=2:runs.append(f'{fmt(us[i])} to {fmt(us[j])} every {fmt(step)}');i=j+1
                 else:runs.append(fmt(us[i]));i+=1
             entries.append([fmt(v),', '.join(runs),str(len(us))])
-        for start in range(0,len(entries),24):
-            new(name.replace('_',' ')+f' | feature {number} coordinates',name+'::coordinates')
-            para(f'Feature {number}: {len(group)} × {f["kind"]}. Row coordinates are exact nominal {f["v"]} positions; entries list {f["u"]} centres on each row. A range includes both endpoints. Unlisted positions contain no holes in this feature family.',32,H-82,W-64,10)
-            table([[f'{f["v"]} row',f'{f["u"]} centres / ranges','Count']]+entries[start:start+24],32,H-140,[130,W-270,76],9)
+        for start in range(0,len(entries),10):
+            chunk=entries[start:start+10]
+            new(name.replace('_',' ')+f' | feature {number} row locations',name+'::coordinates')
+            para(f'Feature {number}: {len(group)} × {detail(f)}. The highlighted centres identify the rows in the adjacent schedule. Every page repeats the complete face outline. Ranges include both ends; unlisted positions remain solid.',32,H-82,W-64,10)
+            p,lo,hi=planar(c,a['shape'],f['axis'],f['stations'][0],(35,150,650,530))
+            rows={float(row[0]) for row in chunk};c.setStrokeColor(ACCENT);c.setLineWidth(.8)
+            for g in group:
+                if g['centre'][1] in rows:
+                    x,y=p(*g['centre']);c.line(x-2,y,x+2,y);c.line(x,y-2,x,y+2)
+            table([[f'{f["v"]} row',f'{f["u"]} centres / ranges','Count']]+chunk,720,H-150,[70,270,65],9)
+            para(f'Face {f["plane"]}={fmt(f["stations"][0])}; centres share the labeled assembly axes. Pattern dimensions are nominal, not manufacturing tolerances.',720,180,400,10)
     return records

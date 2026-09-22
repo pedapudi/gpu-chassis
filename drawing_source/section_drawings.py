@@ -75,7 +75,7 @@ def draw_sections(a,api):
     y=para(material_note(name),32,H-82,W-64,10)
     para('Sections use the assembly coordinates and positive axes shown below. Coordinates and successive gaps dimension each step in the section. The cuts include local openings if the section crosses them; they are not developed blanks.',32,y,W-64,10)
     for j,d in enumerate(chosen):
-        x0=40+j*580;y0=425;ww=505;hh=220;sec=d['shape'];bb=bounds(sec);uv=d['uv'];lo=[bb[i] for i in uv];hi=[bb[i+3] for i in uv];scale=min(ww/max(hi[0]-lo[0],1),hh/max(hi[1]-lo[1],1))
+        x0=60+j*580;y0=425;ww=505;hh=220;sec=d['shape'];bb=bounds(sec);uv=d['uv'];lo=[bb[i] for i in uv];hi=[bb[i+3] for i in uv];scale=min(ww/max(hi[0]-lo[0],1),hh/max(hi[1]-lo[1],1))
         ox=x0+(ww-(hi[0]-lo[0])*scale)/2;oy=y0+(hh-(hi[1]-lo[1])*scale)/2
         def pt(vector):q=vector.toTuple();return ox+(q[uv[0]]-lo[0])*scale,oy+(q[uv[1]]-lo[1])*scale
         c.setFont('Helvetica-Bold',11);c.drawString(x0,680,f'Section normal {"XYZ"[d["axis"]]} at {"XYZ"[d["axis"]]} = {fmt(d["station"])}')
@@ -85,25 +85,33 @@ def draw_sections(a,api):
             path=c.beginPath();path.moveTo(*points[0])
             for p in points[1:]:path.lineTo(*p)
             c.drawPath(path)
-        c.setFont('Helvetica',9);c.drawString(x0,405,f'{"XYZ"[uv[0]]} increases right; {"XYZ"[uv[1]]} increases up. Section extents {fmt(hi[0]-lo[0])} × {fmt(hi[1]-lo[1])}.')
+        from annotated_geometry import dim
+        dim(c,(ox,oy),(ox+(hi[0]-lo[0])*scale,oy),fmt(hi[0]-lo[0]),offset=17)
+        dim(c,(ox,oy),(ox,oy+(hi[1]-lo[1])*scale),fmt(hi[1]-lo[1]),True,offset=18)
+        c.setFont('Helvetica',9);c.drawString(x0,377,f'{"XYZ"[uv[0]]} increases right; {"XYZ"[uv[1]]} increases up. Section extents {fmt(hi[0]-lo[0])} × {fmt(hi[1]-lo[1])}.')
         rows=[['Axis','Coordinate levels','Successive gaps']]
         for index,ax in enumerate(uv):
             levels=sorted(set(v[index] for v in d['vertices']));gaps=[b-a for a,b in zip(levels,levels[1:])]
             rows.append(['XYZ'[ax],', '.join(fmt(q) for q in levels),', '.join(fmt(q) for q in gaps)])
         radii=sorted(set(q['radius'] for q in d['edges'] if 'radius' in q))
         rows.append(['Curves','R'+', R'.join(fmt(q) for q in radii) if radii else 'Straight edges; nominal sharp intersections','Radii shown only where modeled.'])
-        table(rows,x0,380,[45,265,235],9)
+        table(rows,x0,355,[45,245,215],9)
     para('The modeled GPU retention bend is R1.2 inside. Other sharp intersections do not specify a manufacturable zero-radius bend. Inside radii, bend allowance, corner relief and weld distortion must be set during fabrication release. Exact section edges are supplied in the matching sections JSON.',32,115,W-64,10)
     serial=[{k:v for k,v in d.items() if k!='shape'} for d in chosen]
     (out/'coordinates'/(name+'_sections.json')).write_text(json.dumps(serial,indent=2))
     faces=wall_faces(shape,name)
-    for start in range(0,len(faces),18):
-        new(name.replace('_',' ')+' | sheet-face extents',name+'::walls')
-        para('These are formed planar surface extents in the assembly datum. They locate return ends, lips and thickness transitions. Each range encloses one planar face; it does not fill holes, notches or disconnected material. Pair this schedule with the part views, sections and opening schedules.',32,H-82,W-64,10)
-        rows=[['Normal / coordinate','In-plane axes','Minimum coordinates','Maximum coordinates','Enclosing span']]
-        for row in faces[start:start+18]:
-            vals=row['limits'];rows.append([row['normal']+' = '+fmt(row['station']),row['axes'][0]+' / '+row['axes'][1],', '.join(fmt(q) for q in vals[:2]),', '.join(fmt(q) for q in vals[2:]),' × '.join(fmt(vals[i+2]-vals[i]) for i in (0,1))])
-        table(rows,32,H-140,[185,130,260,260,285],10)
-        para('A thickness change requires separate sheet components joined during fabrication unless a qualified forming process is specified. Fold lines are defined by adjoining surface coordinates; developed blank dimensions are not supplied by this nominal model.',32,110,W-64,10)
+    from annotated_geometry import planar
+    face_groups={}
+    for row in faces:face_groups.setdefault((row['normal'],row['station']),[]).append(row)
+    face_groups=list(face_groups.items())
+    for start in range(0,len(face_groups),4):
+        new(name.replace('_',' ')+' | dimensioned sheet faces',name+'::walls')
+        para('Complete contours of the physical faces. Each dimension and coordinate range refers to the adjacent face, including its actual holes and open-edge cuts. Thickness faces are shown in the formed sections. Coordinates use the assembly datum.',32,H-82,W-64,10)
+        for j,((normal,station),face_rows) in enumerate(face_groups[start:start+4]):
+            x=35+(j%2)*575;y=440-(j//2)*335
+            p,lo,hi=planar(c,shape,'XYZ'.index(normal),station,(x,y,545,245))
+            axes=face_rows[0]['axes']
+            para(f'<b>{normal} = {fmt(station)}</b> | {axes[0]} {fmt(lo[0])} to {fmt(hi[0])}; {axes[1]} {fmt(lo[1])} to {fmt(hi[1])}. Complete contour bounds; openings remain void.',x,y-8,535,9)
+        para('Bend radii and developed blank dimensions remain fabrication-release requirements where they are absent from the nominal model.',32,85,W-64,9)
     (out/'coordinates'/(name+'_walls.json')).write_text(json.dumps(faces,indent=2))
-    return dict(part=name,section_sheets=1,wall_sheets=math.ceil(len(faces)/18),sections=[dict(normal='XYZ'[d['axis']],station=d['station'],edges=len(d['edges'])) for d in chosen])
+    return dict(part=name,section_sheets=1,wall_sheets=math.ceil(len(face_groups)/4),sections=[dict(normal='XYZ'[d['axis']],station=d['station'],edges=len(d['edges'])) for d in chosen])

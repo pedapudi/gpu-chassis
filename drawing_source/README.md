@@ -1,19 +1,23 @@
-# Generate dimensioned drawings
+# Generate annotated engineering drawings
 
-The drawing generator reads analytic part snapshots and validation metadata from the CAD rebuild directory. Use the same virtual environment as the CAD rebuild and install `drawing_source/requirements.txt` there.
+The generator reads analytic part snapshots and validation metadata from the CAD rebuild directory. Use the CAD virtual environment and the dependencies in `drawing_source/requirements.txt`.
 
-After `python cad_source/rebuild.py --out scratch --variant both`, run:
+Run the drawing generator for each available configuration:
 
 ```sh
 python drawing_source/make_drawings.py nine-u scratch
+python drawing_source/make_drawings.py nine-u-180 scratch
+python drawing_source/make_drawings.py nine-u-120 scratch
 python drawing_source/make_drawings.py modular scratch
 python drawing_source/make_drawings.py modular-120 scratch
 ```
 
-Each command writes the PDF, feature JSON, edge CSV, bill of materials and drawing index under its design's `drawings/` directory. Use a fresh rebuild directory for geometry changes. `--reuse-views` is only valid when geometry and projection settings are unchanged.
+Each command writes a PDF, feature JSON, edge CSV, bill of materials, drawing index, and diagram-completeness report beneath the configuration's `drawings/` directory. Existing STEP files remain unchanged. Use a fresh rebuild directory after changing CAD geometry. `--reuse-views` requires unchanged geometry and projection settings.
 
-Hole schedules distinguish opposing sheet faces and omit solid flange-root boundaries. Round holes specify diameter and radius; slots specify overall length, width, end radius and orientation. Part-specific interface sheets dimension open-edge contours that are absent from closed-hole schedules.
+Every feature-location page shows the complete physical face, including its outer contour, holes, and open-edge cuts. Opposite walls have separate views. Circular holes use analytic circles. Leaders give feature counts, diameters, slot dimensions, and radii beside the corresponding geometry. Dense coordinate schedules share the page with a complete face view and highlight the rows listed in the schedule.
 
-Formed sections show the cross-sectional steps and thicknesses of non-flat parts. Sheet-face extent tables locate return ends and joined sheet components in the assembly datum. These tables enclose each planar surface; they do not replace its hole or notch schedule. Section planes pass through the defining folds of the tray, lid and GPU retention shelf. The matching JSON files record section edges and surface extents.
+Formed sections carry dimensions on the profile. The adjacent tables record coordinate levels and step sizes. Sheet-face pages show actual contours and coordinate limits, including returns and joined sheet components. Interface schedules use numbered leaders to identify the features described by each row. Enlarged sections illustrate retention bends, GPU clearances, PSU screw clearance, and backplane support height.
 
-`specificity_coverage.json` accounts for every fabricated part in each drawing set. Flat parts use their overall and opening schedules; non-flat parts also receive sections and surface-coordinate tables. Dimensions come from analytic geometry. These drawings describe nominal formed parts; tooling, production tolerances, supplier interfaces and developed blanks still require qualification.
+`diagram_completeness.json` records table and geometry counts for every sheet. The generator rejects a technical table page without drawing geometry. Drawing indexes are navigation tables and are exempt. `specificity_coverage.json` records every fabricated part and its section coverage. Render every PDF page and inspect the resulting images before publication; the structural checks do not detect all annotation collisions or incorrect leaders.
+
+Dimensions describe nominal formed geometry. Supplier interfaces, production tolerances, unspecified bend radii, developed blanks, fixed-joint strength, and thermal performance still require qualification.

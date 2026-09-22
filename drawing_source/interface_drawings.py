@@ -6,9 +6,34 @@ from section_drawings import bounds,fmt
 def interface_details(parts,mod,api):
     c,new,para,table,view,W,H,out=api;lookup={a['name']:a for a in parts}
     def sheet(title,name,rows,note):
-        new(title,name+'::edge-details')
-        y=table([['Feature','Nominal formed dimensions / assembly requirement']]+rows,32,H-85,[235,885],11)
-        para(note,32,y,W-64,11)
+        from annotated_geometry import context_pages
+        selected=[(name.replace('_',' '),lookup[name]['shape'])]
+        extra=[]
+        if 'lid' in title.lower():extra=[p for p in parts if p['group']=='lid']
+        if 'frame and cap' in title.lower():extra=[p for p in parts if 'folded' in p['name'].lower() and 'cap' in p['name'].lower()]
+        if 'rail supports' in title.lower():extra=[p for p in parts if 'Sliding_crossbar' in p['name']][:1]
+        for p in extra:
+            if p['name']!=name:selected.append((p['name'].replace('_',' '),p['shape']))
+        anchors_by_name={
+          'Upper_module_rear_perforated_cover':[(100,485,386),(220,485,380.5),(438.5,476,385),(220,481,376.82),(438.5,477.2,390),(143,485,393)],
+          'Rear_MCIO_lower_U_frame_140mm_top_open_entry':[(140,486.5,378),(220,486.5,380.5),(297,488,390),(220,488,395),(220,494,398.05),(143,488,393),(220,486.5,380.5)],
+          'Replacement_lid_adapter_with_undrilled_OEM_side_returns':[(220,240,399.55),(3,240,390),(3,118.2,389.55),(7.5,240,221.5),(3,240,212.5),(7.5,240,221.5),(3,100,212.5)],
+          'Screw_mounted_3mm_rack_ear_left':[(440,30,200),(440,61.7,389.25),(440,64,386.105163),(220,240,399.25),(3,240,389),(3,118.2,389.25)]}
+        if name=='Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns':
+            if 'bank' in title:
+                anchors=[(5.845,470.2,75.25),(13.345,470.2,75.25),(27.555,470.2,127.78),(22.555,474.08,129.28),(13.345,467.7,12.62),(18.74,468.35,12.62),(23.505,469,11.12)]
+            else:anchors=[(435,470.2,80),(428,470.2,154),(247,470.2,110),(166,470.2,36),(318,470.2,7.5),(22.555,474.08,129.28)]
+            for p in parts:
+                if p['name'] in ('Lower_bank_toe_receiver','Lower_bank_retention_flange'):selected.append((p['name'].replace('_',' '),p['shape']))
+        elif name=='Longitudinal_mount_rail_20':
+            shift=72.25 if mod else 0
+            t=170+shift
+            anchors=[(100,190,t),(357,227.5,t+18),(220,226.75,t+10),(420,318.5,t+8),(420,300,t+4.2),(423.6,300,t+6),(420,208.2,t+6),(220,203.2,t)]
+            for p in parts:
+                if p['name'] in ('GPU_tray_two_side_bends','GPU_tray_spot_welded_channel_146','Rail_welded_sheet_bridge_20_155','Rail_square_nut_guide_strip_20_15.2','Rail_square_nut_guide_strip_20_23.6','M3_8mm_female_female_standoff_1','Miwin_MG_SW510B_429x225_PCB_photo_reference'):
+                    selected.append((p['name'].replace('_',' '),p['shape']))
+        else:anchors=anchors_by_name[name]
+        context_pages(api,title,name+'::edge-details',rows,note,selected,anchors)
     if mod:
         sheet('Rear cover | open cable notch and folded edges','Upper_module_rear_perforated_cover',[
             ['Rear web','1.500 thick; X1.5–438.5, Y483.5–485, Z375.32–398.05.'],

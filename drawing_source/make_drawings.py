@@ -28,18 +28,35 @@ mod=variant.startswith('modular');fan_size=checks.get('fan_size_mm',120);intake_
 pdf=out/('rm53-502-module-drawings.pdf' if mod else 'nine-u-chassis-drawings.pdf')
 c=canvas.Canvas(str(pdf),pagesize=landscape(A3),pageCompression=1);c.setTitle(title+' | nominal formed geometry');c.setAuthor('');c.setCreator('');c.setProducer('');c.setSubject('Engineering review drawings; fabrication hold points apply')
 W,H=landscape(A3);page=0;index=[]
+page_audit=[];drawing_marks=0;table_count=0;inside_table=False
+for method in ('drawPath','rect','circle'):
+ original=getattr(c,method)
+ def tracked(*args,_original=original,**kwargs):
+  global drawing_marks
+  if not inside_table:drawing_marks+=1
+  return _original(*args,**kwargs)
+ setattr(c,method,tracked)
+def finish_sheet():
+ if page:
+  record=dict(page=page,title=index[-1][1],identity=index[-1][2],tables=table_count,geometry_marks=drawing_marks)
+  page_audit.append(record)
+  assert table_count==0 or drawing_marks>0 or index[-1][1]=='Fabricated-part drawing index',record
+
 navy=HexColor('#183643');grey=HexColor('#647782');orange=HexColor('#925a26')
 style=ParagraphStyle('text',fontName='Helvetica',fontSize=10,leading=14,textColor=navy)
 def para(text,x,y,w,size=10):
  st=ParagraphStyle('p',parent=style,fontSize=size,leading=size*1.35);p=Paragraph(text,st);pw,ph=p.wrap(w,1000);assert y-ph>65,(page,text[:80],y,ph);p.drawOn(c,x,y-ph);return y-ph-10
 def table(rows,x,y,widths,size=9):
+ global table_count,inside_table
+ table_count+=1;inside_table=True
  data=[[Paragraph(str(v),ParagraphStyle('t',parent=style,fontSize=size,leading=size*1.22)) for v in row] for row in rows]
- t=Table(data,colWidths=widths,hAlign='LEFT');t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),HexColor('#e6edf0')),('VALIGN',(0,0),(-1,-1),'TOP'),('BOTTOMPADDING',(0,0),(-1,-1),6),('TOPPADDING',(0,0),(-1,-1),6),('LINEBELOW',(0,0),(-1,0),.7,grey),('LINEBELOW',(0,1),(-1,-1),.25,HexColor('#cad4d9'))]));tw,th=t.wrap(sum(widths),10000);assert y-th>65,(page,'table overflow',th);t.drawOn(c,x,y-th);return y-th-15
+ t=Table(data,colWidths=widths,hAlign='LEFT');t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),HexColor('#e6edf0')),('VALIGN',(0,0),(-1,-1),'TOP'),('BOTTOMPADDING',(0,0),(-1,-1),6),('TOPPADDING',(0,0),(-1,-1),6),('LINEBELOW',(0,0),(-1,0),.7,grey),('LINEBELOW',(0,1),(-1,-1),.25,HexColor('#cad4d9'))]));tw,th=t.wrap(sum(widths),10000);assert y-th>65,(page,'table overflow',th);t.drawOn(c,x,y-th);inside_table=False;return y-th-15
 def new(heading,identity='Assembly'):
- global page
+ global page,drawing_marks,table_count
+ finish_sheet();drawing_marks=0;table_count=0
  if page:c.showPage()
  page+=1;index.append((page,heading,identity));c.setFillColor(navy);c.setFont('Helvetica-Bold',18);c.drawString(32,H-39,heading);c.setFont('Helvetica',9);c.setFillColor(grey);c.drawString(32,H-57,title);c.setStrokeColor(grey);c.setLineWidth(.6);c.line(32,59,W-32,59)
- c.setFont('Helvetica',8);c.drawString(32,43,'Units: mm | Nominal formed geometry | Do not scale | Coordinate tables control feature locations')
+ c.setFont('Helvetica',8);c.drawString(32,43,'Units: mm | Nominal formed geometry | Do not scale | Annotated views and adjacent schedules define nominal geometry')
  c.drawRightString(W-32,43,f'Sheet {page} | 2026-09-22');c.setFillColor(orange);c.drawString(32,28,'ENGINEERING REVIEW — NOT RELEASED FOR FABRICATION');c.setFillColor(navy)
  c.bookmarkPage('page'+str(page));c.addOutlineEntry(heading,'page'+str(page),0)
 def view(shape,rect,direction,label,key):
@@ -68,16 +85,26 @@ def clean(n):
  return re.sub(r'(\d)mm',r'\1 mm',re.sub(r'(\d)p(\d)mm',r'\1.\2 mm',n.replace('_',' ')))
 def csvwrite(p,fields,rows):
  with p.open('w',newline='') as f:w=csv.DictWriter(f,fields);w.writeheader();w.writerows(rows)
-new('Assembly dimensions and release conditions')
+from annotated_geometry import context_pages, planar, mark, dim
+api=(c,new,para,table,view,W,H,out)
+new('Assembly release conditions')
 y=H-85
 y=para('Two serviceable sheet-metal assemblies share a removable twenty-position GPU cartridge. The 9U enclosure includes a motherboard layer; the replacement-lid module attaches above an existing RM53-502. The OEM chassis in the modular model is an external size reference only.',32,y,530,12)
 rows=[['Dimension','Nominal value'],['Body width / depth','440 / 485'],['Rack face width','482.6'],['Height', '399.55 total study envelope; 177.30 upper module' if mod else '399.25 (9 × 44.45 minus 0.80)'],['GPU tray floor Z','242.25' if mod else '170.00'],['Upper slots / GPU count','20 positions / 10 dual-slot reference cards'],['Slot pitch / populated GPU pitch','20.32 / 40.64'],['GPU fans',f'3 × {fan_size} × 25; 27 with pads' if mod else (f"{checks['upper_fan_count']} × {fan_size} × {checks['upper_fan_depth_mm']}, one row" if intake_mode else '6 × 120 × 38, two rows')],['Lower cooling','OEM installation to be measured' if mod else 'XE360-TR5 394 × 120 × 28 + 38 mm fans'],['Backplane PCB','429 × 225 × 2.5; mechanical details from photographs']]
-y=table(rows,32,y,[215,315])
+assembly_dimensions=rows[1:]
 y=para('Datum: exported X=0 at the body left in the front view; Y=0 at the front-panel plane; Z=0 at the enclosure underside. Front view looks toward +Y. Rear view looks toward -Y. Coordinates in the schedules are assembly coordinates, not developed-blank coordinates.',32,y,530)
 right=H-85
 for head,body in [('OEM interface hold','The lid return-flange profile, seating width, screw centres and carrying capacity require measurement on the actual RM53-502. OEM side holes are deliberately absent. The adapter cannot yet be called a verified drop-in part.'),('Supplier-interface hold','Backplane hole locations, socket seating height, connector keepouts and latch access are photo estimates. Standard slot pitch is an explicit assumption. The GPU and power-connector envelopes require supplier CAD or a fit sample.'),('Sheet-metal release hold','Bends are sharp nominal intersections. Select material, inside radii, reliefs, bend allowance and forming sequence before issuing flat patterns. Supplied DXFs show formed face profiles; they are not laser-ready developed blanks.'),('Qualification hold','No structural load, rail capacity, thermal, vibration or electrical certification is implied. A populated prototype is required. The PSU cable count does not establish a ten-GPU wiring plan.')]:
  right=para('<b>'+head+'</b><br/>'+body,610,right,540,11)
 right=para('STEP is the analytic geometry master. OpenSCAD contains individual faceted solids and editable assembly controls. The interactive render uses STLs compiled from those OpenSCAD files. The coordinate schedules identify every analytic circular edge and straight edge in each fabricated part.',610,right,540)
+def compound_group(label,selected):
+ assert selected,label
+ return label,cq.Compound.makeCompound([a['shape'] for a in selected])
+assembly_context=[compound_group('Body and end panels',[a for a in parts if a['group']=='shell']),compound_group('GPU cartridge',[a for a in parts if a['group']=='cassette']),compound_group('Intake fans',[a for a in parts if a['group']=='fans']),compound_group('Backplane',[a for a in parts if a['group']=='backplane'])]
+assembly_context.append(compound_group('Screw-mounted rack ears',[a for a in parts if a['group']=='rack_ears']))
+if mod:assembly_context.append(compound_group('OEM body size reference',[a for a in parts if a['group']=='oem_reference']))
+assembly_anchors=[(440,0,checks.get('module_base_z_mm',0)),(461.3,0,checks.get('module_base_z_mm',0)),(440,0,checks.get('combined_height_mm',399.25)),(220,300,242.25 if mod else 170),(220,469,374.46 if mod else 302.21),(220,469,374.46 if mod else 302.21),(220,2,310.9 if mod else 270),(220,20,222.25 if mod else 85),(220,330,260.25 if mod else 188)]
+context_pages(api,'Assembly dimensions','Assembly',assembly_dimensions,'Nominal installed envelopes. The body and removable GPU tray use the common assembly datum. See component sheets for hole and cutout locations.',assembly_context,assembly_anchors)
 new('Assembly projections and installation envelope')
 struct=[a['shape'] for a in parts if a['role']=='fabricated' and a['group'] in ('shell','cassette','lid','rear_vent','adapter','rack_ears','intake_grilles')]
 shape=cq.Compound.makeCompound(struct)
@@ -110,17 +137,19 @@ for x,label,pcb,top in [(55,'Motherboard',1.57,5),(610,'GPU backplane',2.5,6)]:
  z0=90;scl=9;c.setFont('Helvetica-Bold',12);c.drawString(x,z0+165,label+' post stack')
  for level,thick,color,txt in [(0,2,'#aebbc6','2.00 sheet'),(2,8,'#b39a61','8.00 catalog post'),(10,pcb,'#216b55',f'{pcb:.2f} PCB'),(10+pcb,.5,'#647783','0.50 washer')]:
   c.setFillColor(HexColor(color));c.rect(x+25,z0+level*scl,110 if level!=2 else 38,thick*scl,fill=1,stroke=0);c.setFillColor(navy);c.setFont('Helvetica',10);c.drawString(x+155,z0+(level+thick/2)*scl,txt)
-new('Adjustable backplane supports and retention geometry')
+
 y=H-85
 rows=[['Feature','Nominal value / constraint'],['Crossbar standoff X travel','32 to 408 in construction X, equivalent to exported X 408 to 32. Six posts selected; quantity/location must follow supplier board drawing.'],['Crossbar Y travel','169.5 to 390.5 construction Y, exported Y 222.7 to 443.7. End limits keep the 7 mm square nut fully inside the guide strips.'],['Selected crossbar Y','225.0, 318.5, 434.2 exported coordinates.'],['Rail nut guide gap','7.2 for nominal 7.0 square nut. Verify nut tolerance and coating allowance before release.'],['Populated socket centres','40.64 pitch, ten positions; rear bracket pitch 20.32. Two additional board sockets lie 20.32 from each populated end.'],['Card/bracket relationship','Bracket centre offset 7.155 from card plane; retention screw 2.055 from card plane on the opposite side. Same datum used for sockets and chassis.'],['Bracket bearing height','374.46 in module; 302.21 in full chassis. Lower motherboard bracket bearing 129.28.'],['Backplane support heights','Tray underside is the datum. Tray top = datum +1.5; rail top = datum +8; crossbar top = datum +10; PCB underside = datum +18. See installed-level schedule.'],['PCB mounting details','Obround holes and component details are photo estimates. Sliding supports accommodate variable holes but do not correct a different socket-to-bracket datum.']]
-y=table(rows,32,y,[210,910],11)
-y=para('Set board position with the GPU bracket datum first. Then move supports to verified mounting holes. Fit all required supports without bending the PCB. Before a populated build, check that posts, washers and crossbars clear every underside component. The 0.64 mm nominal gap between 40 mm cards leaves little tolerance; physical card width and straightness must be checked.',32,y,1120,12)
+context_pages(api,'Adjustable backplane supports','Assembly',rows[1:],'Set the board from the GPU bracket datum, then move supports to verified holes. Check underside component clearance and latch access on the physical board.',[(a['name'].replace('_',' '),a['shape']) for a in parts if 'Longitudinal_mount_rail' in a['name'] or 'Sliding_crossbar' in a['name'] or a['name'] in ('Miwin_MG_SW510B_429x225_PCB_photo_reference','Full_width_twenty_slot_rear_with_side_returns','M3_8mm_female_female_standoff_1')],[(220,226.75,252.25 if mod else 180),(420,318.5,250.25 if mod else 178),(220,318.5,252.25 if mod else 180),(420,300,246.45 if mod else 174.2),(389,350,262.75 if mod else 190.5),(22,474.08,374.46 if mod else 302.21),(220,474.08,374.46 if mod else 302.21),(357,225,260.25 if mod else 188),(357,225,262.75 if mod else 190.5)])
 if not mod:
  new('Motherboard mounting coordinates — SSI EEB reference')
  y=para('Ten nominal SSI EEB locations are selected to match the ten holes circled in the ASUS WRX90E-SAGE SE manual (printed page 2-13). SSI EEB 2011 v1.0.1 Figure 2 gives the dimensional datum. The motherboard PCB underside is Z16.00; tray top Z8.00; standard posts 8.00. The hole map below uses the exported assembly datum.',32,H-85,1120,12)
  rows=[['SSI location','X','Y','Tray clearance bore']]+[[a['name'],f"{a['x']:.2f}",f"{a['y']:.2f}",'3.40'] for a in checks['motherboard_nominal_holes']]
  table(rows,32,y,[115,105,105,155],11)
- tray=next(a for a in parts if a['name']=='WRX90_board_specific_replaceable_tray');view(tray['shape'],(575,200,555,450),(0,0,1),'Top | hole schedule is authoritative','motherboard_map')
+ tray=next(a for a in parts if a['name']=='WRX90_board_specific_replaceable_tray')
+ p,_,_=planar(c,tray['shape'],2,6,(565,205,580,440))
+ for hole in checks['motherboard_nominal_holes']:
+  xx,yy=p(hole['x'],hole['y']);c.setFont('Helvetica',8);c.drawString(xx+5,yy+5,hole['name'])
  para('The integrated I/O shield seating and the actual board tolerances remain fit checks. Do not add standoffs at unused ATX/EEB positions: an extra post can contact motherboard circuitry. Other motherboard formats require a separate verified tray and rear-interface check.',575,175,555,11)
  csvwrite(out/'motherboard_holes.csv',['name','x','y'],checks['motherboard_nominal_holes'])
 else:
@@ -130,13 +159,28 @@ else:
  table(rows,720,H-85,[200,230],11)
  para('Place the removed OEM cover on a flat datum. Record every side screw centre from its front edge and seating plane, separately for left and right. Record flange thickness, offset, engagement and all tabs. Transfer the verified pattern to the parameterized adapter source; do not drill from this provisional drawing.',32,240,660,12)
  para('The six module-to-adapter holes are design dimensions: X=10 and 430; Y=80, 242.5 and 410; diameter 3.4. Those are separate from the unknown OEM screws. Attach the empty module before its internal components obstruct these top-access screws.',720,225,430,11)
-new('Nominal clearances, verification scope and hold points')
+
 rows=[['Check','Result / limitation'],['Analytic solids','Every source solid must pass BRep validity and positive-volume checks. Exact solid intersections are listed in validation reports.'],['Part-to-part checks','All non-alternative parts are compared; intended reference contacts and OEM proxy overlap are recorded separately. Do not interpret excluded proxy volume as a verified OEM interior.'],['OpenSCAD / STEP agreement','Each SCAD part is compiled to STL. Watertightness, positive volume and bounds are compared against the source tessellation. Analytic STEP remains the dimensional master.'],['Service motion','Cartridge and card paths are sampled at the reported positions. Driver-access checks use the documented assembly order. These do not certify flexible cable bends or physical latch operation.'],['PSU clearance','Side bearing M3 × 6 screw tip to PSU nominal envelope: 0.5 mm. Tolerance-sensitive; verify before fabrication.'],['Fan / I/O carrier','80 mm exhaust bottom Z70; I/O carrier top Z68: 2.0 mm nominal.'],['GPU neighbor clearance','40.64 pitch minus 40.00 width = 0.64 mm nominal. Supplier dimensional tolerance required.'],['Power cables','Forward connectors and a 35 mm straight lead are occupancy allowances. Select actual cables; check their bend radius, plug latch and connector approach.'],['Cooling','Selectable full-chassis intake: six 120 mm, two 180 mm or three 120 mm. Module: three fans. One full-face grille per fabricated front face, including the AIO area in 9U. Uniform 9 mm perforations on 10 mm staggered pitch; lands retained around fasteners. Thermal performance is unqualified.'],['Backplane / OEM measurements','Hole locations and plug/slot details from photos are not precision mechanical evidence. OEM lid holes/profile remain unmeasured.']]
 if mod:
  rows=[row for row in rows if row[0] not in ('PSU clearance','Fan / I/O carrier')]
  rows.insert(4,['Fan intake','Common 136 mm carrier openings. '+('140 mm frames with 141 mm padded width; 1 mm padded interfan gap.' if fan_size==140 else '120 mm frames with 116 mm blanking-plate openings; 22 mm frame gap.')])
  rows.insert(5,['Rear MCIO plug','35 × 14 mm envelope passes with the upper cap removed. Lid gap 1.05 mm; GPU-envelope gap 1.64 mm. Check physical latch and cable bend radius.'])
-table(rows,32,H-85,[240,885],11)
+clearance_rows=rows[1:]
+clearance_shapes=[compound_group('GPU reference envelopes',[a for a in parts if a['name'] in ('GPU_1_Max_Q_envelope','GPU_2_Max_Q_envelope')]),compound_group('Lid',[a for a in parts if a['group']=='lid']),compound_group('Front fans',[a for a in parts if a['group']=='fans']),compound_group('GPU power plugs and leads',[a for a in parts if a['group']=='power'])]
+if not mod:
+ clearance_shapes.extend([compound_group('PSU and bearing screw',[a for a in parts if a['group']=='psu' or a['name']=='Side_ledge_M3x6_1.5_390']),compound_group('Rear fans and I/O carrier',[a for a in parts if a['group']=='exhaust' or a['name']=='Flat_1p2mm_IO_carrier_with_clear_shield_lands'])])
+else:clearance_shapes.append(compound_group('Rear cable entry',[a for a in parts if a['group']=='external_entry']))
+clearance_anchors=[]
+for label,_ in clearance_rows:
+ if label=='PSU clearance':q=(434.25,443.2,158)
+ elif label=='Fan / I/O carrier':q=(209,470,69)
+ elif label=='GPU neighbor clearance':q=(369.015,300,330 if mod else 258)
+ elif label=='Rear MCIO plug':q=(220,485,397)
+ elif label=='Fan intake' or label=='Cooling':q=(220,2,310.9 if mod else 270)
+ elif label=='Power cables':q=(389,195,300 if mod else 228)
+ else:q=(389,300,330 if mod else 258)
+ clearance_anchors.append(q)
+context_pages(api,'Nominal clearances and verification scope','Assembly',clearance_rows,'Numbered leaders locate the components involved in each check. Geometry shows installed positions; the nominal gap dimensions below still require supplier tolerances and physical validation.',clearance_shapes,clearance_anchors)
 new('Engineering references')
 sources=[('Motherboard hole selection','ASUS Pro WS WRX90E-SAGE SE manual, printed page 2-13','https://dlcdnets.asus.com/pub/ASUS/mb/SocketsTR5/Pro_WS_WRX90E-SAGE_SE/E22564_Pro_WS_WRX90E-SAGE_SE_EM_WEB.pdf'),('Motherboard dimensional datum','SSI EEB 2011 v1.0.1, Figure 2','https://www.snia.org/sites/default/files/SSIF/2018-05-31/SSI%20EEB%202011%201.0.1.pdf'),('Standoff','Harwin R30-1000802; M3 through thread, 8 mm, 5 mm AF','https://www.harwin.com/products/R30-1000802'),('Fan spacing','ARCTIC P12 engineering drawing: 120 mm frame, 105 mm mounting pitch','https://support.arctic.de/p12'),('PSU envelope','ASUS Pro WS 3000P technical specifications','https://www.asus.com/my/motherboards-components/power-supply-units/workstation/asus-pro-ws-3000p/techspec/'),('Radiator envelope','SilverStone XE360-TR5 technical specifications','https://www.silverstonetek.com/en/product/info/coolers/xe360_tr5/'),('OEM body dimensions','SilverStone RM53-502; external envelope only','https://www.silverstonetek.com/en/product/info/computer-chassis/rm53_502/'),('Backplane reference','Miwin 12-slot PCIe 5.0 switch GPU expansion board; product photos and overall dimensions','https://www.miwinchina.com/product/12slot-pcie-50-switch-gpu-expansion-board.html')]
 if mod:sources[3]=('Fan mounting envelope','Noctua NF-A14: 124.5 square mounting; NF-A12x25: 105 square mounting. See fan option schedule.','https://www.noctua.at/en/products/nf-a12x25-pwm/specifications')
@@ -144,18 +188,25 @@ if intake_mode=='2x180':sources[3]=('Fan mounting envelope','SilverStone AP183: 
 y=H-85
 for h,t,url in sources:y=para(f'<b>{h}</b> — {t}<br/><link href="{url}" color="#17647b">{url}</link>',32,y,1120,10)
 if mod:
- new(f'{fan_size} mm intake layout and rear cable-entry service')
+
  rows=[['Interface','Dimensions and assembly'],['Upper module','440 wide × 177.3 high; base Z222.25. GPU tray remains Z242.25.'],['Fan centres','X78, 220, 362; Z310.9. Padded row 425 × 141; 1 mm gaps; 7.5 mm side margins.'],['Mounting','124.5 square pitch; 5.5 wide clearance slots; short screws through carrier and front pads.'],['Rear entry','Notch X150–290, Z380.5–398.05. Remove folded cap to expose the full aperture. Its return projects to Y494, 9 mm beyond the body.'],['Connector passage','35 × 14 plug, Z383–397. Nominal lid gap 1.05; GPU-envelope gap 1.64. Larger plugs require a different entry.'],['Brush frame','Lower U-frame and upper folded cap are separate 1.5 mm sheet parts. Two lower M3 screws retain the base; two upper M3 screws release the cap.'],['GPU service','Disconnect and withdraw external cables; remove lid and complete rear cover/brush assembly before GPU or cartridge lift.'],['Airflow','Front contains only fan intake perforation and mounting features. Fan selection and airflow distribution require thermal validation.']]
  if fan_size==120:
   rows[2]=['Fan centres','X78, 220, 362; Z310.9. Padded row 404 × 120; 22 mm gaps; 18 mm side margins.']
   rows[3]=['Mounting','105 square pitch; 5.5 wide clearance slots; short screws through carrier, 1 mm blanking plate and front pads.']
- table(rows,32,H-85,[200,925],11)
- para('Dimensions are nominal. The external route is an optional 6 mm cable envelope above the GPU bank, then down through the forward service bay. Brush compression, actual connector latches, cable bend radius and tolerances require physical confirmation.',32,200,1120,11)
+ context_pages(api,f'{fan_size} mm intake and rear cable entry','Assembly',rows[1:],'The front intake and rear cable opening use separate panels. Remove the brush cap to pass connectors; unplug cables before removing GPUs.',[(a['name'].replace('_',' '),a['shape']) for a in parts if a['name'] in ('Upper_module_front_dual_120_140mm_fan_carrier','Upper_module_rear_perforated_cover')],[(440,0,222.25),(220,0,310.9),(78+checks['fan_pattern_mm']/2,0,310.9+checks['fan_pattern_mm']/2),(220,485,380.5),(220,485,397),(143,485,393),(297,485,393),(220,0,310.9)])
 if mod:
- new('Common intake carrier: 120 mm and 140 mm fan options')
+
  rows=[['Feature','140 mm option','120 mm option'],['Manufacturer reference','Noctua NF-A14 industrialPPC','Noctua NF-A12x25 PWM'],['Frame / padded envelope','140 × 140 × 25 / 141 × 141 × 27','120 × 120 × 25 / 120 × 120 × 27'],['Fan centres / pitch','X78, 220, 362; Z310.9 / 142','Same centres and pitch'],['Hole pattern','124.5 × 124.5','105 × 105'],['Outer / shared slots','9 × 5.5 / 27 × 5.5','7 × 5.5 / 44 × 5.5'],['Mounting axes X','15.75, 140.25, 157.75, 282.25, 299.75, 424.25','25.5, 130.5, 167.5, 272.5, 309.5, 414.5'],['Mounting axes Z','248.65, 373.15','258.4, 363.4'],['Air opening','136 diameter','116 diameter in each blanking plate'],['Blanking plates','Not installed','Three 140 × 140 × 1; retained by fan screws'],['Plastic penetration with 5 × 8 screw','5 including tip','4 including tip; verify fan retention'],['Assembly','Carrier → front pad → fan','Carrier → blanking plate → front pad → fan']]
- y=table(rows,32,H-85,[215,455,455],10)
- para('The shared horizontal obround connects the adjacent screw positions of two neighbouring fans. Hole pitch comes from fan manufacturer specifications. Slot lengths provide clearance for those axes and are not traced dimensions from the SilverStone photographs. The blanking plates close the 136 mm openings around 120 mm frames. Both configurations use one common full-face grille with access for either screw pattern. Change fans and blanking plates with the grille removed; no carrier replacement or underside nuts are required.',32,y,1120,11)
+ carrier=next(a for a in parts if a['name']=='Upper_module_front_dual_120_140mm_fan_carrier')
+ for col,size,pitch in [(1,140,124.5),(2,120,105)]:
+  context_pages(api,f'Common intake carrier | {size} mm fans','Assembly',[[r[0],r[col]] for r in rows[1:]],'Both options share this carrier. The 120 mm option adds blanking plates; short screws engage fan plastic. Front view below uses the actual carrier contour.',[('Common front carrier',carrier['shape'])],[(220,0,310.9),(78+size/2,0,310.9),(220,0,310.9),(78+pitch/2,0,310.9+pitch/2),(140.25,0,373.15),(78+pitch/2,0,310.9+pitch/2),(78+pitch/2,0,310.9+pitch/2),(78+68,0,310.9),(78,0,310.9),(78+pitch/2,0,310.9+pitch/2),(78+pitch/2,0,310.9+pitch/2)])
+  new(f'Common intake carrier | {size} mm mounting pattern',carrier['name']+'::fan-pattern')
+  p,lo,hi=planar(c,carrier['shape'],1,0,(35,150,760,530))
+  dim(c,p(78-pitch/2,310.9-pitch/2),p(78+pitch/2,310.9-pitch/2),f'{pitch:.3f} centres',offset=55)
+  dim(c,p(78-pitch/2,310.9-pitch/2),p(78-pitch/2,310.9+pitch/2),f'{pitch:.3f} centres',True,offset=-80)
+  mark(c,p(78+pitch/2,310.9+pitch/2),f'{size} mm fan mounting axes',(830,580))
+  para('Three fan centres: X78, 220, 362; Z310.9. Centre pitch 142. The shared obrounds join adjacent fan screw positions. See the face feature sheets for all slot lengths, widths and radii.',830,530,310,11)
+  para('Carrier viewed in X/Z assembly coordinates. Fan pattern centres are referenced to the actual cut contours; the optional 120 mm blanking plates are separate parts.',35,125,1080,10)
 from section_drawings import draw_sections,material_note
 from interface_drawings import interface_details
 from feature_drawings import draw_feature_pages
@@ -170,6 +221,8 @@ if not mod:
 if intake_mode:
  from drawing_annotations import intake_sheet
  intake_sheet(parts,checks,(c,new,para,table,view,W,H,out))
+from clearance_drawings import clearance_details
+clearance_details(parts,mod,api)
 coverage=[]
 # Each fabricated sheet-metal part receives a drawing and exact coordinate schedule.
 fasttokens=('nut','screw','standoff','washer','M3','M4')
@@ -177,7 +230,8 @@ fabricated=[a for a in parts if a['role']=='fabricated' and a['group'] not in ('
 part_rows=[]
 for idx,a in enumerate(fabricated):
  name=a['name'];s=a['shape'];b=bb(s);d=dims(s);new(clean(name),name)
- (root/'formed_parts').mkdir(exist_ok=True);cq.exporters.export(s,str(root/'formed_parts'/(name+'.step')))
+ (root/'formed_parts').mkdir(exist_ok=True)
+ if not (root/'formed_parts'/(name+'.step')).exists():cq.exporters.export(s,str(root/'formed_parts'/(name+'.step')))
  view(s,(35,412,530,300),(0,0,1),'Top (+Z) | hidden edges grey',name+'_top')
  rear_part=('rear' in name.lower() or 'IO_' in name or 'IO_carrier' in name)
  view(s,(610,412,540,300),(0,1,0) if rear_part else (0,-1,0),'Exterior rear (+Y) | looking toward -Y' if rear_part else 'Exterior front (-Y) | looking toward +Y',name+'_elevation')
@@ -214,6 +268,7 @@ for start in range(0,len(part_rows),24):
  rows=[['Part identifier','Sheet','Group','Overall X × Y × Z']]+[[a['name'],a['drawing_sheet'],a['group'],' × '.join(f'{a[k]:.2f}' for k in ('x_mm','y_mm','z_mm'))] for a in part_rows[start:start+24]]
  table(rows,32,H-85,[640,55,140,285],9)
 (out/'specificity_coverage.json').write_text(json.dumps(coverage,indent=2))
+finish_sheet();(out/'diagram_completeness.json').write_text(json.dumps(page_audit,indent=2))
 c.save();(out/'drawing_manifest.json').write_text(json.dumps({'pdf':pdf.name,'pages':page,'fabricated_parts':len(fabricated),'drawing_index':index,'status':'engineering review; fabrication holds apply'},indent=2));print('PDF',pdf,page,'pages',flush=True)
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'cad_source'))

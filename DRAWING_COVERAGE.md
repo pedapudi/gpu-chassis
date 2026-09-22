@@ -1,21 +1,21 @@
 # Drawing coverage
 
-Both chassis include direct geometry annotations and coordinate schedules. The five configurations repeat shared parts; counts describe each complete drawing set.
+The full chassis and replacement-lid module include complete part views with dimensions and linked schedules. The five configurations repeat shared parts; counts describe each complete drawing set.
 
-| Configuration | Fabricated parts | Sheets | Section sheets | Surface sheets |
+| Configuration | Fabricated parts | Sheets | Section sheets | Face sheets |
 | --- | ---: | ---: | ---: | ---: |
-| 9U, six 120 mm fans | 44 | 213 | 28 | 28 |
-| 9U, two 180 mm fans | 45 | 218 | 28 | 28 |
-| 9U, three 120 mm fans | 45 | 218 | 28 | 28 |
-| Module, three 140 mm fans | 36 | 176 | 24 | 24 |
-| Module, three 120 mm fans | 39 | 185 | 24 | 24 |
+| 9U, six 120 mm fans | 44 | 219 | 28 | 39 |
+| 9U, two 180 mm fans | 45 | 224 | 28 | 39 |
+| 9U, three 120 mm fans | 45 | 224 | 28 | 39 |
+| Module, three 140 mm fans | 36 | 190 | 24 | 35 |
+| Module, three 120 mm fans | 39 | 196 | 24 | 35 |
 
-PCIe rear elevations carry aperture width, height and centre-spacing dimensions directly on the CAD profile. Enlarged details dimension retention bores, their offset from bracket centres, and toe-notch width and depth. The lower rear elevation identifies the 164 × 50 mm web clearance separately from the smaller I/O shield reference. Rear elevations preserve exterior handedness.
+Feature-location sheets show complete physical face contours, including actual holes and open-edge cuts. Opposite walls have separate views. Circular holes use analytic circles; leaders specify counts, diameters, radii, and slot dimensions. Dense coordinate tables share the page with the face outline and highlighted hole rows. Complex cutouts retain their actual contours.
 
-Every closed-hole family has a leader with count, diameter and radius, or slot length, width and end radius. Complex profile bounds are explicitly labeled; exact edges remain on the formed view and STEP. Coordinate tables locate every repeat and distinguish coincident projections of separate flanges. Boundaries at joined-sheet steps are labeled as boundaries rather than through-holes. Open-edge contours, formed sections, sheet thicknesses, support heights and fastening sequences have dedicated details.
+Interface tables use numbered leaders tied to specific features. Rear elevations directly dimension PCIe apertures and pitch; enlarged details show retention bores, toe notches, and the integral retention bend. Additional CAD sections illustrate the adjacent-GPU gap, PSU screw-tip clearance, lower exhaust/I/O clearance, and installed backplane support height. Fan-option drawings dimension mounting pitch on the carrier geometry.
 
-The two single-row intake drawings dimension fan mounting pitch, opening diameter, insert screws and slot sizes. The six-fan carrier and module carriers retain their own hole schedules and view annotations.
+Formed sections carry overall dimensions directly on the profile, with coordinate levels beside the diagram. Face sheets show the actual surface perimeter and coordinate limits. Drawing indexes remain separate navigation tables.
 
-The coverage audit checks every fabricated part, positive dimensions, diameter/radius agreement, slot radii, section coverage and page numbering. All PDF pages are rendered and checked for text outside page boundaries. Independent visual reviews inspect the updated leaders, rear dimensions and fan-pattern details. Nominal dimensions do not establish production tolerances or physical supplier fit.
+Each drawing set includes a diagram-completeness report. The generator rejects technical table pages without drawing geometry. The coverage audit checks fabricated-part coverage, feature dimensions, diameter/radius agreement, slot radii, section coverage, and page numbering. Every PDF page is rendered and checked for missing glyphs and text outside the page. Independent visual reviews inspect contours, feature correspondence, annotation spacing, and viewpoint labels.
 
-The single-row full-chassis variants additionally pass changed-part intersection checks, mounting and airflow gauges, sampled front removal, STEP round trips and compiled OpenSCAD mesh checks. Their 558 common analytic parts match the six-fan chassis. Manufacturer backplane measurements, OEM lid interfaces, forming allowances, fixed-joint strength, cooling and power qualification remain release requirements.
+This revision changes drawings and viewer drawing indexes. STEP and OpenSCAD geometry remain byte-for-byte unchanged. Nominal dimensions do not establish production tolerances or physical supplier fit. Backplane measurements, OEM lid interfaces, unspecified bend radii, developed blanks, fixed-joint strength, cooling, and power qualification remain release requirements.

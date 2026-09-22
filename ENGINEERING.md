@@ -10,7 +10,7 @@ Each design folder contains an assembly STEP, individual formed-part STEP files,
 
 The STEP files preserve analytic surfaces. The OpenSCAD files describe faceted part solids with editable visibility, placement and cartridge-lift controls. They are not fully dimension-parametric recreations of every manufactured part. Rebuild dimension changes with the supplied Python CAD sources. The modular folder also includes a native constructive-solid-geometry adapter template with parameters for measured OEM hole coordinates and return profiles.
 
-The drawing PDFs include formed-part views, cross-sections, sheet-face extent tables, sheet thicknesses, hole and cutout schedules, location diagrams and row-by-row coordinates. Dedicated interface sheets dimension open-edge notches, the stepped PSU opening, lid returns, adapter seating and the installed rail-height stack. Round holes show diameter and radius. Obround slots show overall length, width, end radius and length axis. Hole counts distinguish separate flanges along the normal axis. Feature JSON schedules accompany the analytic edge CSVs. An edge CSV is a geometry record, not a hole list. Face-profile DXFs are not developed sheet-metal blanks.
+The drawing PDFs include formed-part views, cross-sections, dimensioned sheet-face views, sheet thicknesses, hole and cutout schedules, location diagrams and row-by-row coordinates. Dedicated interface sheets dimension open-edge notches, the stepped PSU opening, lid returns, adapter seating and the installed rail-height stack. Round holes show diameter and radius. Obround slots show overall length, width, end radius and length axis. Hole counts distinguish separate flanges along the normal axis. Feature JSON schedules accompany the analytic edge CSVs. An edge CSV is a geometry record, not a hole list. Face-profile DXFs are not developed sheet-metal blanks.
 
 ## Datum and hardware
 
@@ -98,7 +98,7 @@ The proposed factory attachment uses nineteen underside stitch fillet welds, eac
 
 ## Drawing interpretation and manufacture
 
-Formed-part views label exterior orientation. Feature-location diagrams instead use positive coordinate axes: the first listed axis increases right and the second increases up. Parallel sheet faces can overlap in these coordinate views; the schedule prints each normal-axis station separately. Profile-cutout bounding boxes are locators, not replacement outlines. Use the corresponding formed profile and STEP for irregular edges.
+Formed-part views label exterior orientation. Feature-location diagrams instead use positive coordinate axes: the first listed axis increases right and the second increases up. Opposite walls have separate face views, each labeled with its normal-axis station. The complete analytic contour appears on every feature-location page. Dense coordinate schedules highlight the corresponding rows on an adjacent face view. Numbered leaders connect interface table entries to physical features.
 
 The explicit R1.2 GPU retention bend is included in the STEP and OpenSCAD geometry. Other bends remain nominal sharp intersections until a fabricator sets tooling, inside radii, corner reliefs and bend deductions. All dimensions are nominal; production tolerances, material grade, finish and developed blanks are not yet released.
 

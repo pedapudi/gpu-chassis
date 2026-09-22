@@ -10,7 +10,7 @@ Each design folder contains an assembly STEP, individual formed-part STEP files,
 
 The STEP files preserve analytic surfaces. The OpenSCAD files describe faceted part solids with editable visibility, placement and cartridge-lift controls. They are not fully dimension-parametric recreations of every manufactured part. Rebuild dimension changes with the supplied Python CAD sources. The modular folder also includes a native constructive-solid-geometry adapter template with parameters for measured OEM hole coordinates and return profiles.
 
-The drawing PDFs include formed-part views, sheet thicknesses, hole and cutout schedules, location diagrams and row-by-row coordinates. Round holes show diameter and radius. Obround slots show overall length, width, end radius and length axis. Hole counts distinguish separate flanges along the normal axis. Feature JSON schedules accompany the analytic edge CSVs. An edge CSV is a geometry record, not a hole list. Face-profile DXFs are not developed sheet-metal blanks.
+The drawing PDFs include formed-part views, cross-sections, sheet-face extent tables, sheet thicknesses, hole and cutout schedules, location diagrams and row-by-row coordinates. Dedicated interface sheets dimension open-edge notches, the stepped PSU opening, lid returns, adapter seating and the installed rail-height stack. Round holes show diameter and radius. Obround slots show overall length, width, end radius and length axis. Hole counts distinguish separate flanges along the normal axis. Feature JSON schedules accompany the analytic edge CSVs. An edge CSV is a geometry record, not a hole list. Face-profile DXFs are not developed sheet-metal blanks.
 
 ## Datum and hardware
 
@@ -102,4 +102,8 @@ Formed-part views label exterior orientation. Feature-location diagrams instead 
 
 The explicit R1.2 GPU retention bend is included in the STEP and OpenSCAD geometry. Other bends remain nominal sharp intersections until a fabricator sets tooling, inside radii, corner reliefs and bend deductions. All dimensions are nominal; production tolerances, material grade, finish and developed blanks are not yet released.
 
-The 9U front carrier combines a 2 mm face with 1.5 mm side angles. Grille mounting bores pass through 3.5 mm where those sheets overlap. The feature schedules show both sheet-face coordinates; the carrier drawing states the main-face thickness. Side-angle attachment and weld qualification remain part of fabrication detailing.
+The front carriers combine 2 mm faces with 1.5 mm side angles. On the 9U carrier, grille mounting bores pass through 3.5 mm where sheets overlap. The lower rear panel and module rear sill combine 1.2 mm webs with 1.5 mm returns. Their drawings identify these as joined sheet assemblies. Side-angle attachment and weld qualification remain part of fabrication detailing.
+
+The lower eight-position bank uses 15 × 103 mm apertures on 20.32 mm centres. Its separate toe strip has eight 10.79 × 1.30 mm edge-open notches. Seven proposed underside fillet welds, each 6 mm long with a nominal 1 mm leg, sit between the notches. The drawing gives their coordinates. Nominal weld envelopes clear the modeled hardware; strength, distortion and bracket-gauge acceptance require qualification.
+
+The drawing coverage report accounts for all fabricated parts in both chassis and both module fan configurations. Flat plates have overall dimensions and opening schedules. Non-flat parts also have formed sections and planar surface extents. Open-edge details supplement closed-hole schedules. Section coordinates define nominal formed geometry; they do not supply a qualified bend allowance or developed blank.

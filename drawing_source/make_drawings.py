@@ -112,7 +112,7 @@ for x,label,pcb,top in [(55,'Motherboard',1.57,5),(610,'GPU backplane',2.5,6)]:
   c.setFillColor(HexColor(color));c.rect(x+25,z0+level*scl,110 if level!=2 else 38,thick*scl,fill=1,stroke=0);c.setFillColor(navy);c.setFont('Helvetica',10);c.drawString(x+155,z0+(level+thick/2)*scl,txt)
 new('Adjustable backplane supports and retention geometry')
 y=H-85
-rows=[['Feature','Nominal value / constraint'],['Crossbar standoff X travel','32 to 408 in construction X, equivalent to exported X 408 to 32. Six posts selected; quantity/location must follow supplier board drawing.'],['Crossbar Y travel','169.5 to 390.5 construction Y, exported Y 222.7 to 443.7. End limits keep the 7 mm square nut fully inside the guide strips.'],['Selected crossbar Y','225.0, 318.5, 434.2 exported coordinates.'],['Rail nut guide gap','7.2 for nominal 7.0 square nut. Verify nut tolerance and coating allowance before release.'],['Populated socket centres','40.64 pitch, ten positions; rear bracket pitch 20.32. Two additional board sockets lie 20.32 from each populated end.'],['Card/bracket relationship','Bracket centre offset 7.155 from card plane; retention screw 2.055 from card plane on the opposite side. Same datum used for sockets and chassis.'],['Bracket bearing height','374.46 in module; 302.21 in full chassis. Lower motherboard bracket bearing 129.28.'],['Backplane support heights','Tray top + 6.5 to rail top; crossbar top is tray datum +10; PCB underside tray datum +18.'],['PCB mounting details','Obround holes and component details are photo estimates. Sliding supports accommodate variable holes but do not correct a different socket-to-bracket datum.']]
+rows=[['Feature','Nominal value / constraint'],['Crossbar standoff X travel','32 to 408 in construction X, equivalent to exported X 408 to 32. Six posts selected; quantity/location must follow supplier board drawing.'],['Crossbar Y travel','169.5 to 390.5 construction Y, exported Y 222.7 to 443.7. End limits keep the 7 mm square nut fully inside the guide strips.'],['Selected crossbar Y','225.0, 318.5, 434.2 exported coordinates.'],['Rail nut guide gap','7.2 for nominal 7.0 square nut. Verify nut tolerance and coating allowance before release.'],['Populated socket centres','40.64 pitch, ten positions; rear bracket pitch 20.32. Two additional board sockets lie 20.32 from each populated end.'],['Card/bracket relationship','Bracket centre offset 7.155 from card plane; retention screw 2.055 from card plane on the opposite side. Same datum used for sockets and chassis.'],['Bracket bearing height','374.46 in module; 302.21 in full chassis. Lower motherboard bracket bearing 129.28.'],['Backplane support heights','Tray underside is the datum. Tray top = datum +1.5; rail top = datum +8; crossbar top = datum +10; PCB underside = datum +18. See installed-level schedule.'],['PCB mounting details','Obround holes and component details are photo estimates. Sliding supports accommodate variable holes but do not correct a different socket-to-bracket datum.']]
 y=table(rows,32,y,[210,910],11)
 y=para('Set board position with the GPU bracket datum first. Then move supports to verified mounting holes. Fit all required supports without bending the PCB. Before a populated build, check that posts, washers and crossbars clear every underside component. The 0.64 mm nominal gap between 40 mm cards leaves little tolerance; physical card width and straightness must be checked.',32,y,1120,12)
 if not mod:
@@ -155,10 +155,14 @@ if mod:
  rows=[['Feature','140 mm option','120 mm option'],['Manufacturer reference','Noctua NF-A14 industrialPPC','Noctua NF-A12x25 PWM'],['Frame / padded envelope','140 × 140 × 25 / 141 × 141 × 27','120 × 120 × 25 / 120 × 120 × 27'],['Fan centres / pitch','X78, 220, 362; Z310.9 / 142','Same centres and pitch'],['Hole pattern','124.5 × 124.5','105 × 105'],['Outer / shared slots','9 × 5.5 / 27 × 5.5','7 × 5.5 / 44 × 5.5'],['Mounting axes X','15.75, 140.25, 157.75, 282.25, 299.75, 424.25','25.5, 130.5, 167.5, 272.5, 309.5, 414.5'],['Mounting axes Z','248.65, 373.15','258.4, 363.4'],['Air opening','136 diameter','116 diameter in each blanking plate'],['Blanking plates','Not installed','Three 140 × 140 × 1; retained by fan screws'],['Plastic penetration with 5 × 8 screw','5 including tip','4 including tip; verify fan retention'],['Assembly','Carrier → front pad → fan','Carrier → blanking plate → front pad → fan']]
  y=table(rows,32,H-85,[215,455,455],10)
  para('The shared horizontal obround connects the adjacent screw positions of two neighbouring fans. Hole pitch comes from fan manufacturer specifications. Slot lengths provide clearance for those axes and are not traced dimensions from the SilverStone photographs. The blanking plates close the 136 mm openings around 120 mm frames. Both configurations use one common full-face grille with access for either screw pattern. Change fans and blanking plates with the grille removed; no carrier replacement or underside nuts are required.',32,y,1120,11)
+from section_drawings import draw_sections,material_note
+from interface_drawings import interface_details
 from feature_drawings import draw_feature_pages
 from rear_drawings import rear_details, enlarged_details
 rear_details(parts,root,(c,new,para,table,view,W,H,out))
 enlarged_details((c,new,para,table,view,W,H,out))
+interface_details(parts,mod,(c,new,para,table,view,W,H,out))
+coverage=[]
 # Each fabricated sheet-metal part receives a drawing and exact coordinate schedule.
 fasttokens=('nut','screw','standoff','washer','M3','M4')
 fabricated=[a for a in parts if a['role']=='fabricated' and a['group'] not in ('fasteners','intake_fasteners','adapter_fasteners','hold_downs','rear_release','partition_screws','lid_screws','lid_guides') and (not any(t in a['name'] for t in fasttokens) or '_guide_strip_' in a['name'])]
@@ -181,7 +185,7 @@ for idx,a in enumerate(fabricated):
  if 'Screw_mounted_3mm' in name:thickness=3.0
  if '1mm_perforated_grille' in name or '1mm_blanking_plate' in name:thickness=1.0
  c.setFont('Helvetica',8);c.setFillColor(navy);c.drawString(35,389,'Feature coordinates: drawings/coordinates/'+name+'.csv')
- c.drawString(35,377,f'Nominal steel sheet thickness: {thickness:.3f} mm. Material grade, finish and production tolerances require release review.')
+ para(material_note(name),35,377,1120,9)
  features=[]
  for e in s.Edges():
   typ=e.geomType()
@@ -192,6 +196,7 @@ for idx,a in enumerate(fabricated):
  fields=['type','x','y','z','radius','axis_x','axis_y','axis_z','end_x','end_y','end_z','length'];csvwrite(out/'coordinates'/(name+'.csv'),fields,features)
  part_rows.append({'name':name,'drawing_sheet':page,'group':a['group'],'x_mm':d[0],'y_mm':d[1],'z_mm':d[2],'volume_mm3':s.Volume(),'analytic_edge_records':len(features)})
  draw_feature_pages(a,(c,new,para,table,view,W,H,out))
+ coverage.append(draw_sections(a,(c,new,para,table,view,W,H,out)))
  print('Drawing',idx+1,'/',len(fabricated),name,flush=True)
 # BOM lists every individual modeled item; bought items remain reference envelopes.
 fields=['name','group','role','quantity','moves_with_cartridge'];bom=[{k:a[k] for k in ('name','group','role')}|{'quantity':1,'moves_with_cartridge':a['moving']} for a in parts if a['role']!='clearance' and a['group']!='board_alternatives'];csvwrite(out/'assembly_bom.csv',fields,bom)
@@ -200,6 +205,7 @@ for start in range(0,len(part_rows),24):
  new('Fabricated-part drawing index')
  rows=[['Part identifier','Sheet','Group','Overall X × Y × Z']]+[[a['name'],a['drawing_sheet'],a['group'],' × '.join(f'{a[k]:.2f}' for k in ('x_mm','y_mm','z_mm'))] for a in part_rows[start:start+24]]
  table(rows,32,H-85,[640,55,140,285],9)
+(out/'specificity_coverage.json').write_text(json.dumps(coverage,indent=2))
 c.save();(out/'drawing_manifest.json').write_text(json.dumps({'pdf':pdf.name,'pages':page,'fabricated_parts':len(fabricated),'drawing_index':index,'status':'engineering review; fabrication holds apply'},indent=2));print('PDF',pdf,page,'pages',flush=True)
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'cad_source'))

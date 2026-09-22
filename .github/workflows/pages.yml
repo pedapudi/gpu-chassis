@@ -1,0 +1,45 @@
+name: Publish engineering viewers
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+      - name: Read bundle version
+        run: |
+          python3 - <<'PY'
+          import json, os
+          config = json.load(open('bundle.json'))
+          with open(os.environ['GITHUB_ENV'], 'a') as out:
+              out.write('BUNDLE_RELEASE=' + config['release'] + '\n')
+              out.write('BUNDLE_ASSET=' + config['asset'] + '\n')
+          PY
+      - name: Download engineering bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$BUNDLE_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern "$BUNDLE_ASSET"
+      - name: Verify and prepare site
+        run: python3 scripts/prepare_pages.py "$BUNDLE_ASSET" --out _site
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Deploy site
+        id: deployment
+        uses: actions/deploy-pages@v4

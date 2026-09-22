@@ -10,7 +10,8 @@ def rear_details(parts, root, api):
     toe=next(p for p in parts if p['name']=='Upper_bank_toe_receiver')
     new('GPU rear panel | apertures, pitch and screw axes',rear['name']+'::interface')
     para('Twenty rear bracket positions serve ten dual-slot GPUs. Apertures and screw holes are different features. Chassis openings below are design dimensions; the PCIe bracket and slot-pitch references do not certify the supplier backplane mounting datum.',32,H-82,W-64,11)
-    view(rear['shape'],(35,300,1100,350),(0,1,0),'Exterior rear (+Y): X increases to the LEFT. Rear sheet front surface Y469.000.','gpu_rear_interface')
+    from drawing_annotations import rear_elevation
+    rear_elevation(rear['shape'],c,180+shift,True)
     rows=[['Feature','Dimensions and location'],['20 main PCIe apertures','15.000 wide × 103.000 high; nominal R0 corners. X centre = bracket axis. Bottom Z'+f'{196.68+shift:.3f}; top Z{299.68+shift:.3f}.'],['Bracket spacing','20.320 centre pitch; 40.640 per dual-slot card; 5.320 nominal web between 15.000 apertures.'],['20 retention bores','DIA 3.900 / R1.950 THRU, normal Z, for #6-32 clearance. Y474.080; X = bracket centre + 9.210.'],['20 nut reliefs','10.000 wide × 3.578 high, cut from Y468 to 472. Bottom Z'+f'{top-1.5-2.778-.5:.3f}; top Z{top-1.2:.3f}. Centred on screw X. Reliefs join adjacent aperture edges near the top.'],['4 side-return holes','DIA 3.400 / R1.700 THRU, normal X. Y477.200; Z'+f'{205+shift:.3f} and {290+shift:.3f}; two holes per side.']]
     table(rows,32,288,[205,W-269],10)
     new('GPU rear panel | bracket and retention coordinate schedule',rear['name']+'::axes')
@@ -31,10 +32,11 @@ def rear_details(parts, root, api):
     para('The proposed toe weld requires prototype qualification for strength, distortion and bracket-gauge acceptance. Qualify forming tolerances and retention-nut capture separately. Rack ears use screw joints.',32,105,W-64,10)
 
 
-def enlarged_details(api):
+def enlarged_details(api,lower=False):
     c,new,para,table,view,W,H,out=api
-    new('GPU bracket interface | enlarged dimension details','Full_width_twenty_slot_rear_with_side_returns::dimensions')
-    para('Coordinate views below use X to the right. Dimensions define the nominal cut features; the twenty-position coordinate schedule locates them on the rear panel. Nut reliefs join the aperture edges as shown on the full rear elevation.',32,H-82,W-64,11)
+    count=8 if lower else 20
+    new(('Motherboard' if lower else 'GPU')+' bracket interface | enlarged dimension details',('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns' if lower else 'Full_width_twenty_slot_rear_with_side_returns')+'::dimensions')
+    para('Coordinate views below use X to the right. Dimensions define the nominal cut features; the bracket-position coordinate schedule locates them on the rear panel. Nut reliefs join the aperture edges as shown on the full rear elevation.',32,H-82,W-64,11)
     def dimension(x1,y1,x2,y2,text,vertical=False,label_offset=-9):
         c.setLineWidth(.5);c.line(x1,y1,x2,y2)
         for x,y in ((x1,y1),(x2,y2)):c.line(x-3,y-3,x+3,y+3)
@@ -51,14 +53,14 @@ def enlarged_details(api):
     dimension(x-28,y,x-28,y+h,'103.000',True)
     dimension(x+w/2,y+h+30,x+w/2+pitch,y+h+30,'20.320 centres')
     dimension(x+w,y+90,x+pitch,y+90,'5.320 web')
-    para('MAIN APERTURES<br/>20 × 15.000 × 103.000<br/>Nominal corner R0<br/>Bracket width 18.420<br/>1.710 overlap per side',335,595,230,12)
+    para(f'MAIN APERTURES<br/>{count} × 15.000 × 103.000<br/>Nominal corner R0<br/>Bracket width 18.420<br/>1.710 overlap per side',335,595,230,12)
     c.setFont('Helvetica-Bold',12);c.drawString(660,680,'RETENTION SHELF - TOP VIEW')
     cx=800;cy=570;s=12;r=1.95*s
     c.circle(cx,cy,r,stroke=1,fill=0);c.setDash(4,3);c.line(cx-65,cy,cx+65,cy);c.line(cx,cy-55,cx,cy+55);c.setDash()
     c.line(cx+r*.707,cy+r*.707,950,630);c.setFont('Helvetica',12);c.drawString(955,630,'DIA 3.900 / R1.950')
     c.setDash(4,3);c.line(cx-9.21*s,cy-55,cx-9.21*s,cy+55);c.setDash()
     dimension(cx-9.21*s,cy-65,cx,cy-65,'9.210 to bracket axis')
-    c.setFont('Helvetica',10);c.drawString(660,455,'20 bores, pitch 20.320; #6-32 screw clearance')
+    c.setFont('Helvetica',10);c.drawString(660,455,f'{count} bores, pitch 20.320; #6-32 screw clearance')
     c.setFont('Helvetica-Bold',12);c.drawString(660,390,'TOE NOTCH - TOP VIEW')
     x=675;y=310;s=12;length=24;depth=4;left=(length-10.79)/2
     pts=[(0,0),(length,0),(length,depth),(left+10.79,depth),(left+10.79,depth-1.3),(left,depth-1.3),(left,depth),(0,depth),(0,0)]
@@ -69,5 +71,5 @@ def enlarged_details(api):
     dimension(x+length*s+35,y+(depth-1.3)*s,x+length*s+35,y+depth*s,'1.300',True,20)
     c.line(x+(left+10.79)*s,y+(depth-1.3)*s,x+length*s+40,y+(depth-1.3)*s)
     c.line(x+length*s,y+depth*s,x+length*s+40,y+depth*s)
-    para('20 open notches, pitch 20.320. Strip thickness 1.500. The 10.190 × 0.860 bracket toe has 0.600 total lateral clearance and 0.440 total fore-aft clearance.',660,265,450,11)
+    para(f'{count} open notches, pitch 20.320. Strip thickness 1.500. The 10.190 × 0.860 bracket toe has 0.600 total lateral clearance and 0.440 total fore-aft clearance.',660,265,450,11)
     para('The lower locator stays in place for card removal. Welds are below the strip, between notches. Inspect notch width and seating alignment after welding and finishing.',660,170,450,11)

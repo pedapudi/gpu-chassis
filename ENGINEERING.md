@@ -56,7 +56,7 @@ Before removing a GPU or the cartridge, disconnect and withdraw the external cab
 
 The reports distinguish analytic solid validity, static intersections, sampled removal paths, driver access and OpenSCAD mesh agreement. These are nominal geometry checks, not a production tolerance analysis or a physical assembly trial. Flexible cable routes are occupancy envelopes; they do not certify bend radius, connector strain or available harness length.
 
-The 9U model provides six upper 120 × 38 mm fans and three assumed 38 mm AIO fans. Fan mounting pitch is 105 × 105 mm, referenced to the ARCTIC P12 engineering drawing; the P12 itself is a 25 mm fan. Select and verify the actual 38 mm fan. The two lower exhaust fans use the nominal 80 mm / 71.5 mm mounting pattern. The module uses the [Noctua NF-A14 industrialPPC mounting reference](https://www.noctua.at/en/products/nf-a14-industrialppc-3000-pwm/specifications): 140 × 140 × 25 mm bare, 141 × 141 × 27 mm padded, and 124.5 mm square hole pitch. Centres are X78, 220 and 362 mm at Z310.9 mm. Pads have nominal corner outlines within the published envelope. The 142 mm centre pitch leaves 1 mm gaps between padded fans.
+The 9U model offers six upper 120 × 38 mm fans in two rows, two 180 × 32 mm fans, or three 120 × 38 mm fans. Each option retains three assumed 38 mm AIO fans. Fan mounting pitch is 105 × 105 mm, referenced to the ARCTIC P12 engineering drawing; the P12 itself is a 25 mm fan. Select and verify the actual 38 mm fan. The two lower exhaust fans use the nominal 80 mm / 71.5 mm mounting pattern. The module uses the [Noctua NF-A14 industrialPPC mounting reference](https://www.noctua.at/en/products/nf-a14-industrialppc-3000-pwm/specifications): 140 × 140 × 25 mm bare, 141 × 141 × 27 mm padded, and 124.5 mm square hole pitch. Centres are X78, 220 and 362 mm at Z310.9 mm. Pads have nominal corner outlines within the published envelope. The 142 mm centre pitch leaves 1 mm gaps between padded fans.
 
 The AIO model reserves a 394 × 120 × 28 mm radiator. Radiator screw thread, allowable penetration and supplied screw lengths must be verified with the cooler hardware before release, particularly with 38 mm fans. Radiator mounting screws remain procurement/interface details rather than qualified component models. Chassis fan screws follow the [Noctua self-tapping installation method](https://www.noctua.at/en/support/faqs/how-do-i-install-a-case-fan); an [ARCTIC case-fan screw](https://www.arctic.de/en/Case-Fan-Screw/C-S-50-080B00) is a commercially available reference. The nominal screw model does not replace the selected fan supplier specification.
 
@@ -106,4 +106,23 @@ The front carriers combine 2 mm faces with 1.5 mm side angles. On the 9U carrier
 
 The lower eight-position bank uses 15 × 103 mm apertures on 20.32 mm centres. Its separate toe strip has eight 10.79 × 1.30 mm edge-open notches. Seven proposed underside fillet welds, each 6 mm long with a nominal 1 mm leg, sit between the notches. The drawing gives their coordinates. Nominal weld envelopes clear the modeled hardware; strength, distortion and bracket-gauge acceptance require qualification.
 
-The drawing coverage report accounts for all fabricated parts in both chassis and both module fan configurations. Flat plates have overall dimensions and opening schedules. Non-flat parts also have formed sections and planar surface extents. Open-edge details supplement closed-hole schedules. Section coordinates define nominal formed geometry; they do not supply a qualified bend allowance or developed blank.
+The drawing coverage report accounts for all fabricated parts in both chassis and all five intake configurations. Flat plates have overall dimensions and opening schedules. Non-flat parts also have formed sections and planar surface extents. Open-edge details supplement closed-hole schedules. Section coordinates define nominal formed geometry; they do not supply a qualified bend allowance or developed blank.
+
+## Full-chassis single-row intake options
+
+The two single-row options use a common front carrier and full-face grille with interchangeable 390 × 220 × 2 mm inserts. Body height remains 399.25 mm and GPU tray height remains Z 170. These options do not establish that a shorter enclosure fits the hardware or cools adequately.
+
+| Upper intake | Fan centres X / Z | Frame depth | Mounting pitch | Air opening |
+| --- | --- | --- | --- | --- |
+| Two 180 mm fans | 128, 312 /270 | 32 | 165 square | Diameter 175 |
+| Three 120 mm fans | 100, 220, 340 /270 | 38 allowance | 105 square | Diameter 116 |
+
+The 180 mm reference is the [SilverStone AP183 engineering drawing](https://www.silverstonetek.com/upload/goods_cable_define/fan-cable-define.pdf). It specifies a 180 ×180 ×32 frame, 165 mm square mounting, 4.5 mm fan bores and a recommended 175 mm panel aperture. Fan frame and rotor details remain simplified reference envelopes. Do not assume another 180 mm model uses the same pattern.
+
+Both inserts have horizontal clearance slots 5.5 mm wide with R 2.75 ends. Outer slots are 9 mm long. Shared slots are 24.5 mm long for the 180 mm pair and 24 mm for the 120 mm row. Four nominal 5 ×8 self-tapping screws per fan penetrate 6 mm into plastic, including the tip. Confirm the selected fan's approved screw and retention torque.
+
+The carrier has a 392 ×222 opening, leaving 1 mm clearance at each insert edge. A factory-attached 398 ×240 ×2 mm backing ring provides a 370 ×200 clear window behind it. Six M3 ×8 screws enter from the front and engage standard M3 nuts captured behind the ring before installation. The modeled joint has 4 mm of sheet and 2.4 mm of nut, with 1.6 mm nominal tip projection. The ring remains fixed when the insert is removed; qualify its attachment strength and distortion before fabrication.
+
+For service, remove the full-face grille, disconnect fan leads and remove the six insert screws. Pull the insert and its fans straight forward. The two 180 mm frames occupy 364 mm across the 370 mm backing opening, giving 3 mm clearance per side; the 120 mm row leaves 5 mm per side. Fan leads need disconnectable service length. The original six-fan option uses its separate two-row carrier; changing between that carrier and the single-row carrier requires front-panel replacement.
+
+`full_intake_checks.json` records validity, changed-part intersections, mounting and airflow gauges, and sampled forward removal. It also verifies 558 common analytic parts against the six-fan chassis. STEP round-trip checks and OpenSCAD mesh checks accompany each single-row option. Static geometry checks do not establish comparative airflow, acoustic performance or GPU temperature.

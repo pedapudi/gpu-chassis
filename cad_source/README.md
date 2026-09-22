@@ -5,3 +5,5 @@ Create a virtual environment and install `requirements.txt` there. Run `python c
 Lengths are millimetres. The source uses a construction X axis that is reflected into the exported right-handed assembly coordinates. See the package datum definition before editing hardware locations.
 
 The native OpenSCAD assembly is in each design folder. Its per-part modules are faceted geometry. `modular/openscad/lid_adapter_parametric.scad` is an editable CSG template for the provisional OEM interface. OEM verification is false by default.
+
+The full chassis supports `nine-u` (six 120 mm upper fans), `nine-u-180` (two 180 mm fans), and `nine-u-120` (three 120 mm fans). `both` builds these three configurations and both module configurations. The single-row variants derive from the same full-chassis assembly and replace its front intake hardware. `full_intake.py` defines their analytic geometry in exported assembly coordinates.

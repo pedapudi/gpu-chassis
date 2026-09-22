@@ -24,7 +24,7 @@ parts=[]
 for a in pickle.loads((root/'parts.brep.pickle').read_bytes()):
  a['shape']=cq.Shape.importBrep(io.BytesIO(a.pop('brep')));parts.append(a)
 checks=json.loads((root/'validation.json').read_text())
-mod=variant.startswith('modular');fan_size=checks.get('fan_size_mm',120);title='RM53-502 replacement-lid GPU module' if mod else '9U motherboard and GPU chassis'
+mod=variant.startswith('modular');fan_size=checks.get('fan_size_mm',120);intake_mode=checks.get('full_intake_mode');title='RM53-502 replacement-lid GPU module' if mod else '9U motherboard and GPU chassis'
 pdf=out/('rm53-502-module-drawings.pdf' if mod else 'nine-u-chassis-drawings.pdf')
 c=canvas.Canvas(str(pdf),pagesize=landscape(A3),pageCompression=1);c.setTitle(title+' | nominal formed geometry');c.setAuthor('');c.setCreator('');c.setProducer('');c.setSubject('Engineering review drawings; fabrication hold points apply')
 W,H=landscape(A3);page=0;index=[]
@@ -71,7 +71,7 @@ def csvwrite(p,fields,rows):
 new('Assembly dimensions and release conditions')
 y=H-85
 y=para('Two serviceable sheet-metal assemblies share a removable twenty-position GPU cartridge. The 9U enclosure includes a motherboard layer; the replacement-lid module attaches above an existing RM53-502. The OEM chassis in the modular model is an external size reference only.',32,y,530,12)
-rows=[['Dimension','Nominal value'],['Body width / depth','440 / 485'],['Rack face width','482.6'],['Height', '399.55 total study envelope; 177.30 upper module' if mod else '399.25 (9 × 44.45 minus 0.80)'],['GPU tray floor Z','242.25' if mod else '170.00'],['Upper slots / GPU count','20 positions / 10 dual-slot reference cards'],['Slot pitch / populated GPU pitch','20.32 / 40.64'],['GPU fans',f'3 × {fan_size} × 25; 27 with pads' if mod else '6 × 120 × 38, two rows'],['Lower cooling','OEM installation to be measured' if mod else 'XE360-TR5 394 × 120 × 28 + 38 mm fans'],['Backplane PCB','429 × 225 × 2.5; mechanical details from photographs']]
+rows=[['Dimension','Nominal value'],['Body width / depth','440 / 485'],['Rack face width','482.6'],['Height', '399.55 total study envelope; 177.30 upper module' if mod else '399.25 (9 × 44.45 minus 0.80)'],['GPU tray floor Z','242.25' if mod else '170.00'],['Upper slots / GPU count','20 positions / 10 dual-slot reference cards'],['Slot pitch / populated GPU pitch','20.32 / 40.64'],['GPU fans',f'3 × {fan_size} × 25; 27 with pads' if mod else (f"{checks['upper_fan_count']} × {fan_size} × {checks['upper_fan_depth_mm']}, one row" if intake_mode else '6 × 120 × 38, two rows')],['Lower cooling','OEM installation to be measured' if mod else 'XE360-TR5 394 × 120 × 28 + 38 mm fans'],['Backplane PCB','429 × 225 × 2.5; mechanical details from photographs']]
 y=table(rows,32,y,[215,315])
 y=para('Datum: exported X=0 at the body left in the front view; Y=0 at the front-panel plane; Z=0 at the enclosure underside. Front view looks toward +Y. Rear view looks toward -Y. Coordinates in the schedules are assembly coordinates, not developed-blank coordinates.',32,y,530)
 right=H-85
@@ -131,7 +131,7 @@ else:
  para('Place the removed OEM cover on a flat datum. Record every side screw centre from its front edge and seating plane, separately for left and right. Record flange thickness, offset, engagement and all tabs. Transfer the verified pattern to the parameterized adapter source; do not drill from this provisional drawing.',32,240,660,12)
  para('The six module-to-adapter holes are design dimensions: X=10 and 430; Y=80, 242.5 and 410; diameter 3.4. Those are separate from the unknown OEM screws. Attach the empty module before its internal components obstruct these top-access screws.',720,225,430,11)
 new('Nominal clearances, verification scope and hold points')
-rows=[['Check','Result / limitation'],['Analytic solids','Every source solid must pass BRep validity and positive-volume checks. Exact solid intersections are listed in validation reports.'],['Part-to-part checks','All non-alternative parts are compared; intended reference contacts and OEM proxy overlap are recorded separately. Do not interpret excluded proxy volume as a verified OEM interior.'],['OpenSCAD / STEP agreement','Each SCAD part is compiled to STL. Watertightness, positive volume and bounds are compared against the source tessellation. Analytic STEP remains the dimensional master.'],['Service motion','Cartridge and card paths are sampled at the reported positions. Driver-access checks use the documented assembly order. These do not certify flexible cable bends or physical latch operation.'],['PSU clearance','Side bearing M3 × 6 screw tip to PSU nominal envelope: 0.5 mm. Tolerance-sensitive; verify before fabrication.'],['Fan / I/O carrier','80 mm exhaust bottom Z70; I/O carrier top Z68: 2.0 mm nominal.'],['GPU neighbor clearance','40.64 pitch minus 40.00 width = 0.64 mm nominal. Supplier dimensional tolerance required.'],['Power cables','Forward connectors and a 35 mm straight lead are occupancy allowances. Select actual cables; check their bend radius, plug latch and connector approach.'],['Cooling','6 upper intakes in 9U, 3 in module. One full-face grille per fabricated front face, including the AIO area in 9U. Uniform 9 mm perforations on 10 mm staggered pitch; lands retained around fasteners. Thermal performance is unqualified.'],['Backplane / OEM measurements','Hole locations and plug/slot details from photos are not precision mechanical evidence. OEM lid holes/profile remain unmeasured.']]
+rows=[['Check','Result / limitation'],['Analytic solids','Every source solid must pass BRep validity and positive-volume checks. Exact solid intersections are listed in validation reports.'],['Part-to-part checks','All non-alternative parts are compared; intended reference contacts and OEM proxy overlap are recorded separately. Do not interpret excluded proxy volume as a verified OEM interior.'],['OpenSCAD / STEP agreement','Each SCAD part is compiled to STL. Watertightness, positive volume and bounds are compared against the source tessellation. Analytic STEP remains the dimensional master.'],['Service motion','Cartridge and card paths are sampled at the reported positions. Driver-access checks use the documented assembly order. These do not certify flexible cable bends or physical latch operation.'],['PSU clearance','Side bearing M3 × 6 screw tip to PSU nominal envelope: 0.5 mm. Tolerance-sensitive; verify before fabrication.'],['Fan / I/O carrier','80 mm exhaust bottom Z70; I/O carrier top Z68: 2.0 mm nominal.'],['GPU neighbor clearance','40.64 pitch minus 40.00 width = 0.64 mm nominal. Supplier dimensional tolerance required.'],['Power cables','Forward connectors and a 35 mm straight lead are occupancy allowances. Select actual cables; check their bend radius, plug latch and connector approach.'],['Cooling','Selectable full-chassis intake: six 120 mm, two 180 mm or three 120 mm. Module: three fans. One full-face grille per fabricated front face, including the AIO area in 9U. Uniform 9 mm perforations on 10 mm staggered pitch; lands retained around fasteners. Thermal performance is unqualified.'],['Backplane / OEM measurements','Hole locations and plug/slot details from photos are not precision mechanical evidence. OEM lid holes/profile remain unmeasured.']]
 if mod:
  rows=[row for row in rows if row[0] not in ('PSU clearance','Fan / I/O carrier')]
  rows.insert(4,['Fan intake','Common 136 mm carrier openings. '+('140 mm frames with 141 mm padded width; 1 mm padded interfan gap.' if fan_size==140 else '120 mm frames with 116 mm blanking-plate openings; 22 mm frame gap.')])
@@ -140,6 +140,7 @@ table(rows,32,H-85,[240,885],11)
 new('Engineering references')
 sources=[('Motherboard hole selection','ASUS Pro WS WRX90E-SAGE SE manual, printed page 2-13','https://dlcdnets.asus.com/pub/ASUS/mb/SocketsTR5/Pro_WS_WRX90E-SAGE_SE/E22564_Pro_WS_WRX90E-SAGE_SE_EM_WEB.pdf'),('Motherboard dimensional datum','SSI EEB 2011 v1.0.1, Figure 2','https://www.snia.org/sites/default/files/SSIF/2018-05-31/SSI%20EEB%202011%201.0.1.pdf'),('Standoff','Harwin R30-1000802; M3 through thread, 8 mm, 5 mm AF','https://www.harwin.com/products/R30-1000802'),('Fan spacing','ARCTIC P12 engineering drawing: 120 mm frame, 105 mm mounting pitch','https://support.arctic.de/p12'),('PSU envelope','ASUS Pro WS 3000P technical specifications','https://www.asus.com/my/motherboards-components/power-supply-units/workstation/asus-pro-ws-3000p/techspec/'),('Radiator envelope','SilverStone XE360-TR5 technical specifications','https://www.silverstonetek.com/en/product/info/coolers/xe360_tr5/'),('OEM body dimensions','SilverStone RM53-502; external envelope only','https://www.silverstonetek.com/en/product/info/computer-chassis/rm53_502/'),('Backplane reference','Miwin 12-slot PCIe 5.0 switch GPU expansion board; product photos and overall dimensions','https://www.miwinchina.com/product/12slot-pcie-50-switch-gpu-expansion-board.html')]
 if mod:sources[3]=('Fan mounting envelope','Noctua NF-A14: 124.5 square mounting; NF-A12x25: 105 square mounting. See fan option schedule.','https://www.noctua.at/en/products/nf-a12x25-pwm/specifications')
+if intake_mode=='2x180':sources[3]=('Fan mounting envelope','SilverStone AP183: 180 × 180 × 32; 165 square pitch; DIA175 panel opening','https://www.silverstonetek.com/upload/goods_cable_define/fan-cable-define.pdf')
 y=H-85
 for h,t,url in sources:y=para(f'<b>{h}</b> — {t}<br/><link href="{url}" color="#17647b">{url}</link>',32,y,1120,10)
 if mod:
@@ -162,6 +163,13 @@ from rear_drawings import rear_details, enlarged_details
 rear_details(parts,root,(c,new,para,table,view,W,H,out))
 enlarged_details((c,new,para,table,view,W,H,out))
 interface_details(parts,mod,(c,new,para,table,view,W,H,out))
+if not mod:
+ from drawing_annotations import lower_rear_sheet
+ lower_rear_sheet(parts,(c,new,para,table,view,W,H,out))
+ enlarged_details((c,new,para,table,view,W,H,out),lower=True)
+if intake_mode:
+ from drawing_annotations import intake_sheet
+ intake_sheet(parts,checks,(c,new,para,table,view,W,H,out))
 coverage=[]
 # Each fabricated sheet-metal part receives a drawing and exact coordinate schedule.
 fasttokens=('nut','screw','standoff','washer','M3','M4')
@@ -181,7 +189,7 @@ for idx,a in enumerate(fabricated):
  para('Reference edge diameters (not a hole schedule): '+(', '.join(f'{q:.3f}' for q in radii) if radii else 'none')+' mm. See following hole/cutout sheets for sizes, radii and centres.',35,H-99,1120,9)
  thickness=1.5
  if any(t in name for t in ('1p2mm','_guide_strip_')) or name=='Full_width_twenty_slot_rear_with_side_returns':thickness=1.2
- if any(t in name for t in ('Longitudinal_mount_rail','Sliding_crossbar','WRX90_board_specific','Front_fan_carrier','Upper_module_front_dual')):thickness=2.0
+ if any(t in name for t in ('Longitudinal_mount_rail','Sliding_crossbar','WRX90_board_specific','Front_fan_carrier','Upper_module_front_dual','Full_chassis_upper_intake_insert')):thickness=2.0
  if 'Screw_mounted_3mm' in name:thickness=3.0
  if '1mm_perforated_grille' in name or '1mm_blanking_plate' in name:thickness=1.0
  c.setFont('Helvetica',8);c.setFillColor(navy);c.drawString(35,389,'Feature coordinates: drawings/coordinates/'+name+'.csv')

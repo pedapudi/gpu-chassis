@@ -14,12 +14,12 @@ def fmt(x):return f'{x:.4f}'.rstrip('0').rstrip('.')
 
 def material_note(name):
     if name in ('Front_fan_carrier_with_side_returns','Upper_module_front_dual_120_140mm_fan_carrier'):
-        return 'Joined sheet assembly: 2.000 front web; 1.500 side angles. '+('Grille fixing lands overlap to 3.500. ' if name=='Front_fan_carrier_with_side_returns' else '')+'Do not form this as a uniform-thickness blank.'
+        return 'Joined sheet assembly: 2.000 front web; 1.500 side angles. '+('Grille fixing lands overlap to 3.500. Single-row options add a 2 mm backing ring at Y2–4, factory attached before fitting the removable insert. ' if name=='Front_fan_carrier_with_side_returns' else '')+'Do not form this as a uniform-thickness blank.'
     if name in ('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns','Upper_module_rear_sill_with_side_returns'):
         return 'Joined sheet assembly: 1.200 rear web; 1.500 side returns. Join before fitting hardware; the modeled thickness transition is not a single-sheet bend.'
     thick=1.5
     if any(t in name for t in ('1p2mm','_guide_strip_')) or name=='Full_width_twenty_slot_rear_with_side_returns':thick=1.2
-    if any(t in name for t in ('Longitudinal_mount_rail','Sliding_crossbar','WRX90_board_specific')):thick=2
+    if any(t in name for t in ('Longitudinal_mount_rail','Sliding_crossbar','WRX90_board_specific','Full_chassis_upper_intake_insert')):thick=2
     if 'Screw_mounted_3mm' in name:thick=3
     if '1mm_perforated_grille' in name or '1mm_blanking_plate' in name:thick=1
     return f'Nominal steel sheet thickness {thick:.3f} mm. Material grade, finish and production tolerances require release review.'

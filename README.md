@@ -13,7 +13,7 @@ The viewers show a 3D model beside selectable, zoomable engineering drawing shee
 
 ## Publish the viewer
 
-GitHub Pages deploys through `.github/workflows/pages.yml` when a release is published or the workflow is run manually. `bundle.json` selects the release asset and its SHA-256 digest. The deployment verifies that digest before extracting the viewer and linked engineering files. Raw projection intermediates and compiled mesh duplicates remain in the downloadable bundle and are omitted from Pages.
+GitHub Pages deploys through `.github/workflows/pages.yml` when the main branch is updated or the workflow is run manually. `bundle.json` selects the release asset and its SHA-256 digest. The deployment verifies that digest before extracting the viewer and linked engineering files. Raw projection intermediates and compiled mesh duplicates remain in the downloadable bundle and are omitted from Pages.
 
 To preview locally, download the release ZIP to this directory and run:
 

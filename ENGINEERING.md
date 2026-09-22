@@ -10,7 +10,7 @@ Each design folder contains an assembly STEP, individual formed-part STEP files,
 
 The STEP files preserve analytic surfaces. The OpenSCAD files describe faceted part solids with editable visibility, placement and cartridge-lift controls. They are not fully dimension-parametric recreations of every manufactured part. Rebuild dimension changes with the supplied Python CAD sources. The modular folder also includes a native constructive-solid-geometry adapter template with parameters for measured OEM hole coordinates and return profiles.
 
-The drawing PDFs show nominal formed geometry. Their coordinate CSVs list analytic line endpoints and circle/arc centres in the assembly coordinate system. A circle record can represent a hole, a boss or an arc; compare it with the part drawing and STEP. Face-profile DXFs are not developed sheet-metal blanks. Do not send them directly to a laser cutter as flat patterns.
+The drawing PDFs include formed-part views, sheet thicknesses, hole and cutout schedules, location diagrams and row-by-row coordinates. Round holes show diameter and radius. Obround slots show overall length, width, end radius and length axis. Hole counts distinguish separate flanges along the normal axis. Feature JSON schedules accompany the analytic edge CSVs. An edge CSV is a geometry record, not a hole list. Face-profile DXFs are not developed sheet-metal blanks.
 
 ## Datum and hardware
 
@@ -22,7 +22,7 @@ Motherboard locations follow the SSI EEB dimensional drawing and the ten selecte
 
 The motherboard tray and backplane crossbars are prepared on the bench with screws entering the posts from below. No nut is placed behind a standoff in the installed chassis. Backplane crossbars clamp from above into standard DIN 562 M4 square thin nuts captured between sheet guide strips. Load those nuts before fixing the rails to the tray. Set the posts and crossbars before fitting the PCB.
 
-PCIe retention uses standard #6-32 screws and hex nuts captured during fabrication. Local rear-sheet reliefs clear the nut corners. Captive ordinary nuts are trapped or tack-welded before panels close access; weld details and production fixtures must be specified by the fabricator. Catalog hardware is not replaced by machined custom screw or standoff parts.
+GPU bracket retention uses standard #6-32 screws and hex nuts beneath an integral 1.2 mm rear-panel shelf. The shelf has a 90-degree outward bend with R1.2 inside and R2.4 outside. Its bearing height and screw axes match the GPU brackets. The proposed nut capture uses welding or brazing before the panel is fitted to the tray; it requires torque and service-cycle qualification. The lower motherboard bank retains its separate 1.5 mm retention strip.
 
 ## Assembly and service
 
@@ -84,3 +84,22 @@ The 120 mm option has a 2 mm carrier, 1 mm blanking plate and 1 mm front pad ahe
 The 120 mm fan reference is the Noctua NF-A12x25 PWM: 120 × 120 × 25 mm bare, 120 × 120 × 27 mm with pads, and 105 × 105 mm mounting pitch. The 140 mm fan reference is the Noctua NF-A14 industrialPPC: 140 × 140 × 25 mm bare, 141 × 141 × 27 mm with pads, and 124.5 × 124.5 mm mounting pitch. Pad outlines and rotors are simplified references. The 120 mm option retains 22 mm gaps between fan frames; its blanking plates retain 2 mm gaps. The mounting patterns are based on manufacturer specifications, not measurements scaled from photographs.
 
 Sources: [120 mm fan dimensions](https://www.noctua.at/en/products/nf-a12x25-pwm/specifications), [140 mm fan dimensions](https://www.noctua.at/en/products/nf-a14-industrialppc-3000-pwm/specifications), [SilverStone panel reference](https://www.silverstonetek.com/en/product/info/computer-chassis/rm53_502/).
+
+
+## GPU rear-panel dimensions and retained toe strip
+
+The twenty main rear apertures are 15.000 × 103.000 mm on 20.320 mm centres, leaving a nominal 5.320 mm web. These opening dimensions are chassis design choices. They are distinct from the 18.420 mm bracket width and the 40.640 mm spacing between populated GPU sockets.
+
+The retention shelf has twenty 3.900 mm diameter bores (R1.950) at Y474.080. Each bore is 9.210 mm in positive X from its bracket centre. Nut-clearance reliefs are 10.000 × 3.578 mm and join the adjacent aperture edges near the shelf. Four side-return holes are 3.400 mm diameter (R1.700). Dedicated drawing sheets provide the twenty-position coordinate schedule, section dimensions and enlarged aperture details.
+
+The toe receiver remains a separate 1.5 mm flat comb. Its twenty notches are 10.790 × 1.300 mm on 20.320 mm centres. The reference bracket toe is 10.190 × 0.860 mm, giving 0.600 mm total lateral clearance and 0.440 mm total fore-aft clearance. The locator lies above the rear web's lower edge; a simple bottom return would not reach its datum. Keeping the comb avoids individual lanced and formed tabs.
+
+The proposed factory attachment uses nineteen underside stitch fillet welds, each 6 mm long with a nominal 1 mm leg, between adjacent toe notches. Fixture the comb relative to the bracket-bearing surface and weld before rear-panel installation and coating. The strip stays on the cartridge during GPU insertion and vertical removal. Weld distortion, strength and bracket-gauge acceptance remain prototype checks. Rack ears remain screw-mounted.
+
+## Drawing interpretation and manufacture
+
+Formed-part views label exterior orientation. Feature-location diagrams instead use positive coordinate axes: the first listed axis increases right and the second increases up. Parallel sheet faces can overlap in these coordinate views; the schedule prints each normal-axis station separately. Profile-cutout bounding boxes are locators, not replacement outlines. Use the corresponding formed profile and STEP for irregular edges.
+
+The explicit R1.2 GPU retention bend is included in the STEP and OpenSCAD geometry. Other bends remain nominal sharp intersections until a fabricator sets tooling, inside radii, corner reliefs and bend deductions. All dimensions are nominal; production tolerances, material grade, finish and developed blanks are not yet released.
+
+The 9U front carrier combines a 2 mm face with 1.5 mm side angles. Grille mounting bores pass through 3.5 mm where those sheets overlap. The feature schedules show both sheet-face coordinates; the carrier drawing states the main-face thickness. Side-angle attachment and weld qualification remain part of fabrication detailing.

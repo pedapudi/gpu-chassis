@@ -6,7 +6,7 @@ from build_chassis import build as build_seed
 from build_modular import build_modular
 from gpu_geometry import neutral_headers
 import cadquery as cq
-ap=argparse.ArgumentParser();ap.add_argument('--out',type=Path,required=True);ap.add_argument('--variant',choices=['both','nine-u','modular'],default='both');a=ap.parse_args()
+ap=argparse.ArgumentParser();ap.add_argument('--out',type=Path,required=True);ap.add_argument('--variant',choices=['both','nine-u','modular','modular-120'],default='both');a=ap.parse_args()
 def save_parts(parts,out):
  out=Path(out);serial=[]
  for p in parts:
@@ -15,6 +15,8 @@ def save_parts(parts,out):
  (out/'parts.brep.pickle').write_bytes(pickle.dumps(serial));neutral_headers(out)
 if a.variant in ('both','nine-u'):
  parts,_=build_full(a.out/'nine-u',a.out/'cache',return_parts=True);save_parts(parts,a.out/'nine-u')
-if a.variant in ('both','modular'):
+if a.variant in ('both','modular','modular-120'):
  seed,_=build_seed(a.out/'intermediate-eight-u',a.out/'cache',return_parts=True)
- parts,_=build_modular(seed,a.out/'modular',return_parts=True);save_parts(parts,a.out/'modular')
+ for name,fan_size in (('modular',140),('modular-120',120)):
+  if a.variant in ('both',name):
+   parts,_=build_modular(seed,a.out/name,return_parts=True,fan_size=fan_size);save_parts(parts,a.out/name)

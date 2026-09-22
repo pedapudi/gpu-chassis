@@ -244,7 +244,7 @@ def build(out,cache,fan_size=120,return_parts=False):
   bearing=w+104.86;tip=bearing+.86-120.02;x0=centres[0]-14;ww=min(436.5,centres[-1]+14)-x0
   shelf=cut(box(x0-3,R+1.2,bearing-1.5,ww+3,10.8,1.5),[cyl(x-9.21,R+5.08,bearing-2,1.95,4) for x in centres])
   add(name+'_retention_flange',shelf,group,moving=moving)
-  profile(name+'_retention_flange',shelf,'z',bearing-1.5)
+  if name!='Upper_bank':profile(name+'_retention_flange',shelf,'z',bearing-1.5)
   toe_x=max(x0,274.5) if group=='shell' else x0
   toe=cut(box(toe_x,R-4,tip+1,x0+ww-toe_x,4,1.5),[box(x-5.395,R-1.3,tip,10.79,1.3,4) for x in centres])
   add(name+'_toe_receiver',toe,group,moving=moving)
@@ -355,6 +355,9 @@ def build(out,cache,fan_size=120,return_parts=False):
  add('Lower_PSU_harness_side_tie_tab',tab,'strain_relief')
  fast('Lower_PSU_tie_M3x8',(0,220,75),(1,0,0),'M3',8)
  add('Lower_PSU_tie_M3_nut',nut((3,220,75),(1,0,0),'M3'),'fasteners',gold)
+ from rear_panel import consolidate_gpu_rear
+ rear_panel_design=consolidate_gpu_rear(parts,out)
+ (out/'rear_panel_design.json').write_text(json.dumps(rear_panel_design,indent=2))
  rear_shape=next(a['shape'] for a in parts if a['name']=='Full_width_twenty_slot_rear_with_side_returns')
  for a in parts:
   if 'cassette_rear_captive_nut' in a['name']:

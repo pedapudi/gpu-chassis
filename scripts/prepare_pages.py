@@ -29,7 +29,7 @@ with zipfile.ZipFile(args.bundle) as archive:
         # These duplicate intermediate representations are not linked by the viewer.
         if ('drawings', 'views') == relative.parts[1:3] or ('openscad', 'compiled') == relative.parts[1:3]:
             continue
-        if relative.parts[0] == 'cad_source' or relative.name == 'SHA256SUMS.json':
+        if relative.parts[0] in ('cad_source', 'drawing_source') or relative.name == 'SHA256SUMS.json':
             continue
         destination = args.out.joinpath(*relative.parts)
         destination.parent.mkdir(parents=True, exist_ok=True)

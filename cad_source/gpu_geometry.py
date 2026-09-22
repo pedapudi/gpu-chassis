@@ -4,6 +4,6 @@ import re
 def neutral_headers(out):
  for p in Path(out).rglob('*.step'):
   s=p.read_text();m=re.search(r"FILE_NAME\('[^']*','([^']*)'",s);assert m
-  s,n=re.subn(r'FILE_DESCRIPTION\(.*?;',"FILE_DESCRIPTION(('Mechanical assembly'),'2;1');",s,count=1,flags=re.S);assert n==1
-  s,n=re.subn(r'FILE_NAME\(.*?;',f"FILE_NAME('{p.name}','{m.group(1)}',(''),(''),'','','');",s,count=1,flags=re.S);assert n==1
+  start=s.index('FILE_DESCRIPTION(');end=s.index('FILE_SCHEMA(');assert start<end
+  s=s[:start]+"FILE_DESCRIPTION(('Mechanical assembly'),'2;1');\n"+f"FILE_NAME('{p.name}','{m.group(1)}',(''),(''),'','','');\n"+s[end:]
   p.write_text(s)

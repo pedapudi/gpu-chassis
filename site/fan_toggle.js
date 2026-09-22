@@ -57,7 +57,7 @@ function setFanSize(size) {
   document.querySelector('[data-group="fans"]').parentElement.lastChild.textContent = `Three ${size} × 25 mm GPU intake fans`;
   document.querySelector('[data-group="fan_pads"]').parentElement.lastChild.textContent = `Corner pads · ${size === 140 ? 141 : 120} × ${size === 140 ? 141 : 120} × 27 mm envelope`;
   document.getElementById('fan-adapter-label').hidden = size !== 120;
-  document.getElementById('fan-status').textContent = size === 120 ? 'Includes three blanking plates' : '140 mm carrier openings';
+  document.getElementById('fan-status').textContent = size === 120 ? 'Includes three blanking plates' : '136 mm carrier openings';
   document.querySelector('h1').textContent = 'RM53-502 GPU module';
   document.title = `RM53-502 GPU module · ${size} mm fans`;
   for (const input of document.querySelectorAll('[name="fan-size"]')) input.checked = Number(input.value) === size;

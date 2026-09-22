@@ -35,6 +35,8 @@ with zipfile.ZipFile(args.bundle) as archive:
         destination.parent.mkdir(parents=True, exist_ok=True)
         with archive.open(item) as src, destination.open('wb') as dst:
             shutil.copyfileobj(src, dst)
+from combine_module_viewer import combine_module_viewer
+combine_module_viewer(args.out, ROOT)
 shutil.copy2(ROOT / 'site/index.html', args.out / 'index.html')
 (args.out / '.nojekyll').touch()
 for variant in ('nine-u', 'modular', 'modular-120'):

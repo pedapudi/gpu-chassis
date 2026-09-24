@@ -53,8 +53,8 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
   if not selected:continue
   q=move_part(p,lambda s:s.translate((0,0,lift)))
   if q['group']=='fans':q['shape']=q['shape'].translate((0,-1.5,0))
-  # Bearing-angle lower tips meet the upper module floor at its top surface.
-  if q['group']=='guides':q=move_part(q,lambda s:s.cut(box(-5,-5,0,450,495,bottom+1.5)))
+  # Bearing-angle lower tips stop above the module floor's inside bend radius.
+  if q['group']=='guides':q=move_part(q,lambda s:s.cut(box(-5,-5,0,450,495,bottom+3)))
   assert q['shape'].Volume()>0,q['name'];parts.append(q)
  # Wide connector passages line up through the module floor and forward baffle.
  passage=[cq.Workplane().add(box(x,108.2,bottom-1,195,65,5)).edges('|Z').fillet(6).val() for x in (15,230)]
@@ -89,7 +89,7 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  tools += [hole_side(12,z) for z in (242,320,388,430)]
  # Joined assembly: 2 mm front face and two 1.5 mm return strips.
  front_pieces=[form(f'Upper_module_front_carrier_{intake}_2mm_face',box(0,0,bottom,440,2,H-bottom),2,[],tools)[1]]
- front_pieces+=[form(f'Upper_module_front_carrier_{intake}_{side}_return_strip',box(x,2,bottom+2,1.5,18,H-bottom-4),1.5,[],tools)[1] for side,x in (('left',1.5),('right',437))]
+ front_pieces+=[form(f'Upper_module_front_carrier_{intake}_{side}_return_strip',box(x,2,bottom+3,1.5,18,H-bottom-5),1.5,[],tools)[1] for side,x in (('left',1.5),('right',437))]
  front=add('Upper_module_front_carrier_'+intake,union([p['shape'] for p in front_pieces]),'shell','#304553',pieces=front_pieces);profile('upper_module_front_no_returns',front,'y',0)
  all_fan_axes=sorted({a for option in INTAKES.values() for row in option for a in fan_axes(row)})
  for row in rows:
@@ -124,8 +124,8 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  # The rear sill closes the space between the module floor and removable cartridge.
  sill=union([box(1.5,469,223.75,437,1.2,20),box(1.5,470.2,223.75,1.5,13.3,20),box(437,470.2,223.75,1.5,13.3,20)])
  # Joined assembly: 1.2 mm web and two 1.5 mm return strips.
- sill_pieces=[form('Upper_module_rear_sill_1p2mm_web',box(1.5,469,223.75,437,1.2,20),1.2,[],[hole_side(477.2,233.75)])[1]]
- sill_pieces+=[form(f'Upper_module_rear_sill_{side}_return_strip',box(x,470.2,223.75,1.5,13.3,20),1.5,[],[hole_side(477.2,233.75)])[1] for side,x in (('left',1.5),('right',437))]
+ sill_pieces=[form('Upper_module_rear_sill_1p2mm_web',box(1.5,469,223.75,437,1.2,20),1.2,[],[hole_side(477.2,233.75),box(0,468,222,3,4,3.25),box(437,468,222,3,4,3.25)])[1]]
+ sill_pieces+=[form(f'Upper_module_rear_sill_{side}_return_strip',box(x,470.2,225.25,1.5,13.3,18.5),1.5,[],[hole_side(477.2,233.75)])[1] for side,x in (('left',1.5),('right',437))]
  sill=add('Upper_module_rear_sill_with_side_returns',union([p['shape'] for p in sill_pieces]),'shell',pieces=sill_pieces)
  profile('upper_module_rear_sill_no_returns',sill,'y',469)
  for x,ax,nx in [(0,(1,0,0),3),(440,(-1,0,0),437)]:

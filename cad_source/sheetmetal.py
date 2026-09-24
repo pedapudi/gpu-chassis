@@ -222,6 +222,19 @@ def move_part(part, fn):
     return q
 
 
+def _add_bend_lines(path, bends):
+    """Mark bend centrelines as dashed lines on the cut layer and declare millimetre units."""
+    import ezdxf
+    doc = ezdxf.readfile(str(path))
+    if 'DASHED' not in doc.linetypes:
+        doc.linetypes.add('DASHED', pattern=[6.0, 4.0, -2.0], description='Bend centreline')
+    doc.header['$INSUNITS'] = 4; doc.header['$MEASUREMENT'] = 1
+    msp = doc.modelspace()
+    for b in bends:
+        msp.add_line(tuple(b['start']), tuple(b['end']), dxfattribs={'layer': '0', 'linetype': 'DASHED'})
+    doc.saveas(str(path))
+
+
 def export_flat_patterns(parts, out):
     """Write one developed DXF per sheet piece and a JSON bend schedule."""
     import json
@@ -240,6 +253,10 @@ def export_flat_patterns(parts, out):
                 records.append(record | dict(developed=False, reason=str(error))); continue
             path = folder / (piece['name'] + '.dxf')
             cq.exporters.export(cq.Workplane().add(result['face']), str(path))
+            _add_bend_lines(path, result['bends'])
+            # The formed piece, moved to its own origin, is the fabricator's 3D reference.
+            lo = bounds(piece['shape'])
+            cq.exporters.export(piece['shape'].translate(cq.Vector(-lo[0], -lo[1], -lo[2])), str(folder / (piece['name'] + '.step')))
             records.append(record | dict(developed=True, dxf=path.name, flat_size_mm=result['size_mm'], flat_area_mm2=result['area_mm2'],
                                          k_factor=result['k_factor'], bends=result['bends'], holes_near_bends=result['holes_near_bends']))
     (folder / 'flat_patterns.json').write_text(json.dumps(records, indent=2))
@@ -280,5 +297,47 @@ def formed_part_report(parts, out):
                                  for r in records if r['developed'] for i, b in enumerate(r['bends']) if min(b['outside_flange_lengths_mm']) < 4 * r['thickness_mm'] - 1e-6],
                   holes_near_bends=[dict(piece=r['piece'], **h) for r in records if r['developed'] for h in r['holes_near_bends']],
                   fastener_sheet_intersections=fastener_sheet_intersections(parts))
+    intended, unexpected = assembly_overlaps(parts)
+    report['intended_overlap_count'] = len(intended)
+    report['unexpected_overlaps'] = unexpected
     (Path(out) / 'formed_part_checks.json').write_text(json.dumps(report, indent=2))
+    (Path(out) / 'assembly_overlaps.json').write_text(json.dumps(dict(intended=intended, unexpected=unexpected), indent=2))
+    assert not report['undeveloped'], ('Sheet pieces did not develop', report['undeveloped'])
+    assert not report['fastener_sheet_intersections'] and not unexpected, ('Assembly collisions', report['fastener_sheet_intersections'], unexpected)
     return report
+
+
+ROUTING_GROUPS = ('power', 'mcio', 'hoses', 'external_route')
+
+
+def assembly_overlaps(parts):
+    """Every overlapping pair of solids, classed as intended or unexpected.
+
+    Intended overlaps are thread engagement (screws in the tapped GPU shelf,
+    self-tapping screws in fan frames) and routing envelopes, which describe
+    cable and hose occupancy rather than solid parts.
+    """
+    from OCP.BRepBndLib import BRepBndLib
+    from OCP.Bnd import Bnd_Box
+    solids = [p for p in parts if p['role'] != 'clearance' and p['group'] not in ('board_alternatives', 'oem_cage')]
+    boxes = []
+    for p in solids:
+        b = Bnd_Box(); BRepBndLib.Add_s(p['shape'].wrapped, b); boxes.append(b.Get())
+    intended, unexpected = [], []
+    for i, a in enumerate(solids):
+        ba = boxes[i]
+        for j in range(i + 1, len(solids)):
+            bb_ = boxes[j]
+            if ba[3] < bb_[0] or bb_[3] < ba[0] or ba[4] < bb_[1] or bb_[4] < ba[1] or ba[5] < bb_[2] or bb_[5] < ba[2]:
+                continue
+            b = solids[j]
+            v = a['shape'].intersect(b['shape']).Volume()
+            if v <= 1e-3:
+                continue
+            names = (a['name'], b['name']); groups = (a['group'], b['group'])
+            thread = any(n.endswith('_6_32_screw') and n.startswith(('GPU_', 'Auxiliary_')) for n in names) and any('rear' in n for n in names)
+            fan = any('_self_tapping_5x8_screw_' in n for n in names) and any(g in ('fans', 'fan_pads', 'exhaust') for g in groups)
+            route = any(g in ROUTING_GROUPS for g in groups)
+            row = dict(parts=list(names), volume_mm3=round(v, 4))
+            (intended if (thread or fan or route) else unexpected).append(row | dict(reason='thread engagement' if thread else 'fan screw thread' if fan else 'routing envelope' if route else 'collision'))
+    return intended, unexpected

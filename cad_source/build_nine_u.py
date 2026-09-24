@@ -88,8 +88,7 @@ def build(out,cache,fan_size=120,return_parts=False):
  body_holes += ear_holes(F,(45,185,345))
  body,piece=form('U_shaped_body_1p5mm_two_longitudinal_bends',body,1.5,[('y',(0,0),(1,1)),('y',(W,0),(-1,1))],body_holes)
  add('U_shaped_body_1p5mm_two_longitudinal_bends',body,'shell',pieces=[piece])
- # Front panel includes side returns. Rack screws use the middle hole in each rack unit.
- front=union([box(0,F,0,440,2,H),box(1.5,F+2,2,1.5,18,H-4),box(437,F+2,2,1.5,18,H-4),box(1.5,F+2,2,18.5,1.5,H-4),box(420,F+2,2,18.5,1.5,H-4)])
+ # Front carrier cutouts; the face and its two side angles are separate pieces below.
  fc=[]
  for z in (85,210,330):
   for x in (100,220,340):fc.append(cyl(x,F-1,z,58,5,(0,1,0)))
@@ -104,7 +103,7 @@ def build(out,cache,fan_size=120,return_parts=False):
  # Joined assembly: 2 mm front face and two formed 1.5 mm side angles.
  front_pieces=[form('Front_fan_carrier_2mm_face',box(0,F,0,440,2,H),2,[],fc)[1]]
  for side,x0,cx,sx in (('left',1.5,1.5,1),('right',420,438.5,-1)):
-  angle=union([box(1.5 if sx>0 else 437,F+2,2,1.5,18,H-4),box(x0,F+2,2,18.5,1.5,H-4)])
+  angle=union([box(1.5 if sx>0 else 437,F+2,3,1.5,18,H-5),box(x0,F+2,3,18.5,1.5,H-5)])
   front_pieces.append(form(f'Front_fan_carrier_{side}_1p5mm_side_angle',angle,1.5,[('z',(cx,F+2),(sx,1))],fc)[1])
  front=add('Front_fan_carrier_with_side_returns',union([p['shape'] for p in front_pieces]),'shell',dark,pieces=front_pieces);profile('front_face_no_returns',front,'y',F)
  # Side screws engage captive nuts on the front returns and lower rear returns.
@@ -197,8 +196,10 @@ def build(out,cache,fan_size=120,return_parts=False):
    for dz in (-35.75,35.75):
     add(f'Rear_fan_self_tapping_5x8_screw_{x+dx}_{110+dz}',fan_screw((x+dx,R+1.2,110+dz),(0,-1,0)),'fasteners',dark)
  # Joined assembly: 1.2 mm rear web and two 1.5 mm return strips.
- lower_pieces=[form('Lower_rear_1p2mm_web',box(1.5,R,1.5,437,1.2,167),1.2,[],lc)[1]]
- lower_pieces+=[form(f'Lower_rear_{side}_1p5mm_return_strip',box(x,R+1.2,1.5,1.5,14.8,167),1.5,[],lc)[1] for side,x in (('left',1.5),('right',437))]
+ # Parts in the body's floor-to-wall corners stop clear of its inside bend radius.
+ corner_clear=[box(0,R-1,0,3,20,3),box(437,R-1,0,3,20,3)]
+ lower_pieces=[form('Lower_rear_1p2mm_web',box(1.5,R,1.5,437,1.2,167),1.2,[],lc+corner_clear)[1]]
+ lower_pieces+=[form(f'Lower_rear_{side}_1p5mm_return_strip',box(x,R+1.2,3,1.5,14.8,165.5),1.5,[],lc)[1] for side,x in (('left',1.5),('right',437))]
  lower=add('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns',union([p['shape'] for p in lower_pieces]),'shell',pieces=lower_pieces);profile('lower_rear_face_no_returns',lower,'y',R)
  io_carrier=cut(box(108,R-1.2,4,165.86,1.2,64),[box(io_x,R-2,io_z,158.75,4,44.45)]+[cyl(x,R-2,z,1.7,6,(0,1,0)) for x in (122,260) for z in (7.5,64.5)])
  add('Flat_1p2mm_IO_carrier_with_clear_shield_lands',io_carrier,'shell');profile('IO_shield_carrier',io_carrier,'y',R-1.2)
@@ -237,8 +238,9 @@ def build(out,cache,fan_size=120,return_parts=False):
  # Partial-length side flanges need bend reliefs where the floor edge continues.
  tray,piece=form('GPU_tray_two_side_bends',tray,1.5,[('y',(4.5,170),(1,1),dict(span=(145,405),relief=True)),('y',(435.5,170),(-1,1),dict(span=(145,405),relief=True))],[cyl(x,y,169,2.25,4) for x,y in hold])
  add('GPU_tray_two_side_bends',tray,'cassette',moving=True,pieces=[piece]);profile('GPU_tray_floor_no_returns',tray,'z',170)
- for y in (146,405):
-  channel,piece=form(f'GPU_tray_spot_welded_channel_{y}',union([box(22,y,168.5,396,8,1.5),box(22,y,161,396,1.5,7.5),box(22,y+6.5,161,396,1.5,7.5)]),1.5,[('x',(y,170),(1,-1)),('x',(y+8,170),(-1,-1))])
+ for y in (146,399):
+  # A 14 mm crown leaves an 8 mm flat between the two bends for standard press-brake tooling.
+  channel,piece=form(f'GPU_tray_spot_welded_channel_{y}',union([box(22,y,168.5,396,14,1.5),box(22,y,161,396,1.5,7.5),box(22,y+12.5,161,396,1.5,7.5)]),1.5,[('x',(y,170),(1,-1)),('x',(y+14,170),(-1,-1))])
   add(f'GPU_tray_spot_welded_channel_{y}',channel,'cassette',moving=True,pieces=[piece])
  # Simple punched tie slots in side-mounted angles, outside the GPU extraction path.
  for side,x in [('power',1.5),('signal',426.5)]:
@@ -296,7 +298,9 @@ def build(out,cache,fan_size=120,return_parts=False):
   add(name+'_retention_flange',shelf,group,moving=moving)
   if name!='Upper_bank':profile(name+'_retention_flange',shelf,'z',bearing-1.5)
   toe_x=max(x0,274.5) if group=='shell' else x0
-  toe=cut(box(toe_x,R-4,tip+1,x0+ww-toe_x,4,1.5),[box(x-5.395,R-1.3,tip,10.79,1.3,4) for x in centres])
+  # The GPU comb is 12 mm deep for weld access and stiffness; the motherboard comb stays 4 mm to clear the board posts.
+  depth=12 if group=='cassette' else 4
+  toe=cut(box(toe_x,R-depth,tip+1,x0+ww-toe_x,depth,1.5),[box(x-5.395,R-1.3,tip,10.79,1.3,4) for x in centres])
   add(name+'_toe_receiver',toe,group,moving=moving)
  retention('Upper_bank',slots,gw,'cassette',True);retention('Lower_bank',host_centres,host_w,'shell')
  # Rear bank ends at the bracket shelf. The removable lid closes the space above it.

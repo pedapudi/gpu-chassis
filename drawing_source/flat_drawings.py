@@ -3,6 +3,21 @@ import json
 import cadquery as cq
 
 
+def cut_faces(path):
+    """Faces of a flat-pattern DXF built from its cut geometry only."""
+    import ezdxf, tempfile, os
+    doc = ezdxf.readfile(str(path))
+    msp = doc.modelspace()
+    for e in [e for e in msp if e.dxf.get('linetype', '').upper() == 'DASHED']:
+        msp.delete_entity(e)
+    fd, tmp = tempfile.mkstemp(suffix='.dxf'); os.close(fd)
+    try:
+        doc.saveas(tmp)
+        return cq.importers.importDXF(tmp).faces().vals()
+    finally:
+        os.unlink(tmp)
+
+
 def flat_pattern_pages(part_name, root, api):
     """Draw one sheet per developed piece of the named part; return the piece count."""
     from annotated_geometry import planar, INK
@@ -13,8 +28,8 @@ def flat_pattern_pages(part_name, root, api):
         return 0
     records = [r for r in json.loads(index.read_text()) if r['part'] == part_name and r['developed']]
     for r in records:
-        # Drawing from the DXF shows exactly the blank supplied for cutting.
-        faces = cq.importers.importDXF(str(root / 'flat_patterns' / r['dxf'])).faces().vals()
+        # Drawing from the DXF shows exactly the blank supplied for cutting; dashed bend lines are drawn separately.
+        faces = cut_faces(root / 'flat_patterns' / r['dxf'])
         assert len(faces) == 1, (r['piece'], len(faces))
         face = faces[0]
         new(part_name.replace('_', ' ') + ' | flat pattern' + ('' if r['piece'] == part_name else ' | ' + r['piece'].replace('_', ' ')), part_name + '::flat')

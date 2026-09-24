@@ -51,7 +51,7 @@ def configure(parts,mode):
  # Joined assembly: 2 mm face, two formed 1.5 mm side angles and the 2 mm backing ring.
  pieces=[dict(name='Full_chassis_front_carrier_2mm_face',shape=box(0,0,0,440,2,399.25).cut(front_cuts),t=2.,bends=[])]
  for side,x0,cx,sx in (('left',1.5,1.5,1),('right',420,438.5,-1)):
-  bends=[];angle=fold(union([box(1.5 if sx>0 else 437,2,2,1.5,18,395.25),box(x0,2,2,18.5,1.5,395.25)]),bends,'z',(cx,2),(sx,1),1.5)
+  bends=[];angle=fold(union([box(1.5 if sx>0 else 437,2,3,1.5,18,394.25),box(x0,2,3,18.5,1.5,394.25)]),bends,'z',(cx,2),(sx,1),1.5)
   pieces.append(dict(name=f'Full_chassis_front_carrier_{side}_1p5mm_side_angle',shape=angle.cut(front_cuts),t=1.5,bends=bends))
  pieces.append(dict(name='Full_chassis_front_carrier_2mm_backing_ring',shape=ring,t=2.,bends=[]))
  add(CARRIER,union([p['shape'] for p in pieces]),pieces=pieces)

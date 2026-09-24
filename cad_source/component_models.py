@@ -3,6 +3,7 @@ Photo-derived feature sizes are explicit modeling estimates, not production draw
 """
 import cadquery as cq
 from mounting_hardware import box,cyl,union,cut,screw,slot
+from sheetmetal import fold
 ATX_REAR_HOLES=[(6,80),(144,80),(120,6),(6,16)]
 PSU_DEPTH=175.
 BOARD_X=2.5
@@ -67,10 +68,12 @@ def add_psu(add, rear):
     # Recessed thread cylinders make the nominal standard mount visible on the PSU itself.
     for i,(u,v) in enumerate(ATX_REAR_HOLES):
         ref(f'ASUS_3000P_ATX_thread_boss_{i+1}',cyl(u,1,v,3.5,5,(0,1,0)).cut(cyl(u,0,v,1.7526,7,(0,1,0))))
-    cradle=union([box(1.5,rear-175,8.5,94,175,1.5),box(1.5,rear-175,10,1.5,175,6),box(94,rear-175,10,1.5,175,12)])
+    cradle=union([box(1.5,rear-175,8.5,94,175,1.5),box(1.5,rear-175,10,1.5,175,10),box(94,rear-175,10,1.5,175,12)])
     mounts=(rear-165,rear-10)
-    cradle=cradle.cut(cq.Compound.makeCompound([cyl(0,y,13.5,1.7,5,(1,0,0)) for y in mounts]))
-    add('ASUS_3000P_folded_175mm_cradle',cradle,'psu_support')
+    bends=[]
+    cradle=fold(cradle,bends,'y',(1.5,8.5),(1,1),1.5);cradle=fold(cradle,bends,'y',(95.5,8.5),(-1,1),1.5)
+    cradle=cradle.cut(cq.Compound.makeCompound([cyl(0,y,16.5,1.7,5,(1,0,0)) for y in mounts]))
+    add('ASUS_3000P_folded_175mm_cradle',cradle,'psu_support',pieces=[dict(name='ASUS_3000P_folded_175mm_cradle',shape=cradle,t=1.5,bends=bends)])
     for i,(x,z) in enumerate(psu_holes(),1):
         add(f'ATX_6_32xquarter_inch_screw_{i}',screw((x,rear+1.2,z),(0,-1,0),'6-32',6.35),'fasteners','#304553')
     return mounts

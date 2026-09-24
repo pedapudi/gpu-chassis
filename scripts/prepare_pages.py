@@ -42,7 +42,7 @@ from combine_full_viewer import combine_full_viewer
 combine_full_viewer(args.out, ROOT)
 shutil.copy2(ROOT / 'site/index.html', args.out / 'index.html')
 (args.out / '.nojekyll').touch()
-for variant in ('nine-u', 'nine-u-180', 'nine-u-120', 'modular', 'modular-120'):
+for variant in ('nine-u', 'nine-u-180', 'nine-u-120', 'modular', 'modular-120-80', 'modular-180'):
     folder = args.out / variant
     manifest = json.loads((folder / 'drawings/drawing_manifest.json').read_text())
     required = [folder / 'interactive_model.html', folder / 'drawings' / manifest['pdf'], folder / 'openscad/assembly.scad']

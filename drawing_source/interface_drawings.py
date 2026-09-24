@@ -5,6 +5,9 @@ from section_drawings import bounds,fmt
 
 def interface_details(parts,mod,api):
     c,new,para,table,view,W,H,out=api;lookup={a['name']:a for a in parts}
+    # Module rear-entry and lid features follow the module top; 399.55 is the 4U reference top.
+    top=bounds(lookup['Upper_module_side_fastened_lid']['shape'])[5] if mod else 399.25;r=top-399.55
+    def z(v):return fmt(v+r)
     def sheet(title,name,rows,note):
         from annotated_geometry import context_pages
         selected=[(name.replace('_',' '),lookup[name]['shape'])]
@@ -15,9 +18,9 @@ def interface_details(parts,mod,api):
         for p in extra:
             if p['name']!=name:selected.append((p['name'].replace('_',' '),p['shape']))
         anchors_by_name={
-          'Upper_module_rear_perforated_cover':[(100,485,386),(220,485,380.5),(438.5,476,385),(220,481,376.82),(438.5,477.2,390),(143,485,393)],
-          'Rear_MCIO_lower_U_frame_140mm_top_open_entry':[(140,486.5,378),(220,486.5,380.5),(297,488,390),(220,488,395),(220,494,398.05),(143,488,393),(220,486.5,380.5)],
-          'Replacement_lid_adapter_with_undrilled_OEM_side_returns':[(220,240,399.55),(3,240,390),(3,118.2,389.55),(7.5,240,221.5),(3,240,212.5),(7.5,240,221.5),(3,100,212.5)],
+          'Upper_module_rear_perforated_cover':[(100,485,386),(220,485,380.5+r),(438.5,476,385),(220,481,376.82),(438.5,477.2,390),(143,485,390+r)],
+          'Rear_MCIO_lower_U_frame_140mm_top_open_entry':[(140,486.5,378),(220,486.5,380.5+r),(297,488,390+r),(220,488,395+r),(220,494,398.05+r),(143,488,390+r),(220,486.5,380.5+r)],
+          'Replacement_lid_adapter_with_undrilled_OEM_side_returns':[(220,240,top),(3,240,top-9.55),(3,118.2,top-10),(7.5,240,221.5),(3,240,212.5),(7.5,240,221.5),(3,100,212.5)],
           'Screw_mounted_3mm_rack_ear_left':[(440,30,200),(440,61.7,389.25),(440,64,386.105163),(220,240,399.25),(3,240,389),(3,118.2,389.25)]}
         if name=='Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns':
             if 'bank' in title:
@@ -36,26 +39,26 @@ def interface_details(parts,mod,api):
         context_pages(api,title,name+'::edge-details',rows,note,selected,anchors)
     if mod:
         sheet('Rear cover | open cable notch and folded edges','Upper_module_rear_perforated_cover',[
-            ['Rear web','1.500 thick; X1.5–438.5, Y483.5–485, Z375.32–398.05.'],
-            ['Top-open cable notch','140.000 wide ×17.550 deep; X150–290, Z380.5–398.05. Nominal corner R0. Lower land 5.180 high.'],
-            ['Side returns','1.500 thick; X1.5–3 and 437–438.5; Y470.2–483.5; Z375.32–398.05. Projection 13.300; height 22.730.'],
-            ['Lower inward lip','X15–425, Y481–483.5, Z375.32–376.82: 410.000 wide ×2.500 projection ×1.500 thick. Ends stop 13.500 short of each web end.'],
-            ['Fastener roles','Two side-return DIA3.4/R1.7 holes at Y477.2/Z390 retain the cover. Four rear DIA3.4/R1.7 holes at X143,297 and Z380.5,393 attach the brush assembly. All are clearance holes.'],
+            ['Rear web',f'1.500 thick; X1.5–438.5, Y483.5–485, Z375.32–{z(398.05)}.'],
+            ['Top-open cable notch',f'140.000 wide ×17.550 deep; X150–290, Z{z(380.5)}–{z(398.05)}. Nominal corner R0. Solid land below the notch {fmt(380.5+r-375.32)} high.'],
+            ['Side returns',f'1.500 thick; X1.5–3 and 437–438.5; Y470.2–483.5; Z375.32–{z(398.05)}. Projection 13.300; height {fmt(398.05+r-375.32)}.'],
+            ['Lower inward lip','X15–425, Y481–483.5, Z375.32–376.82: 410.000 wide ×2.500 projection ×1.500 thick. Ends stop 13.500 short of each web end; a 1.500 wide bend-relief slot is cut into the web at each lip end.'],
+            ['Fastener roles','Two side-return DIA3.4/R1.7 holes at Y477.2/Z390 retain the cover. Four rear DIA3.4/R1.7 holes at X143,297 and Z'+z(380.5)+','+z(390)+' attach the brush assembly. All are clearance holes.'],
             ['Service','Disconnect external cables; remove the cover with its brush frame before GPU or cartridge extraction.']],
-            'The upper edge remains open when the brush cap is removed. The printed notch is a clear opening, not a closed rectangular hole. Refer to the formed sections for return direction. Bend radii and corner reliefs remain fabrication-release dimensions.')
+            'The upper edge remains open when the brush cap is removed. The printed notch is a clear opening, not a closed rectangular hole. Refer to the formed sections for return direction. Bends are formed at inside radius R1.5 with relief slots at the ends of the partial lower lip.')
         sheet('MCIO frame and cap | open contours and assembly','Rear_MCIO_lower_U_frame_140mm_top_open_entry',[
-            ['Lower U-frame blank','X138–302, Y485–486.5, Z375.32–398.05: 164.000 wide ×22.730 high ×1.500 thick.'],
-            ['U-frame top-open notch','X150–290, Z380.5–398.05: 140.000 ×17.550. Side lands 12.000 wide; bottom land 5.180 high. Nominal corner R0.'],
-            ['Cap left/right ears','X138–148 and X292–302; Y486.5–488; Z387–398.05. Each ear is 10.000 wide ×11.050 high ×1.500 thick.'],
-            ['Cap bottom-open recess','X148–292, Z387–395: 144.000 wide ×8.000 deep. Top connecting band Z395–398.05 is 3.050 high. Nominal corner R0.'],
-            ['Cap outward return','X138–302; Y488–494; Z396.55–398.05. 164.000 wide ×6.000 projection ×1.500 thick. Overall cap depth 7.500.'],
-            ['Attachment order','Capture the four standard M3 nuts on the rear cover before installation. Lower screws at X143,297/Z380.5 retain the U-frame; upper screws at X143,297/Z393 release the cap. All frame bores DIA3.4/R1.7.'],
+            ['Lower U-frame blank',f'X138–302, Y485–486.5, Z375.32–{z(398.05)}: 164.000 wide ×{fmt(398.05+r-375.32)} high ×1.500 thick.'],
+            ['U-frame top-open notch',f'X150–290, Z{z(380.5)}–{z(398.05)}: 140.000 ×17.550. Side lands 12.000 wide; bottom land {fmt(380.5+r-375.32)} high. Nominal corner R0.'],
+            ['Cap left/right ears',f'X138–148 and X292–302; Y486.5–488; Z{z(385)}–{z(398.05)}. Each ear is 10.000 wide ×13.050 high ×1.500 thick.'],
+            ['Cap bottom-open recess',f'X148–292, Z{z(385)}–{z(395)}: 144.000 wide ×10.000 deep. Top connecting band Z{z(395)}–{z(398.05)} is 3.050 high. Nominal corner R0.'],
+            ['Cap outward return',f'X138–302; Y488–494; Z{z(396.55)}–{z(398.05)}. 164.000 wide ×6.000 projection ×1.500 thick. Overall cap depth 7.500.'],
+            ['Attachment order','Capture the four standard M3 nuts on the rear cover before installation. Lower screws at X143,297/Z'+z(380.5)+' retain the U-frame; upper screws at X143,297/Z'+z(390)+' release the cap. All frame bores DIA3.4/R1.7.'],
             ['Connector service','Remove the cap before passing a 35 ×14 plug through the 140 ×17.55 opening. Refit around the cables. Brush compression and actual latch clearance require a physical sample.']],
             'The cap and U-frame have different open profiles. Do not substitute the cable-opening rectangle for either part outline. The cap return reaches Y494, 9 mm behind the body.')
         sheet('Module lid and adapter | returns and seating datums','Replacement_lid_adapter_with_undrilled_OEM_side_returns',[
-            ['Lid top','X0–440; Y2–485; Z398.05–399.55. Sheet 1.500.'],
-            ['Lid side returns','X1.5–3 and X437–438.5; Y22–460; Z381.55–398.05. Length 438.000; drop 16.500 below top underside; front/rear setbacks 20.000 /25.000 from top-sheet ends.'],
-            ['Lid clearance bores','DIA3.6/R1.8 normal X at Y118.2 and 433.2, Z389.55; two per side. Use M3 ×6 screws and captive M3 nuts.'],
+            ['Lid top',f'X0–440; Y2–485; Z{z(398.05)}–{z(399.55)}. Sheet 1.500.'],
+            ['Lid side returns',f'X1.5–3 and X437–438.5; Y22–460; Z{z(381.55)}–{z(398.05)}. Length 438.000; drop 16.500 below top underside; front/rear setbacks 20.000 /25.000 from top-sheet ends.'],
+            ['Lid clearance bores',f'DIA3.6/R1.8 normal X at Y118.2 and 433.2, Z{z(389.55)}; two per side. Use M3 ×6 screws and captive M3 nuts.'],
             ['Adapter ring','X0–440; Y0–485; Z220–221.5. Inner opening X15–425/Y15–470: 410 ×455; perimeter width 15.000.'],
             ['Adapter side returns','X1.5–3 and X437–438.5; Y20–465; Z205–220. Length 445.000; drop 15.000; end setbacks 20.000; clear inside span 434.000.'],
             ['Vertical stack','Adapter top Z221.5; gasket 0.750; module bottom Z222.25. Upper module fasteners locate in the six modeled DIA3.4 bores.'],

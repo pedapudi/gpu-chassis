@@ -57,8 +57,11 @@ def supports(add,rows,points,board_z=18,female=False):
         rail=box(x-8,150,6,16,260,2)
         rail=cut(rail,[slot(x,164,5,234,4.5,4,'y'),cyl(x,155,5,2.25,4),cyl(x,405,5,2.25,4)])
         for y in (155,405):
-            foot=union([box(x-8,y-5,4.5,16,10,1.5),box(x-8,y-5,1.5,1.5,10,3),box(x+6.5,y-5,1.5,1.5,10,3)]).cut(cyl(x,y,1,2.25,6))
-            add(f'Rail_welded_sheet_bridge_{x}_{y}',foot,'mounts','#9aaeba')
+            from sheetmetal import fold
+            foot=union([box(x-8,y-5,4.5,16,10,1.5),box(x-8,y-5,1.5,1.5,10,3),box(x+6.5,y-5,1.5,1.5,10,3)])
+            bends=[];foot=fold(foot,bends,'y',(x-8,6),(1,-1),1.5);foot=fold(foot,bends,'y',(x+8,6),(-1,-1),1.5)
+            foot=foot.cut(cyl(x,y,1,2.25,6))
+            add(f'Rail_welded_sheet_bridge_{x}_{y}',foot,'mounts','#9aaeba',pieces=[dict(name=f'Rail_welded_sheet_bridge_{x}_{y}',shape=foot,t=1.5,bends=bends)])
             add(f'Rail_bridge_captive_DIN562_M4_nut_{x}_{y}',box(x-3.5,y-3.5,2.3,7,7,2.2).cut(cyl(x,y,2,2,3)),'fasteners','#b39a61')
             add(f'Rail_M4x6_screw_{x}_{y}',screw((x,y,8),(0,0,-1),'M4',6),'fasteners','#647783')
         add(f'Longitudinal_mount_rail_{x}',rail,'mounts','#9aaeba')

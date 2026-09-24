@@ -13,12 +13,12 @@ def fmt(x):return f'{x:.4f}'.rstrip('0').rstrip('.')
 
 
 def material_note(name):
-    if name in ('Front_fan_carrier_with_side_returns','Upper_module_front_dual_120_140mm_fan_carrier'):
+    if name=='Front_fan_carrier_with_side_returns' or name.startswith('Upper_module_front_carrier_'):
         return 'Joined sheet assembly: 2.000 front web; 1.500 side angles. '+('Grille fixing lands overlap to 3.500. Single-row options add a 2 mm backing ring at Y2–4, factory attached before fitting the removable insert. ' if name=='Front_fan_carrier_with_side_returns' else '')+'Do not form this as a uniform-thickness blank.'
     if name in ('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns','Upper_module_rear_sill_with_side_returns'):
         return 'Joined sheet assembly: 1.200 rear web; 1.500 side returns. Join before fitting hardware; the modeled thickness transition is not a single-sheet bend.'
     thick=1.5
-    if any(t in name for t in ('1p2mm','_guide_strip_')) or name=='Full_width_twenty_slot_rear_with_side_returns':thick=1.2
+    if any(t in name for t in ('1p2mm','_guide_strip_')) or name=='Full_width_twenty_one_slot_rear_with_side_returns':thick=1.2
     if any(t in name for t in ('Longitudinal_mount_rail','Sliding_crossbar','WRX90_board_specific','Full_chassis_upper_intake_insert')):thick=2
     if 'Screw_mounted_3mm' in name:thick=3
     if '1mm_perforated_grille' in name or '1mm_blanking_plate' in name:thick=1
@@ -54,7 +54,8 @@ def draw_sections(a,api):
         candidates=[]
         stations=[round(b[axis]+dims[axis]*fraction,5) for fraction in (.05,.25,.5,.75,.95)]
         # A section must cross the defining fold, not an unbent end margin.
-        if name=='Full_width_twenty_slot_rear_with_side_returns' and axis==0:stations=[414.0]
+        # Through a tapped hole over an interior web: the second-largest thread axis X.
+        if name=='Full_width_twenty_one_slot_rear_with_side_returns' and axis==0:stations=[sorted({round(e.Center().x,4) for e in shape.Edges() if e.geomType()=='CIRCLE' and abs(e.radius()-1.3525)<1e-4})[-2]]
         if name in ('GPU_tray_two_side_bends','Lid_with_separate_side_fasteners','Upper_module_side_fastened_lid') and axis==1:stations=[328.2 if name=='GPU_tray_two_side_bends' else 240.0]
         thin_axis=min(range(3),key=lambda i:dims[i])
         for station in stations:
@@ -94,9 +95,9 @@ def draw_sections(a,api):
             levels=sorted(set(v[index] for v in d['vertices']));gaps=[b-a for a,b in zip(levels,levels[1:])]
             rows.append(['XYZ'[ax],', '.join(fmt(q) for q in levels),', '.join(fmt(q) for q in gaps)])
         radii=sorted(set(q['radius'] for q in d['edges'] if 'radius' in q))
-        rows.append(['Curves','R'+', R'.join(fmt(q) for q in radii) if radii else 'Straight edges; nominal sharp intersections','Radii shown only where modeled.'])
+        rows.append(['Curves','R'+', R'.join(fmt(q) for q in radii) if radii else 'Straight edges; no bends in this section','Radii shown only where modeled.'])
         table(rows,x0,355,[45,245,215],9)
-    para('The modeled GPU retention bend is R1.2 inside. Other sharp intersections do not specify a manufacturable zero-radius bend. Inside radii, bend allowance, corner relief and weld distortion must be set during fabrication release. Exact section edges are supplied in the matching sections JSON.',32,115,W-64,10)
+    para('Formed bends have inside radius equal to the sheet thickness; square corners in a section are joints between separate pieces or cut edges. Developed flat patterns and bend tables are in flat_patterns/. Weld distortion requires fabrication qualification. Exact section edges are supplied in the matching sections JSON.',32,115,W-64,10)
     serial=[{k:v for k,v in d.items() if k!='shape'} for d in chosen]
     (out/'coordinates'/(name+'_sections.json')).write_text(json.dumps(serial,indent=2))
     faces=wall_faces(shape,name)
@@ -112,6 +113,6 @@ def draw_sections(a,api):
             p,lo,hi=planar(c,shape,'XYZ'.index(normal),station,(x,y,545,245))
             axes=face_rows[0]['axes']
             para(f'<b>{normal} = {fmt(station)}</b> | {axes[0]} {fmt(lo[0])} to {fmt(hi[0])}; {axes[1]} {fmt(lo[1])} to {fmt(hi[1])}. Complete contour bounds; openings remain void.',x,y-8,535,9)
-        para('Bend radii and developed blank dimensions remain fabrication-release requirements where they are absent from the nominal model.',32,85,W-64,9)
+        para('Formed bends use inside radius equal to thickness and K-factor 0.40 for development; confirm both with the fabricator before cutting blanks.',32,85,W-64,9)
     (out/'coordinates'/(name+'_walls.json')).write_text(json.dumps(faces,indent=2))
     return dict(part=name,section_sheets=1,wall_sheets=math.ceil(len(face_groups)/4),sections=[dict(normal='XYZ'[d['axis']],station=d['station'],edges=len(d['edges'])) for d in chosen])

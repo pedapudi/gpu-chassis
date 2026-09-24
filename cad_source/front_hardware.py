@@ -1,5 +1,6 @@
 """Screw-mounted folded rack ears and a continuous perforated intake face."""
 from mounting_hardware import box,cyl,union,screw,nut
+from sheetmetal import fold
 import math
 
 def ear_holes(y0,zlevels):
@@ -10,11 +11,13 @@ def add_ears(add,y0,z0,height,zlevels,units):
   left=side=='left';x=-3 if left else 440;face_x=-21.3 if left else 440
   ear=union([box(face_x,y0-3,z0,21.3,3,height),box(x,y0,z0,3,64,height)])
   holes=ear_holes(y0,zlevels)
-  panel_levels=(22,148,205,290,381.45) if units==9 else (242,320,388)
+  panel_levels=(22,148,205,290,381.45) if units==9 else (242,320,388,430)
   holes += [cyl(-5,y0+12,z,3.3,450,(1,0,0)) for z in panel_levels]
   if units==9:holes.append(cyl(-5,y0+65,z0+height-10,3.3,450,(1,0,0)))
   for i in range(units):holes.append(cyl(-12.55 if left else 452.55,y0-4,z0+21.825+44.45*i,3.5,5,(0,1,0)))
-  add('Screw_mounted_3mm_rack_ear_'+side,ear.cut(__import__('cadquery').Compound.makeCompound(holes)),'rack_ears','#526776')
+  bends=[];ear=fold(ear,bends,'z',(0 if left else 440,y0-3),(-1 if left else 1,1),3.)
+  ear=ear.cut(__import__('cadquery').Compound.makeCompound(holes))
+  add('Screw_mounted_3mm_rack_ear_'+side,ear,'rack_ears','#526776',pieces=[dict(name='Screw_mounted_3mm_rack_ear_'+side,shape=ear,t=3.,bends=bends)])
   axis=(1,0,0) if left else (-1,0,0)
   for y in (32,55):
    for z in zlevels:

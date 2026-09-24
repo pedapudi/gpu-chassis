@@ -9,7 +9,8 @@ python drawing_source/make_drawings.py nine-u scratch
 python drawing_source/make_drawings.py nine-u-180 scratch
 python drawing_source/make_drawings.py nine-u-120 scratch
 python drawing_source/make_drawings.py modular scratch
-python drawing_source/make_drawings.py modular-120 scratch
+python drawing_source/make_drawings.py modular-120-80 scratch
+python drawing_source/make_drawings.py modular-180 scratch
 ```
 
 Each command writes a PDF, feature JSON, edge CSV, bill of materials, drawing index, and diagram-completeness report beneath the configuration's `drawings/` directory. Existing STEP files remain unchanged. Use a fresh rebuild directory after changing CAD geometry. `--reuse-views` requires unchanged geometry and projection settings.
@@ -20,4 +21,4 @@ Formed sections carry dimensions on the profile. The adjacent tables record coor
 
 `diagram_completeness.json` records table and geometry counts for every sheet. The generator rejects a technical table page without drawing geometry. Drawing indexes are navigation tables and are exempt. `specificity_coverage.json` records every fabricated part and its section coverage. Render every PDF page and inspect the resulting images before publication; the structural checks do not detect all annotation collisions or incorrect leaders.
 
-Dimensions describe nominal formed geometry. Supplier interfaces, production tolerances, unspecified bend radii, developed blanks, fixed-joint strength, and thermal performance still require qualification.
+Dimensions describe nominal formed geometry. Supplier interfaces, production tolerances, fabricator confirmation of bend radii and K-factor, fixed-joint strength, and thermal performance still require qualification.

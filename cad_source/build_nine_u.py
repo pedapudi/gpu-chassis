@@ -1,4 +1,4 @@
-"""Nine-unit sheet-metal chassis with a removable twenty-position GPU deck.
+"""Nine-unit sheet-metal chassis with a removable twenty-one-position GPU deck.
 All lengths are millimetres. Hardware envelopes do not certify supplier fit.
 """
 from pathlib import Path
@@ -7,11 +7,12 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import cadquery as cq
 from mounting_hardware import box,cyl,union,cut,screw,fan_screw,nut,hex_prism,supports,slot,pem_632
 import gpu_geometry
+from sheetmetal import fold,transform_bends
 from front_hardware import add_ears,ear_holes,grille_holes
 from component_models import add_psu,psu_holes,psu_vent,backplane_outline,add_board_details,BOARD_X,BOARD_Y,BOARD_SLOT_X,BOARD_MOUNT_POINTS,board_hole_tools
 P=dict(width=440.,depth=485.,height=399.25,sheet=1.5,gpu_deck_z=170.,rear_bracket_plane=469.,
        motherboard_bottom=16.,motherboard_thickness=1.57,motherboard_x=20.2,standoff_body=8.,
-       upper_fan_size=120,case_fan_depth=38.,aio_fan_depth=38.,aio_radiator_depth=28.,slot_pitch=20.32,upper_slot_count=20,lower_slot_count=8,
+       upper_fan_size=120,case_fan_depth=38.,aio_fan_depth=38.,aio_radiator_depth=28.,slot_pitch=20.32,upper_slot_count=21,lower_slot_count=8,
        gpu_length=266.7,gpu_height=111.76,gpu_width=40.,socket_height=11.25,socket_seating_depth=4.4,
        power_plug_length=22.,power_straight_length=35.,power_bundle_diameter=12.,
        power_plug_height_from_card_datum=28.,retimer_length=160.,mcio_bundle_diameter=6.,
@@ -41,9 +42,18 @@ def build(out,cache,fan_size=120,return_parts=False):
  silver='#aebbc6';dark='#304553';green='#216b55';gold='#b39451';blue='#3c7b93';orange='#cb843c';teal='#337f89'
  # Construction X measures from the rear viewer's left; exported X is right-handed.
  def physical(shape):return shape.mirror('YZ',(W/2,0,0)).translate((0,-F,0))
- def add(name,shape,group,color=silver,role='fabricated',visible=True,moving=False):
+ def add(name,shape,group,color=silver,role='fabricated',visible=True,moving=False,pieces=None):
   assert shape.isValid() and shape.Volume()>0,name
-  parts.append(dict(name=name,shape=physical(shape),group=group,color=color,role=role,visible=visible,moving=moving));return shape
+  part=dict(name=name,shape=physical(shape),group=group,color=color,role=role,visible=visible,moving=moving)
+  # Formed sheet pieces carry their bend zones for flat-pattern development.
+  if pieces:part['pieces']=[dict(p,shape=physical(p['shape']),bends=transform_bends(p['bends'],physical)) for p in pieces]
+  parts.append(part);return shape
+ def form(name,shape,t,folds,tools=()):
+  """Form the listed sharp corners of one sheet piece, then cut its features."""
+  bends=[]
+  for f in folds:shape=fold(shape,bends,*f[:3],t,**(f[3] if len(f)>3 else {}))
+  shape=cut(shape,list(tools))
+  return shape,dict(name=name,shape=shape,t=t,bends=bends)
  def profile(name,s,axis,value):
   s=physical(s).clean()
   if axis=='y':value-=F
@@ -71,12 +81,13 @@ def build(out,cache,fan_size=120,return_parts=False):
  body=union([box(0,F+2,0,W,D-F-2,1.5),box(0,F+2,1.5,1.5,D-F-2,H-3),box(W-1.5,F+2,1.5,1.5,D-F-2,H-3)])
  panel_side_z=[22,148,205,290,381.45]
  body_holes=[side_holes(y,z) for y in (F+12,424) for z in panel_side_z]+[side_holes(y,H-10,1.8) for y in (65,380)]
- body_holes += [psu_vent(R)]+[cyl(-1,y,13.5,1.7,5,(1,0,0)) for y in (R-165,R-10)]
+ body_holes += [psu_vent(R)]+[cyl(-1,y,16.5,1.7,5,(1,0,0)) for y in (R-165,R-10)]
  # Screw positions for fixed support angles and front cable restraints.
  body_holes += [side_holes(y,158) for y in (180,290,390)]+[side_holes(424,313)]
- body_holes += [side_holes(y,z) for y,z in ((90,177),(90,200),(220,75))]
+ body_holes += [side_holes(y,z) for y,z in ((90,180),(90,200),(220,75))]
  body_holes += ear_holes(F,(45,185,345))
- add('U_shaped_body_1p5mm_two_longitudinal_bends',cut(body,body_holes),'shell')
+ body,piece=form('U_shaped_body_1p5mm_two_longitudinal_bends',body,1.5,[('y',(0,0),(1,1)),('y',(W,0),(-1,1))],body_holes)
+ add('U_shaped_body_1p5mm_two_longitudinal_bends',body,'shell',pieces=[piece])
  # Front panel includes side returns. Rack screws use the middle hole in each rack unit.
  front=union([box(0,F,0,440,2,H),box(1.5,F+2,2,1.5,18,H-4),box(437,F+2,2,1.5,18,H-4),box(1.5,F+2,2,18.5,1.5,H-4),box(420,F+2,2,18.5,1.5,H-4)])
  fc=[]
@@ -90,14 +101,19 @@ def build(out,cache,fan_size=120,return_parts=False):
  grille_fix=[(x,z) for x in (15,425) for z in (32,138,270,383)]
  fc += [cyl(x,F-1,z,1.7,5,(0,1,0)) for x,z in grille_fix]
  fc += [side_holes(F+12,z) for z in panel_side_z]
- front=add('Front_fan_carrier_with_side_returns',front.cut(cq.Compound.makeCompound(fc)),'shell',dark);profile('front_face_no_returns',front,'y',F)
+ # Joined assembly: 2 mm front face and two formed 1.5 mm side angles.
+ front_pieces=[form('Front_fan_carrier_2mm_face',box(0,F,0,440,2,H),2,[],fc)[1]]
+ for side,x0,cx,sx in (('left',1.5,1.5,1),('right',420,438.5,-1)):
+  angle=union([box(1.5 if sx>0 else 437,F+2,2,1.5,18,H-4),box(x0,F+2,2,18.5,1.5,H-4)])
+  front_pieces.append(form(f'Front_fan_carrier_{side}_1p5mm_side_angle',angle,1.5,[('z',(cx,F+2),(sx,1))],fc)[1])
+ front=add('Front_fan_carrier_with_side_returns',union([p['shape'] for p in front_pieces]),'shell',dark,pieces=front_pieces);profile('front_face_no_returns',front,'y',F)
  # Side screws engage captive nuts on the front returns and lower rear returns.
  for y in (F+12,424):
   for z in panel_side_z:
    if y==424 and z not in (22,148):continue
    for side,x,ax,nx in [('left',0,(1,0,0),3),('right',440,(-1,0,0),437)]:
-    fast(f'{side}_panel_M3x8_{y}_{z}',(x,y,z),ax,'M3',8)
-    add(f'{side}_panel_captive_nut_{y}_{z}',nut((nx,y,z),ax,'M3'),'fasteners',gold)
+    fast(f'{side}_panel_M3x8_{y:g}_{z}',(x,y,z),ax,'M3',8)
+    add(f'{side}_panel_captive_nut_{y:g}_{z}',nut((nx,y,z),ax,'M3'),'fasteners',gold)
  # Upper rear side fixings belong to the removable cassette and are removed before lifting.
  for z in (205,290):
   for side,x,ax,nx in [('left',0,(1,0,0),3),('right',440,(-1,0,0),437)]:
@@ -110,18 +126,21 @@ def build(out,cache,fan_size=120,return_parts=False):
   box(437,R+1.2,vent_bottom,1.5,D-1.5-(R+1.2),vent_top-vent_bottom),
   box(15,R+12,vent_bottom,410,D-1.5-(R+12),1.5)])
  vh=[side_holes(424,z) for z in (313,381.45)]
- for row,z in enumerate(range(312,393,10)):
+ # Perforation rows stay two thicknesses clear of the lower lip bend.
+ for row,z in enumerate([313.5+9.75*i for i in range(9)]):
   for x in range(14+5*(row%2),427,10):vh.append(cyl(x,D-2,z,4,4,(0,1,0)))
- vent=vent.cut(cq.Compound.makeCompound(vh))
- add('Upper_rear_perforated_panel_with_side_returns',vent,'rear_vent',dark)
+ vent,vent_piece=form('Upper_rear_perforated_panel_with_side_returns',vent,1.5,[('z',(1.5,D),(1,-1)),('z',(438.5,D),(-1,-1)),('x',(D,vent_bottom),(-1,1),dict(span=(15,425),relief=True))],vh)
+ add('Upper_rear_perforated_panel_with_side_returns',vent,'rear_vent',dark,pieces=[vent_piece])
  profile('upper_rear_perforated_face_no_returns',vent,'y',D)
  for x,ax,nx in [(0,(1,0,0),3),(440,(-1,0,0),437)]:
   for z in (313,381.45):
    fast(f'Upper_vent_side_M3x8_{x}_{z}',(x,424,z),ax,'M3',8)
    add(f'Upper_vent_captive_nut_{x}_{z}',nut((nx,424,z),ax,'M3'),'fasteners',gold)
- lid=union([box(0,F+2,H-1.5,W,D-F-2,1.5),box(1.5,F+22,H-18,1.5,394-F,16.5),box(W-3,F+22,H-18,1.5,394-F,16.5)])
- lid=cut(lid,[side_holes(y,H-10,1.8) for y in (65,380)]+[box(-3,y-4.5,H-18.1,446,9,5.3) for y in (F+12,424)])
- add('Lid_with_separate_side_fasteners',lid,'lid',visible=False)
+ # The lid is a flat top with two welded inset strips.
+ lid_tools=[side_holes(y,H-10,1.8) for y in (65,380)]+[box(-3,y-4.5,H-18.1,446,9,5.3) for y in (F+12,424)]
+ lid_pieces=[form('Lid_top_sheet',box(0,F+2,H-1.5,W,D-F-2,1.5),1.5,[],lid_tools)[1]]
+ lid_pieces+=[form(f'Lid_{side}_return_strip',box(x,F+22,H-18,1.5,394-F,16.5),1.5,[],lid_tools)[1] for side,x in (('left',1.5),('right',W-3))]
+ add('Lid_with_separate_side_fasteners',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
  for y in (65,380):
   for side,x,ax,nx in [('left',0,(1,0,0),3),('right',440,(-1,0,0),437)]:
    fast(f'{side}_lid_M3x6_{y}',(x,y,H-10),ax,'M3',6,'lid_screws',visible=False)
@@ -153,8 +172,8 @@ def build(out,cache,fan_size=120,return_parts=False):
  # The PSU reference includes the actual envelope and photo-derived interfaces.
  cradle_y=add_psu(add,R)
  for y in cradle_y:
-  fast(f'PSU_cradle_M3x6_side_screw_{y}',(0,y,13.5),(1,0,0),'M3',6)
-  add(f'PSU_cradle_M3_nut_{y}',nut((3,y,13.5),(1,0,0),'M3'),'fasteners',gold)
+  fast(f'PSU_cradle_M3x6_side_screw_{y}',(0,y,16.5),(1,0,0),'M3',6)
+  add(f'PSU_cradle_M3_nut_{y}',nut((3,y,16.5),(1,0,0),'M3'),'fasteners',gold)
  # Board and slots share a seating datum. Aperture dimensions follow ATX/CEM.
  board_top=17.57;host_w=board_top+11.25-4.4;host_bearing=host_w+104.86
  board_datum_y=R-59.05+46.94;board_rear=board_datum_y+10.16;board_front=board_rear-330.2
@@ -177,7 +196,10 @@ def build(out,cache,fan_size=120,return_parts=False):
   for dx in (-35.75,35.75):
    for dz in (-35.75,35.75):
     add(f'Rear_fan_self_tapping_5x8_screw_{x+dx}_{110+dz}',fan_screw((x+dx,R+1.2,110+dz),(0,-1,0)),'fasteners',dark)
- lower=add('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns',cut(lower,lc),'shell');profile('lower_rear_face_no_returns',lower,'y',R)
+ # Joined assembly: 1.2 mm rear web and two 1.5 mm return strips.
+ lower_pieces=[form('Lower_rear_1p2mm_web',box(1.5,R,1.5,437,1.2,167),1.2,[],lc)[1]]
+ lower_pieces+=[form(f'Lower_rear_{side}_1p5mm_return_strip',box(x,R+1.2,1.5,1.5,14.8,167),1.5,[],lc)[1] for side,x in (('left',1.5),('right',437))]
+ lower=add('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns',union([p['shape'] for p in lower_pieces]),'shell',pieces=lower_pieces);profile('lower_rear_face_no_returns',lower,'y',R)
  io_carrier=cut(box(108,R-1.2,4,165.86,1.2,64),[box(io_x,R-2,io_z,158.75,4,44.45)]+[cyl(x,R-2,z,1.7,6,(0,1,0)) for x in (122,260) for z in (7.5,64.5)])
  add('Flat_1p2mm_IO_carrier_with_clear_shield_lands',io_carrier,'shell');profile('IO_shield_carrier',io_carrier,'y',R-1.2)
  for x in (122,260):
@@ -193,11 +215,12 @@ def build(out,cache,fan_size=120,return_parts=False):
   add(f'External_entry_nut_{x}',nut((x,R,152.5),(0,-1,0),'M3'),'fasteners',gold)
  add('External_35x14mm_plug_transit_envelope',box(325,R-10,145.5,35,35,14),'clearance',orange,'clearance',False)
  # Folded angles bolt to the U-shell; the GPU tray rests on them.
- hold=[(12,132),(90,132),(350,132),(428,132)]
+ # Hold-down nuts sit clear of the front bearing angle's inside bend radius.
+ hold=[(12,134.5),(90,134.5),(350,134.5),(428,134.5)]
  for x in (1.5,420):
   rail=union([box(x,145,Z-1.5,18.5,270,1.5),box(1.5 if x==1.5 else 437,145,150,1.5,270,18.5)])
-  rail=cut(rail,[side_holes(y,158) for y in (180,290,390)])
-  add(f'Bolted_folded_side_bearing_{x}',rail,'guides')
+  rail,piece=form(f'Bolted_folded_side_bearing_{x}',rail,1.5,[('y',(1.5 if x==1.5 else 438.5,Z),(1 if x==1.5 else -1,-1))],[side_holes(y,158) for y in (180,290,390)])
+  add(f'Bolted_folded_side_bearing_{x}',rail,'guides',pieces=[piece])
   ax=(1,0,0) if x==1.5 else (-1,0,0);sx=0 if x==1.5 else 440;nx=3 if x==1.5 else 437
   for y in (180,290,390):
    headx=sx-.5 if ax==(1,0,0) else sx+.5
@@ -205,31 +228,43 @@ def build(out,cache,fan_size=120,return_parts=False):
    add(f'Side_ledge_M3_washer_{x}_{y}',cyl(headx,y,158,3.5,.5,ax).cut(cyl(headx,y,158,1.6,.5,ax)),'fasteners')
    add(f'Side_ledge_nut_{x}_{y}',nut((nx,y,158),ax,'M3'),'fasteners',gold)
  front_ledge=union([box(1.5,126,168.5,437,19,1.5),box(1.5,126,150,437,1.5,18.5)])
- add('Front_bearing_angle_spot_welded_to_side_angles',cut(front_ledge,[cyl(x,y,168,2.25,4) for x,y in hold]),'guides')
+ front_ledge,piece=form('Front_bearing_angle_spot_welded_to_side_angles',front_ledge,1.5,[('x',(126,Z),(1,-1))],[cyl(x,y,168,2.25,4) for x,y in hold])
+ add('Front_bearing_angle_spot_welded_to_side_angles',front_ledge,'guides',pieces=[piece])
  for x,y in hold:
   add(f'Tray_M4_captive_nut_{x}',nut((x,y,168.5),(0,0,-1),'M4'),'guides',gold)
   fast(f'Tray_M4x8_hold_down_{x}',(x,y,171.5),(0,0,-1),'M4',8,'hold_downs')
- tray=cut(box(4.5,126,170,431,R-126,1.5),[cyl(x,y,169,2.25,4) for x,y in hold])
- tray=union([tray,box(4.5,145,171.5,1.5,260,10.5),box(434,145,171.5,1.5,260,10.5)])
- add('GPU_tray_two_side_bends',tray,'cassette',moving=True);profile('GPU_tray_floor_no_returns',tray,'z',170)
+ tray=union([box(4.5,126,170,431,R-126,1.5),box(4.5,145,171.5,1.5,260,10.5),box(434,145,171.5,1.5,260,10.5)])
+ # Partial-length side flanges need bend reliefs where the floor edge continues.
+ tray,piece=form('GPU_tray_two_side_bends',tray,1.5,[('y',(4.5,170),(1,1),dict(span=(145,405),relief=True)),('y',(435.5,170),(-1,1),dict(span=(145,405),relief=True))],[cyl(x,y,169,2.25,4) for x,y in hold])
+ add('GPU_tray_two_side_bends',tray,'cassette',moving=True,pieces=[piece]);profile('GPU_tray_floor_no_returns',tray,'z',170)
  for y in (146,405):
-  add(f'GPU_tray_spot_welded_channel_{y}',union([box(22,y,168.5,396,8,1.5),box(22,y,161,396,1.5,7.5),box(22,y+6.5,161,396,1.5,7.5)]),'cassette',moving=True)
+  channel,piece=form(f'GPU_tray_spot_welded_channel_{y}',union([box(22,y,168.5,396,8,1.5),box(22,y,161,396,1.5,7.5),box(22,y+6.5,161,396,1.5,7.5)]),1.5,[('x',(y,170),(1,-1)),('x',(y+8,170),(-1,-1))])
+  add(f'GPU_tray_spot_welded_channel_{y}',channel,'cassette',moving=True,pieces=[piece])
  # Simple punched tie slots in side-mounted angles, outside the GPU extraction path.
  for side,x in [('power',1.5),('signal',426.5)]:
   bracket=union([box(x,70,171.5,12,50,1.5),box(1.5 if side=='power' else 437,70,171.5,1.5,50,38)])
-  bracket=cut(bracket,[box(x+3,y,170,3,9,5) for y in (77,96)]+[side_holes(90,z) for z in (177,200)])
-  add(f'{side}_side_cable_restraint_angle',bracket,'strain_relief')
+  # Tie slots sit 3 mm from the free edge on both angles, clear of the bend.
+  slot_x=x+6 if side=='power' else x+3
+  bracket,piece=form(f'{side}_side_cable_restraint_angle',bracket,1.5,[('y',(1.5 if side=='power' else 438.5,171.5),(1 if side=='power' else -1,1))],[box(slot_x,y,170,3,9,5) for y in (77,96)]+[side_holes(90,z) for z in (180,200)])
+  add(f'{side}_side_cable_restraint_angle',bracket,'strain_relief',pieces=[piece])
   sx=0 if side=='power' else 440;ax=(1,0,0) if side=='power' else (-1,0,0);nx=3 if side=='power' else 437
-  for z in (177,200):
+  # The lower restraint nut clears the angle's inside bend radius.
+  for z in (180,200):
    fast(f'{side}_restraint_M3x8_{z}',(sx,90,z),ax,'M3',8)
    add(f'{side}_restraint_nut_{z}',nut((nx,90,z),ax,'M3'),'fasteners',gold)
  # Adjustable backplane supports: rows slide in Y and standoff studs slide in X.
  points=BOARD_MOUNT_POINTS
- def mount_add(name,s,group,color,role='fabricated',visible=True):return add(name,s.translate((0,0,170)),group,color,role,visible,True)
+ def mount_add(name,s,group,color,role='fabricated',visible=True,pieces=None):
+  lift=lambda shape:shape.translate((0,0,170))
+  return add(name,lift(s),group,color,role,visible,True,[dict(p,shape=lift(p['shape']),bends=transform_bends(p['bends'],lift)) for p in pieces] if pieces else None)
  supports(mount_add,[171.8,265.3,381.0],points,18,female=True)
  bz=188.;bt=2.5;gw=bz+bt+11.25-4.4;gb=gw+104.86
  gpu_axes=[BOARD_X+x for x in BOARD_SLOT_X[1:-1]]
- slots=[gpu_axes[0]+7.155+i*20.32 for i in range(20)]
+ # Twenty-one positions span all twelve sockets: slots[0] serves the leading single-width socket,
+ # the ten GPUs use slots[1:], and slots[-1] also aligns with the trailing single-width socket.
+ aux_axis=BOARD_X+BOARD_SLOT_X[0]
+ slots=[aux_axis+7.155+i*20.32 for i in range(P['upper_slot_count'])]
+ assert all(abs(slots[2*i+1]-x-7.155)<1e-9 for i,x in enumerate(gpu_axes))
  outline=backplane_outline()
  pcb=cq.Workplane('XY').polyline(outline).close().extrude(bt).translate((0,0,bz)).val()
  pcb=cut(pcb,board_hole_tools(bz-1,bt+2))
@@ -245,7 +280,7 @@ def build(out,cache,fan_size=120,return_parts=False):
   s=box(x-3.75,sy,z,7.5,89,11.25).cut(box(x-.8,sy+2,w,1.6,85,5))
   s=s.fuse(box(x-.8,R-59.05-.75,w,1.6,1.5,4.4))
   add(name,s,group,dark,'reference',moving=moving)
- def bracket(name,cx,w,group,moving=False,blank=False):
+ def bracket(name,cx,w,group,moving=False,blank=False,tapped=False):
   bearing=w+104.86;tip=bearing+.86-120.02;sx=cx-9.21
   b=box(cx-9.21,R-.86,tip+7.27,18.42,.86,111.89)
   if not blank:b=b.cut(box(cx-6.03,R-1.5,bearing+.86-10.16-89.9,12.06,3,89.9))
@@ -253,7 +288,8 @@ def build(out,cache,fan_size=120,return_parts=False):
   b=cut(b,[cyl(sx,R+5.08,bearing-1,2.21,3),box(cx-9.22,R+2.87,bearing-1,max(.01,sx-cx+9.22),4.42,3)])
   add(name,b,group,gold,'reference',moving=moving)
   fast(name+'_6_32_screw',(sx,R+5.08,bearing+.86),(0,0,-1),'6-32',6.35,moving=moving)
-  add(name+'_captive_6_32_hex_nut',nut((sx,R+5.08,bearing-1.5),(0,0,-1),'6-32'),'fasteners',gold,moving=moving)
+  # GPU-bank screws thread into the tapped shelf; motherboard-bank screws use captive nuts.
+  if not tapped:add(name+'_captive_6_32_hex_nut',nut((sx,R+5.08,bearing-1.5),(0,0,-1),'6-32'),'fasteners',gold,moving=moving)
  def retention(name,centres,w,group,moving=False):
   bearing=w+104.86;tip=bearing+.86-120.02;x0=centres[0]-14;ww=min(436.5,centres[-1]+14)-x0
   shelf=cut(box(x0-3,R+1.2,bearing-1.5,ww+3,10.8,1.5),[cyl(x-9.21,R+5.08,bearing-2,1.95,4) for x in centres])
@@ -265,21 +301,27 @@ def build(out,cache,fan_size=120,return_parts=False):
  retention('Upper_bank',slots,gw,'cassette',True);retention('Lower_bank',host_centres,host_w,'shell')
  # Rear bank ends at the bracket shelf. The removable lid closes the space above it.
  rear=union([box(1.8,R,171.5,436.4,1.2,gb-171.5),box(1.8,R+1.2,171.5,1.2,12.8,gb-171.5),box(437,R+1.2,171.5,1.2,12.8,gb-171.5),box(1.8,R,171.5,436.4,1.2,3)])
- rear=rear.cut(cq.Compound.makeCompound([box(x-9.21-5,R-1,gb-1.5-2.778-.5,10,4,3.278) for x in slots]))
- rear=cut(rear,[box(x-7.5,R-1,gw-.67,15,4,103) for x in slots]+[side_holes(424,z) for z in (205,290)])
- rear=add('Full_width_twenty_slot_rear_with_side_returns',rear,'cassette',moving=True);profile('upper_rear_face_no_returns',rear,'y',R)
+ # Apertures stop two thicknesses below the shelf bend tangent so forming does not distort them.
+ rear=cut(rear,[box(x-7.5,R-1,gw-.67,15,4,100.5) for x in slots]+[side_holes(424,z) for z in (205,290)])
+ rear=add('Full_width_twenty_one_slot_rear_with_side_returns',rear,'cassette',moving=True);profile('upper_rear_face_no_returns',rear,'y',R)
  for i,x in enumerate((BOARD_X+BOARD_SLOT_X[0],BOARD_X+BOARD_SLOT_X[-1]),1):
   socket(f'Backplane_auxiliary_single_width_socket_{i}',x,190.5,'backplane',True)
+ # CEM single-width envelope: 2.67 secondary-side and 14.47 primary-side component height.
+ aux_body=box(aux_axis-3.455,R-1.9-266.7,gw+8.89,18.71,266.7,111.76-8.89)
+ aux_edge=box(aux_axis-.785,R-59.05-71.5,gw,1.57,83,8.89).cut(box(aux_axis-1,R-59.05-.85,gw-1,2,1.7,8.8))
+ add('Auxiliary_socket_1_single_width_card_envelope',union([aux_body,aux_edge]),'aux_card',green,'reference',moving=True)
+ bracket('Auxiliary_socket_1_bracket',slots[0],gw,'brackets',True,tapped=True)
  for i,x in enumerate(gpu_axes):
   socket(f'GPU_socket_{i+1}',x,190.5,'backplane',True)
   body=box(x-3.455,R-1.9-266.7,gw+8.89,40,266.7,111.76-8.89)
   edge=box(x-.785,R-59.05-71.5,gw,1.57,83,8.89).cut(box(x-1,R-59.05-.85,gw-1,2,1.7,8.8))
   add(f'GPU_{i+1}_Max_Q_envelope',union([body,edge]),'gpus',blue,'reference',moving=True)
-  for j in (0,1):bracket(f'GPU_{i+1}_bracket_{j+1}',slots[2*i+j],gw,'brackets',True)
+  for j in (0,1):bracket(f'GPU_{i+1}_bracket_{j+1}',slots[2*i+1+j],gw,'brackets',True,tapped=True)
  # Handles are forward of all GPU bodies; they do not cover the backplane latches.
  for x in (45,360):
   h=union([box(x,129,171.5,28,12,1.5),box(x,139.5,173,28,1.5,32)])
-  add(f'Tray_handhold_{x}',h.cut(box(x+5,138.5,181,18,4,18)),'cassette',moving=True)
+  h,piece=form(f'Tray_handhold_{x}',h,1.5,[('x',(141,171.5),(-1,1))],[box(x+5,138.5,181,18,4,18)])
+  add(f'Tray_handhold_{x}',h,'cassette',moving=True,pieces=[piece])
  # Ten nominal SSI EEB positions matched to the ten holes in the ASUS manual.
  local=[('F',6.35,33.02),('M',6.35,237.49),('Z',6.35,322.58),('C',163.83,10.16),('H',163.83,165.10),('Y',163.83,322.58),('A',288.29,10.16),('G',288.29,165.10),('K',288.29,237.49),('X',293.37,322.58)]
  mh=[(n,115+x,board_rear-d) for n,x,d in local]
@@ -287,8 +329,9 @@ def build(out,cache,fan_size=120,return_parts=False):
  mbtray=cut(box(112,74,6,314,336.5,2),[cyl(x,y,5,1.7,5) for _,x,y in mh]+[cyl(x,y,5,1.7,5) for x,y in tray_fix])
  add('WRX90_board_specific_replaceable_tray',mbtray,'motherboard_mounts');profile('motherboard_tray',mbtray,'z',6)
  for x,y in tray_fix:
-  foot=union([box(x-6,y-6,4.5,12,12,1.5),box(x-6,y-6,1.5,1.5,12,3),box(x+4.5,y-6,1.5,1.5,12,3)]).cut(cyl(x,y,1,1.7,6))
-  add(f'Motherboard_tray_welded_sheet_bridge_{x}_{y}',foot,'motherboard_mounts')
+  foot=union([box(x-6,y-6,4.5,12,12,1.5),box(x-6,y-6,1.5,1.5,12,3),box(x+4.5,y-6,1.5,1.5,12,3)])
+  foot,piece=form(f'Motherboard_tray_welded_sheet_bridge_{x}_{y}',foot,1.5,[('y',(x-6,6),(1,-1)),('y',(x+6,6),(-1,-1))],[cyl(x,y,1,1.7,6)])
+  add(f'Motherboard_tray_welded_sheet_bridge_{x}_{y}',foot,'motherboard_mounts',pieces=[piece])
   add(f'Motherboard_tray_bridge_captive_M3_nut_{x}_{y}',nut((x,y,4.5),(0,0,-1),'M3'),'motherboard_mounts',gold)
   fast(f'Motherboard_tray_M3x6_{x}_{y}',(x,y,8),(0,0,-1),'M3',6,'motherboard_mounts')
  board=cut(box(115,board_front,16,304.8,330.2,1.57),[cyl(x,y,15,1.7,4) for _,x,y in mh])
@@ -365,14 +408,15 @@ def build(out,cache,fan_size=120,return_parts=False):
  add('External_MCIO_optional_route',ext_shape,'external_route',teal,'clearance',False)
  # Compact tie tabs touch the shell. Cable ties are released and harnesses parked forward for service.
  tab=union([box(1.5,205,60,1.5,30,30),box(1.5,205,60,15,30,1.5)])
- tab=cut(tab,[side_holes(220,75),box(5,211,59,4,16,4)])
- add('Lower_PSU_harness_side_tie_tab',tab,'strain_relief')
+ # The tie slot sits 3 mm clear of the bend.
+ tab,piece=form('Lower_PSU_harness_side_tie_tab',tab,1.5,[('y',(1.5,60),(1,1))],[side_holes(220,75),box(7.5,211,59,4,16,4)])
+ add('Lower_PSU_harness_side_tie_tab',tab,'strain_relief',pieces=[piece])
  fast('Lower_PSU_tie_M3x8',(0,220,75),(1,0,0),'M3',8)
  add('Lower_PSU_tie_M3_nut',nut((3,220,75),(1,0,0),'M3'),'fasteners',gold)
  from rear_panel import consolidate_gpu_rear
  rear_panel_design=consolidate_gpu_rear(parts,out)
  (out/'rear_panel_design.json').write_text(json.dumps(rear_panel_design,indent=2))
- rear_shape=next(a['shape'] for a in parts if a['name']=='Full_width_twenty_slot_rear_with_side_returns')
+ rear_shape=next(a['shape'] for a in parts if a['name']=='Full_width_twenty_one_slot_rear_with_side_returns')
  for a in parts:
   if 'cassette_rear_captive_nut' in a['name']:
    assert a['shape'].distance(rear_shape)<1e-5 and overlap(a['shape'],rear_shape)<1e-5,a['name']
@@ -405,7 +449,7 @@ def build(out,cache,fan_size=120,return_parts=False):
  for dz in (1,10,50,125,170):
   hits=[]
   for a in parts:
-   if a['group'] not in ('gpus','brackets'):continue
+   if a['group'] not in ('gpus','aux_card','brackets'):continue
    s=a['shape'].translate((0,0,dz))
    for b in parts:
     if b['group'] in ('shell','cassette','strain_relief','guides','partition','rear_vent') and overlap(s,b['shape'])>1e-4:hits.append([a['name'],b['name']])
@@ -421,13 +465,13 @@ def build(out,cache,fan_size=120,return_parts=False):
  component_route_hits=[]
  for i,a in enumerate(mcio_shapes,1):
   for b in parts:
-   if b['group'] in ('hoses','aio','gpus','psu','power','motherboard','cpu') and overlap(physical(a),b['shape'])>1e-4:component_route_hits.append([f'MCIO_route_{i}',b['name']])
+   if b['group'] in ('hoses','aio','gpus','aux_card','psu','power','motherboard','cpu') and overlap(physical(a),b['shape'])>1e-4:component_route_hits.append([f'MCIO_route_{i}',b['name']])
  psu_envelope=physical(box(6,R-175,10,86,175,150))
  psu_hits=[a['name'] for a in parts if a['group'] in ('hoses','motherboard','retimers','power','mcio','cpu') and overlap(psu_envelope,a['shape'])>1e-4]
  assert not psu_hits,('PSU occupancy conflicts',psu_hits)
  hardware_hits=[]
  for a in parts:
-  if a['group'] not in ('gpus','retimers','lower_blank','power','mcio','hoses','external_route'):continue
+  if a['group'] not in ('gpus','aux_card','retimers','lower_blank','power','mcio','hoses','external_route'):continue
   for b in parts:
    if b['role']=='fabricated' and b['group'] in ('shell','cassette','guides','partition','strain_relief','rear_vent'):
     if overlap(a['shape'],b['shape'])>1e-4:hardware_hits.append([a['name'],b['name']])
@@ -439,12 +483,12 @@ def build(out,cache,fan_size=120,return_parts=False):
    plastic_joint=('_self_tapping_5x8_screw_' in a['name'] and b['group']=='fans') or ('_self_tapping_5x8_screw_' in b['name'] and a['group']=='fans')
    if not plastic_joint and overlap(a['shape'],b['shape'])>1e-4:intake_hits.append([a['name'],b['name']])
  assert not intake_hits,('Intake component interference',intake_hits)
- checks=dict(PSU_model='ASUS-PRO-WS-3000P',PSU_size_depth_width_height_mm=[175,150,86],PSU_rear_mount_holes_construction_xz_mm=atx,PSU_handedness='Rear-view counterclockwise quarter-turn of the standard ATX pattern',backplane_socket_count=12,backplane_GPU_socket_pitch_mm=40.64,backplane_auxiliary_end_slot_gap_mm=20.32,backplane_PCB_origin_construction_xy_mm=[BOARD_X,BOARD_Y],backplane_dimensions_mm=[429,225,2.5],backplane_mounting_holes_photo_estimates=True,motherboard_standoff_type="Harwin R30-1000802 female-female M3 8 mm",motherboard_lower_screw_engagement_mm=3.5,motherboard_upper_screw_engagement_mm=2.93,motherboard_screw_tip_gap_mm=1.57,backplane_supported_holes_construction_xy_mm=BOARD_MOUNT_POINTS,cartridge_removal_requires=['lid with captive nuts','upper rear vent and its fasteners','tray hold-down screws','disconnected harnesses'],enclosure_mm=[482.6,P['depth'],H],body_width_mm=W,rack_units=9,upper_rear_positions=20,dual_slot_GPU_envelopes=10,lower_rear_positions=8,
+ checks=dict(PSU_model='ASUS-PRO-WS-3000P',PSU_size_depth_width_height_mm=[175,150,86],PSU_rear_mount_holes_construction_xz_mm=atx,PSU_handedness='Rear-view counterclockwise quarter-turn of the standard ATX pattern',backplane_socket_count=12,backplane_GPU_socket_pitch_mm=40.64,backplane_auxiliary_end_slot_gap_mm=20.32,backplane_PCB_origin_construction_xy_mm=[BOARD_X,BOARD_Y],backplane_dimensions_mm=[429,225,2.5],backplane_mounting_holes_photo_estimates=True,motherboard_standoff_type="Harwin R30-1000802 female-female M3 8 mm",motherboard_lower_screw_engagement_mm=3.5,motherboard_upper_screw_engagement_mm=2.93,motherboard_screw_tip_gap_mm=1.57,backplane_supported_holes_construction_xy_mm=BOARD_MOUNT_POINTS,cartridge_removal_requires=['lid with captive nuts','upper rear vent and its fasteners','tray hold-down screws','disconnected harnesses'],enclosure_mm=[482.6,P['depth'],H],body_width_mm=W,rack_units=9,upper_rear_positions=P['upper_slot_count'],dual_slot_GPU_envelopes=10,single_width_auxiliary_card_envelopes=1,backplane_trailing_auxiliary_socket='Shares the last rear position with the tenth GPU second bracket; usable only without that GPU',lower_rear_positions=8,
   lid_to_panel_fastener_intersections=lid_hits,intake_component_intersections=intake_hits,gpu_deck_z_mm=170,upper_fan_centres_z_mm=[210,330],upper_fan_count=6,upper_inlet_spacer_mm=0,grille_to_GPU_fan_face_mm=2,front_intake_aperture_mm=116,grille_perforation_diameter_mm=9,grille_perforation_pitch_mm=10,slot_pitch_mm=20.32,dual_slot_pitch_mm=40.64,upper_bracket_centres_x_mm=[W-x for x in slots],lower_card_planes_x_mm=[W-x for x in host_axes],
   upper_retention_screws_x_mm=[W-x+9.21 for x in slots],lower_retention_screws_x_mm=[W-x+9.21 for x in host_centres],
   lower_bracket_centres_x_mm=[W-x for x in host_centres],upper_card_planes_x_mm=[W-x for x in gpu_axes],
   bracket_screw_offset_from_centre_mm=9.21,bracket_screw_offset_from_PCB_centre_mm=2.055,
-  bracket_screw_y_mm=R+5.08-F,retention_nut='Captive standard 6-32 UNC hex nut; rear sheet relieved for corner clearance',bracket_screw_clearance_diameter_mm=3.9,
+  bracket_screw_y_mm=R+5.08-F,upper_bracket_retention='#6-32 UNC-2B threads tapped in extruded collars of the integral 1.2 mm shelf; no nuts',upper_bracket_tap_drill_mm=2.705,lower_bracket_retention='Captive standard #6-32 UNC hex nut beneath the separate 1.5 mm strip; rear web relieved for nut corners',lower_bracket_screw_clearance_diameter_mm=3.9,
   fan_mount_slot_mm=[9,5.5],shared_fan_mount_slot_mm=[24,5.5],AIO_fan_mount_slot_mm=[9,4.8],AIO_shared_fan_mount_slot_mm=[24,4.8],chassis_fan_screw="5 x 8 mm self-tapping plastic fan screw",GPU_fan_screw_penetration_mm=6,rear_fan_screw_penetration_mm=6.8,fan_frame_pitch_mm=120,adjacent_fan_screw_gap_mm=15,vent_hole_diameter_mm=9,front_vent_pitch_mm=10,
   rear_upper_vent_bounds_xz_mm=[1.5,303.07,437,H-1.5-303.07],rear_upper_vent_hole_count=len(vh)-2,rear_cover_side_screw_count=4,rear_cover_screw_heights_mm=[313,381.45],
   motherboard_CPU_centre_x_mm=W-cpu_x,rear_view_order='PSU, CPU and I/O, PCIe bank (left to right)',
@@ -463,7 +507,8 @@ def build(out,cache,fan_size=120,return_parts=False):
   'Hose routes are occupancy references; unused length, fittings and minimum bend radius require cooler CAD.',
   'ASUS 3000P has four native GPU 16-pin cables and four 8-pin GPU cables; ten GPU routes are service envelopes, not a qualified wiring plan.',
   'Miwin photo reconstruction: standard socket pitch is assumed; undimensioned coordinates require supplier verification.',
-  'Square bend intersections are nominal formed geometry; a fabricator must apply bend radii, reliefs and bend deductions.'])
+  'Miwin lists four x16 slots per switch. Photo labels suggest the two end double-width positions and both single-width sockets connect to host or NIC connectors instead; confirm slot wiring with the supplier.',
+  'Bends are formed with inside radius equal to sheet thickness and developed with K-factor 0.40; confirm both with the fabricator before cutting blanks.'])
  (out/'validation.json').write_text(json.dumps(checks,indent=2))
  print(json.dumps(checks,indent=2),flush=True)
  assert not any(v['intersections'] for v in motion), 'Cassette motion intersects fixed structure'
@@ -476,7 +521,7 @@ def build(out,cache,fan_size=120,return_parts=False):
  asm=cq.Assembly(name='Nine_unit_WRX90_GPU_chassis');cass=cq.Assembly(name='Removable_GPU_cassette');meshes=[]
  for a in parts:
   rgb=[int(a['color'][i:i+2],16)/255 for i in (1,3,5)]
-  if a['role']!='clearance' and a['group'] not in ('board_alternatives','io_shield'):asm.add(a['shape'],name=a['name'],color=cq.Color(*rgb))
+  if a['role']!='clearance' and a['group'] not in ('board_alternatives','io_shield') and not gpu_geometry.cable_route(a):asm.add(a['shape'],name=a['name'],color=cq.Color(*rgb))
   if a['moving'] and a['role']!='clearance' and a['group']!='board_alternatives':cass.add(a['shape'],name=a['name'],color=cq.Color(*rgb))
   if a['role']=='fabricated' and a['group'] in ('shell','cassette','lid','rear_vent','guides','partition','strain_relief','mounts','motherboard_mounts','psu_support','fans','intake_grilles') and not any(v in a['name'] for v in ('nut','screw','standoff','washer','M3','M4')):
    cq.exporters.export(a['shape'],str(out/'formed_parts'/(a['name']+'.step')))

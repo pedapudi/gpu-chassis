@@ -1,20 +1,17 @@
 function isIntakePart(p) {
-  return ['fans', 'fan_pads', 'fan_adapters'].includes(p.group) || p.name.startsWith('Upper_fan_self_tapping_');
+  return ['fans', 'fan_pads'].includes(p.group) || p.name.startsWith('Upper_fan_self_tapping_') || p.name.startsWith('Upper_module_front_carrier_');
 }
-let activeFanSize = 140;
-const adapterVisibility = {120: true};
-function setFanSize(size) {
-  const option = moduleFanOptions[size];
+let activeIntake = '3x140';
+function setIntake(mode) {
+  const option = moduleFanOptions[mode];
   if (!option) return;
   const previousSheet = drawingIndex.find(row => row[0] === drawingPage);
   const previousSelection = selected?.name;
-  const changing = size !== activeFanSize;
-  if (changing) {
+  if (mode !== activeIntake) {
     const visible = {};
-    for (const group of ['fans', 'fan_pads', 'intake_fasteners']) {
+    for (const group of ['fans', 'fan_pads', 'intake_fasteners', 'shell']) {
       visible[group] = all.some(p => isIntakePart(p.userData) && p.userData.group === group && p.visible);
     }
-    if (activeFanSize === 120) adapterVisibility[120] = (groups.fan_adapters || []).some(p => p.visible);
     for (let i = all.length - 1; i >= 0; i--) {
       const part = all[i];
       if (!isIntakePart(part.userData)) continue;
@@ -29,7 +26,7 @@ function setFanSize(size) {
     dataset.parameters = option.parameters;
     for (const data of option.parts) {
       const part = addViewerPart(data);
-      part.visible = data.group === 'fan_adapters' ? adapterVisibility[120] && visible.fans : visible[data.group];
+      part.visible = visible[data.group] ?? true;
       if (data.moving) part.position.z = 360 * Number(document.getElementById('explode').value);
       part.children[1].visible = document.getElementById('engineering').checked;
       part.children[1].material.opacity = .45;
@@ -38,7 +35,7 @@ function setFanSize(size) {
       }
     }
   }
-  activeFanSize = size;
+  activeIntake = mode;
   fanAssetBase = option.base;
   for (const key of Object.keys(partDetails)) delete partDetails[key];
   Object.assign(partDetails, option.details);
@@ -54,14 +51,14 @@ function setFanSize(size) {
     const href = link.getAttribute('href');
     if (!href.startsWith('../')) link.setAttribute('href', fanAssetBase + href);
   }
-  document.querySelector('[data-group="fans"]').parentElement.lastChild.textContent = `Three ${size} × 25 mm GPU intake fans`;
-  document.querySelector('[data-group="fan_pads"]').parentElement.lastChild.textContent = `Corner pads · ${size === 140 ? 141 : 120} × ${size === 140 ? 141 : 120} × 27 mm envelope`;
-  document.getElementById('fan-adapter-label').hidden = size !== 120;
-  document.getElementById('fan-status').textContent = size === 120 ? 'Includes three blanking plates' : '136 mm carrier openings';
+  document.querySelector('[data-group="fans"]').parentElement.lastChild.textContent = option.label + ' GPU intake fans';
+  const pads = document.querySelector('[data-group="fan_pads"]');
+  if (pads) pads.parentElement.hidden = !option.parts.some(p => p.group === 'fan_pads');
+  document.getElementById('fan-status').textContent = 'Own front carrier; common grille';
   document.querySelector('h1').textContent = 'RM53-502 GPU module';
-  document.title = `RM53-502 GPU module · ${size} mm fans`;
-  for (const input of document.querySelectorAll('[name="fan-size"]')) input.checked = Number(input.value) === size;
-  const url = new URL(location.href); url.searchParams.set('fan', size); history.replaceState(null, '', url);
+  document.title = `RM53-502 GPU module · ${option.label}`;
+  for (const input of document.querySelectorAll('[name="intake-mode"]')) input.checked = input.value === mode;
+  const url = new URL(location.href); url.searchParams.set('intake', mode); history.replaceState(null, '', url);
   sync(); filterParts();
   const match = previousSheet && drawingIndex.find(row => previousSheet[2] === 'Assembly' ? row[1] === previousSheet[1] : row[2] === previousSheet[2]);
   showDrawing(match ? match[0] : Math.min(drawingPage, drawingIndex.length));
@@ -72,7 +69,7 @@ function setFanSize(size) {
     document.getElementById('picked').textContent = 'Click a component for dimensions and its engineering drawing.';
   }
 }
-for (const input of document.querySelectorAll('[name="fan-size"]')) {
-  input.addEventListener('change', () => setFanSize(Number(input.value)));
+for (const input of document.querySelectorAll('[name="intake-mode"]')) {
+  input.addEventListener('change', () => setIntake(input.value));
 }
-setFanSize(new URLSearchParams(location.search).get('fan') === '120' ? 120 : 140);
+setIntake(new URLSearchParams(location.search).get('intake') in moduleFanOptions ? new URLSearchParams(location.search).get('intake') : '3x140');

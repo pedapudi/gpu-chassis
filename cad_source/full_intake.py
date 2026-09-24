@@ -8,7 +8,8 @@ import json,io,pickle
 import cadquery as cq
 from mounting_hardware import box,cyl,union,screw,nut,fan_screw
 from front_hardware import grille_holes
-from gpu_geometry import neutral_headers
+from gpu_geometry import neutral_headers,cable_route
+from sheetmetal import fold
 
 FAN_DRAWING='https://www.silverstonetek.com/upload/goods_cable_define/fan-cable-define.pdf'
 CARRIER='Front_fan_carrier_with_side_returns'
@@ -31,9 +32,9 @@ def settings(mode):
 
 def configure(parts,mode):
  spec=settings(mode);result=[a for a in parts if not intake_part(a)]
- def add(name,shape,group='shell',role='fabricated',color='#304553'):
+ def add(name,shape,group='shell',role='fabricated',color='#304553',pieces=None):
   assert shape.isValid() and shape.Volume()>0,name
-  result.append(dict(name=name,shape=shape,group=group,color=color,role=role,visible=True,moving=False))
+  result.append(dict(name=name,shape=shape,group=group,color=color,role=role,visible=True,moving=False)|(dict(pieces=pieces) if pieces else {}))
  # The unchanged side returns retain all body, ear and grille attachment datums.
  front=union([box(0,0,0,440,2,399.25),box(1.5,2,2,1.5,18,395.25),box(437,2,2,1.5,18,395.25),box(1.5,2,2,18.5,1.5,395.25),box(420,2,2,18.5,1.5,395.25)])
  cuts=[box(24,-1,159,392,4,222)]
@@ -43,11 +44,17 @@ def configure(parts,mode):
   cuts += [slot(x,-1,z,24,4.8,5) for x in (160,280)]
  cuts += [cyl(x,-1,z,1.7,6,(0,1,0)) for x,z in GRILLE_FIXES]
  cuts += [cyl(-5,12,z,1.7,450,(1,0,0)) for z in (22,148,205,290,381.45)]
- front=front.cut(cq.Compound.makeCompound(cuts))
+ front_cuts=cq.Compound.makeCompound(cuts)
  # A factory-attached backing ring supports the flush, front-removable insert.
  ring=box(21,2,150,398,2,240).cut(box(35,1,170,370,4,200))
  ring=ring.cut(cq.Compound.makeCompound([cyl(x,1,z,1.7,4,(0,1,0)) for x,z in INSERT_FIXES]))
- add(CARRIER,union([front,ring]))
+ # Joined assembly: 2 mm face, two formed 1.5 mm side angles and the 2 mm backing ring.
+ pieces=[dict(name='Full_chassis_front_carrier_2mm_face',shape=box(0,0,0,440,2,399.25).cut(front_cuts),t=2.,bends=[])]
+ for side,x0,cx,sx in (('left',1.5,1.5,1),('right',420,438.5,-1)):
+  bends=[];angle=fold(union([box(1.5 if sx>0 else 437,2,2,1.5,18,395.25),box(x0,2,2,18.5,1.5,395.25)]),bends,'z',(cx,2),(sx,1),1.5)
+  pieces.append(dict(name=f'Full_chassis_front_carrier_{side}_1p5mm_side_angle',shape=angle.cut(front_cuts),t=1.5,bends=bends))
+ pieces.append(dict(name='Full_chassis_front_carrier_2mm_backing_ring',shape=ring,t=2.,bends=[]))
+ add(CARRIER,union([p['shape'] for p in pieces]),pieces=pieces)
  insert=box(25,0,160,390,2,220);cuts=[cyl(x,-1,270,spec['opening']/2,4,(0,1,0)) for x in spec['x_centres']]
  axes=[(x+dx,270+dz) for x in spec['x_centres'] for dx in (-spec['pitch']/2,spec['pitch']/2) for dz in (-spec['pitch']/2,spec['pitch']/2)]
  for z in (270-spec['pitch']/2,270+spec['pitch']/2):
@@ -94,10 +101,10 @@ def export_variant(parts,base_checks,out,mode):
  (out/'validation.json').write_text(json.dumps(checks,indent=2));(out/'parameters.json').write_text(json.dumps(dict(width=440,depth=485,height=399.25,gpu_deck_z=170,full_intake_mode=mode,upper_fan_size=s['size']),indent=2))
  serial=[]
  for a in parts:
-  q=a.copy();buf=io.BytesIO();q.pop('shape').exportBrep(buf);q['brep']=buf.getvalue();serial.append(q)
+  q=a.copy();q.pop('pieces',None);buf=io.BytesIO();q.pop('shape').exportBrep(buf);q['brep']=buf.getvalue();serial.append(q)
   if a['role']=='fabricated' and a['group'] in ('shell','cassette','lid','rear_vent','guides','strain_relief','mounts','motherboard_mounts','psu_support','intake_grilles','rack_ears') and not any(t in a['name'] for t in ('nut','screw','standoff','washer','M3','M4')):cq.exporters.export(a['shape'],str(out/'formed_parts'/(a['name']+'.step')))
  (out/'parts.brep.pickle').write_bytes(pickle.dumps(serial))
- for name,filter_part in [('double_deck_assembly',lambda a:a['role']!='clearance' and a['group'] not in ('board_alternatives','io_shield')),('front_intake_assembly',intake_part),('upper_fan_modules',lambda a:a['group']=='fans')]:
+ for name,filter_part in [('double_deck_assembly',lambda a:a['role']!='clearance' and a['group'] not in ('board_alternatives','io_shield') and not cable_route(a)),('front_intake_assembly',intake_part),('upper_fan_modules',lambda a:a['group']=='fans')]:
   asm=cq.Assembly(name=name)
   for a in parts:
    if filter_part(a):asm.add(a['shape'],name=a['name'],color=cq.Color(*[int(a['color'][i:i+2],16)/255 for i in (1,3,5)]))

@@ -35,15 +35,15 @@ def rear_elevation(shape,c,base_z,upper=True):
                 path=c.beginPath();path.moveTo(*p(points[0].x,points[0].z))
                 for v in points[1:]:path.lineTo(*p(v.x,v.z))
                 c.drawPath(path)
-    count=20 if upper else 8;centres=[(12.645 if upper else 13.345)+20.32*i for i in range(count)];zlo=base_z+16.68 if upper else 23.75;zhi=zlo+103
+    count=21 if upper else 8;centres=[(12.645 if upper else 13.345)+20.32*i for i in range(count)];zlo=base_z+16.68 if upper else 23.75;height=100.5 if upper else 103;zhi=zlo+height
     # The upper panel shares the same bracket centres as the lower bank.
     x=centres[-1]
     dimension(c,p(x+7.5,zlo),p(x-7.5,zlo),'15.000',offset=-29)
-    dimension(c,p(x+7.5,zlo),p(x+7.5,zhi),'103.000',offset=-32,vertical=True)
+    dimension(c,p(x+7.5,zlo),p(x+7.5,zhi),f'{height:.3f}',offset=-32,vertical=True)
     xa,xb=centres[-4:-2] if upper else centres[1:3]
     dimension(c,p(xb,zhi),p(xa,zhi),'20.320',offset=42 if upper else 60)
-    leader(c,p(x,zlo+48),(p(x,zlo)[0]+55,bottom-(0 if upper else 70)),[f'{count} apertures: 15.000 × 103.000','Nominal R0; 5.320 web between openings'])
-    leader(c,p(centres[2]+9.21,zhi-.3),(left+500,bottom+(310 if upper else 390)),['Nut reliefs join aperture edges','Retention bores: DIA 3.900 / R1.950, normal Z','See enlarged top view for bore offset and toe notch'])
+    leader(c,p(x,zlo+48),(p(x,zlo)[0]+55,bottom-(0 if upper else 70)),[f'{count} apertures: 15.000 × {height:.3f}','Nominal R0; 5.320 web between openings'])
+    leader(c,p(centres[2]+9.21,zhi-.3),(left+500,bottom+(310 if upper else 390)),['Shelf threads: #6-32 UNC-2B, extruded collars','Every web joins the upper bend','See enlarged top view for thread offset and toe notch'] if upper else ['Nut reliefs join aperture edges','Retention bores: DIA 3.900 / R1.950, normal Z','See enlarged top view for bore offset and toe notch'])
     if not upper:
         leader(c,p(209,110),(left+40,bottom+380),['2 × DIA 76 / R38 exhaust openings','80 mm fans: 71.500 square mounting pitch'])
         leader(c,p(428,154),(left+10,bottom-65),['4 × DIA 3.900 / R1.950','PSU mounting clearance'])

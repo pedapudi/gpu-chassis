@@ -6,6 +6,7 @@ from mounting_hardware import box,cyl,union,cut,screw,fan_screw,nut,slot
 from build_chassis import overlap
 import gpu_geometry
 from sheetmetal import fold,move_part
+from threads import tap_captive_nuts,captive_screw
 from front_hardware import add_ears,ear_holes,grille_holes
 
 # Each intake option has its own removable front carrier; one grille gives tool access to all three.
@@ -65,7 +66,7 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  bh=[]
  for y,z in [(233.2,230.25),(343.2,230.25),(443.2,230.25),(143.2,252.25),(143.2,272.25),(477.2,277.25),(477.2,362.25)]:bh.append(hole_side(y,z))
  for z in (242,320,388,430):bh.append(hole_side(12,z))
- bh += [hole_side(477.2,233.75),hole_side(477.2,390),hole_side(118.2,H-10,1.8),hole_side(433.2,H-10,1.8)]
+ bh += [hole_side(477.2,233.75),hole_side(477.2,390,3.2),hole_side(118.2,H-10,3.2),hole_side(433.2,H-10,3.2)]
  for y in (100,240,380):bh.append(hole_side(y,231,2.25))
  bh += ear_holes(0,(252,354))
  body,piece=form('Upper_module_U_body_with_cable_passages',body,1.5,[('y',(0,bottom),(1,1)),('y',(W,bottom),(-1,1))],bh)
@@ -163,7 +164,7 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
   add(f'Rear_MCIO_captive_M3_nut_{x}_{z:g}',nut((x,483.5,z),(0,-1,0),'M3'),'entry_fasteners','#b39451')
  add('Rear_MCIO_35x14_plug_transit_cap_removed',box(202.5,440,383+rise,35,100,14),'clearance','#cb843c','clearance',False)
  for x,ax,nx in [(0,(1,0,0),3),(440,(-1,0,0),437)]:
-  add(f'Rear_vent_M3x8_{x}',screw((x,477.2,390),ax,'M3',8),'fasteners')
+  add(f'Rear_vent_captive_thumbscrew_{x}',captive_screw((1.5 if x==0 else 438.5,477.2,390),ax,5),'fasteners')
   add(f'Rear_vent_nut_{x}',nut((nx,477.2,390),ax,'M3'),'fasteners')
  # The lid is a flat top with two welded inset strips.
  lid_tools=[hole_side(y,H-10,1.8) for y in (118.2,433.2)]
@@ -172,7 +173,7 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  add('Upper_module_side_fastened_lid',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
  for y in (118.2,433.2):
   for x,ax,nx in [(0,(1,0,0),3),(440,(-1,0,0),437)]:
-   add(f'Lid_M3x6_{x}_{y}',screw((x,y,H-10),ax,'M3',6),'lid_screws',visible=False)
+   add(f'Lid_captive_thumbscrew_{x}_{y}',captive_screw((1.5 if x==0 else 438.5,y,H-10),ax,5),'lid_screws',visible=False)
    add(f'Lid_captive_nut_{x}_{y}',nut((nx,y,H-10),ax,'M3'),'lid_guides')
  # OEM mating holes are intentionally absent: transfer from the actual removed cover.
  ring=cut(box(0,0,220,W,D,1.5),[box(15,15,219,410,455,4)]+[cyl(x,y,219,1.7,4) for x,y in mounting])
@@ -208,6 +209,9 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
   add(f'GPU_{i+1}_paired_power_service_stub',tube(points,6),'power','#cb843c','reference')
  add('External_MCIO_rear_entry_optional_route',tube([(220,540,390+rise),(220,460,390+rise),(220,180,390+rise),(330,180,350),(330,180,269.75),(340,193.7,269.75)],3),'external_route','#337f89','clearance',False)
  add('Backplane_auxiliary_power_service_stub',tube([(352,158.2,190),(352,158.2,266.75),(367,243.2,267.75)],4),'power','#cb843c','reference')
+ # Captive nuts become extruded tapped threads in the sheet that held them.
+ tapped_threads=tap_captive_nuts(parts,lambda p:'nut' in p['name'] and 'DIN562' not in p['name'] and '_guide_strip_' not in p['name'])
+ (out/'tapped_threads.json').write_text(json.dumps(tapped_threads,indent=2))
  # Floor passage fit and removable-tray travel are checked with disconnected harnesses.
  fixed=[p for p in parts if not p['moving'] and p['role']=='fabricated' and p['group'] in ('shell','guides','partition','strain_relief','adapter')]
  moving=[p for p in parts if p['moving'] and p['role']!='clearance' and p['group'] not in ('fasteners','board_alternatives')]
@@ -229,13 +233,14 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
   if p['group']!='mcio':continue
   for q in parts:
    if q['group'] in ('power','fans','gpus','aux_card') and overlap(p['shape'],q['shape'])>1e-4:signal_power_hits.append([p['name'],q['name']])
- # Intake parts must clear every other part; fan screws intentionally thread into fan plastic.
+ # Intake parts must clear every other part; fan screws thread into fan plastic and grille screws into formed threads.
  intake_hits=[]
  for p in parts:
   if p['group'] not in ('fans','fan_pads','intake_grilles','intake_fasteners'):continue
   for q in parts:
    if q is p or q['role']=='clearance' or q['group'] in ('board_alternatives','oem_cage'):continue
    screw_in_fan=('_self_tapping_5x8_screw_' in p['name'] and q['group'] in ('fans','fan_pads')) or ('_self_tapping_5x8_screw_' in q['name'] and p['group'] in ('fans','fan_pads'))
+   screw_in_fan|=p.get('thread_host')==q['name'] or q.get('thread_host')==p['name']
    if not screw_in_fan and overlap(p['shape'],q['shape'])>1e-4:intake_hits.append(sorted([p['name'],q['name']]))
  intake_hits=sorted(map(list,{tuple(h) for h in intake_hits}))
  gpu_top=max(p['shape'].BoundingBox().zmax for p in parts if p['group']=='gpus')

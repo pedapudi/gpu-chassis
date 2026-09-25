@@ -45,7 +45,7 @@ def clearance_details(parts,mod,api):
         dim(c,p(469,68),p(469,70),'2.000 gap',True,offset=-80)
         mark(c,p(465,72),'80 mm fan frame',(760,540));mark(c,p(470.8,66),'I/O carrier',(760,460))
     t=242.25 if mod else 170
-    selected=[a['shape'] for a in parts if a['name'] in ('GPU_tray_two_side_bends','Miwin_MG_SW510B_429x225_PCB_photo_reference','M3_8mm_female_female_standoff_1') or 'Sliding_crossbar' in a['name'] or 'Longitudinal_mount_rail' in a['name'] or 'Rail_welded_sheet_bridge' in a['name']]
+    selected=[a['shape'] for a in parts if a['name'] in ('GPU_tray_two_side_bends','Miwin_MG_SW510B_429x225_PCB_photo_reference','M3_8mm_female_female_standoff_1') or 'Sliding_crossbar' in a['name'] or 'Longitudinal_mount_rail' in a['name']]
     new('Backplane support | installed height section','Assembly')
     para('Local CAD section at Y227 through a post and its crossbar. The rail is shown at the right. Cut boundaries are cropped; installed heights share the tray underside datum.',32,H-82,W-64,11)
     p=section_view(c,selected,1,227,[345,226,t,428,228,t+23],(100,300,800,270))

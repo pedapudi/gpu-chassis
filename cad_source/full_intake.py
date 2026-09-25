@@ -89,6 +89,9 @@ def configure(parts,mode):
   for dx in (-pitch/2,pitch/2):
    for dz in (-pitch/2,pitch/2):
     sx,sz=x+dx,270+dz;add(f'GPU_fan_self_tapping_5x8_screw_{sx}_{sz}',fan_screw((sx,0,sz),(0,1,0)),'intake_fasteners')
+ # The insert and grille nuts become extruded tapped threads in the carrier.
+ from threads import tap_captive_nuts
+ tap_captive_nuts(result,lambda a:a['name'].startswith(('Intake_insert_captive_M3_nut_','Intake_grille_M3_nut_')))
  return result,spec
 
 def export_variant(parts,base_checks,out,mode):

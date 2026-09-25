@@ -8,6 +8,7 @@ import cadquery as cq
 from mounting_hardware import box,cyl,union,cut,screw,fan_screw,nut,hex_prism,supports,slot,pem_632
 import gpu_geometry
 from sheetmetal import fold,transform_bends
+from threads import tap_captive_nuts,emboss_boss,form_thread,captive_screw
 from front_hardware import add_ears,ear_holes,grille_holes
 from component_models import add_psu,psu_holes,psu_vent,backplane_outline,add_board_details,BOARD_X,BOARD_Y,BOARD_SLOT_X,BOARD_MOUNT_POINTS,board_hole_tools
 P=dict(width=440.,depth=485.,height=399.25,sheet=1.5,gpu_deck_z=170.,rear_bracket_plane=469.,
@@ -46,7 +47,7 @@ def build(out,cache,fan_size=120,return_parts=False):
   assert shape.isValid() and shape.Volume()>0,name
   part=dict(name=name,shape=physical(shape),group=group,color=color,role=role,visible=visible,moving=moving)
   # Formed sheet pieces carry their bend zones for flat-pattern development.
-  if pieces:part['pieces']=[dict(p,shape=physical(p['shape']),bends=transform_bends(p['bends'],physical)) for p in pieces]
+  if pieces:part['pieces']=[dict(p,shape=physical(p['shape']),bends=transform_bends(p['bends'],physical),tapped=[dict(h,centre=[W-h['centre'][0],h['centre'][1]-F,h['centre'][2]]) for h in p.get('tapped',[])]) for p in pieces]
   parts.append(part);return shape
  def form(name,shape,t,folds,tools=()):
   """Form the listed sharp corners of one sheet piece, then cut its features."""
@@ -80,13 +81,17 @@ def build(out,cache,fan_size=120,return_parts=False):
  # One U-section: floor and sidewalls are a single bent-sheet component.
  body=union([box(0,F+2,0,W,D-F-2,1.5),box(0,F+2,1.5,1.5,D-F-2,H-3),box(W-1.5,F+2,1.5,1.5,D-F-2,H-3)])
  panel_side_z=[22,148,205,290,381.45]
- body_holes=[side_holes(y,z) for y in (F+12,424) for z in panel_side_z]+[side_holes(y,H-10,1.8) for y in (65,380)]
+ body_holes=[side_holes(y,z) for y in (F+12,424) for z in panel_side_z]+[side_holes(y,H-10,3.2) for y in (75,380)]
  body_holes += [psu_vent(R)]+[cyl(-1,y,16.5,1.7,5,(1,0,0)) for y in (R-165,R-10)]
  # Screw positions for fixed support angles and front cable restraints.
- body_holes += [side_holes(y,158) for y in (180,290,390)]+[side_holes(424,313)]
+ body_holes += [side_holes(y,158) for y in (180,290,390)]+[side_holes(424,z,3.2) for z in (313,381.45)]
  body_holes += [side_holes(y,z) for y,z in ((90,180),(90,200),(220,75))]
  body_holes += ear_holes(F,(45,185,345))
  body,piece=form('U_shaped_body_1p5mm_two_longitudinal_bends',body,1.5,[('y',(0,0),(1,1)),('y',(W,0),(-1,1))],body_holes)
+ # Four tapped bosses embossed 4.5 mm up from the floor carry the motherboard tray.
+ tray_fix=[(118,80),(418,80),(118,402),(418,402)]
+ for x,y in tray_fix:body=emboss_boss(body,x,y,0,1.5,4.5,'M3')
+ piece['shape']=cut(piece['shape'],[cyl(x,y,-1,1.25,4) for x,y in tray_fix]);piece['tapped']=[dict(thread='M3',centre=[x,y,4.5]) for x,y in tray_fix]
  add('U_shaped_body_1p5mm_two_longitudinal_bends',body,'shell',pieces=[piece])
  # Front carrier cutouts; the face and its two side angles are separate pieces below.
  fc=[]
@@ -106,7 +111,7 @@ def build(out,cache,fan_size=120,return_parts=False):
   angle=union([box(1.5 if sx>0 else 437,F+2,3,1.5,18,H-5),box(x0,F+2,3,18.5,1.5,H-5)])
   front_pieces.append(form(f'Front_fan_carrier_{side}_1p5mm_side_angle',angle,1.5,[('z',(cx,F+2),(sx,1))],fc)[1])
  front=add('Front_fan_carrier_with_side_returns',union([p['shape'] for p in front_pieces]),'shell',dark,pieces=front_pieces);profile('front_face_no_returns',front,'y',F)
- # Side screws engage captive nuts on the front returns and lower rear returns.
+ # Side screws engage extruded tapped threads in the front returns and lower rear returns.
  for y in (F+12,424):
   for z in panel_side_z:
    if y==424 and z not in (22,148):continue
@@ -133,16 +138,17 @@ def build(out,cache,fan_size=120,return_parts=False):
  profile('upper_rear_perforated_face_no_returns',vent,'y',D)
  for x,ax,nx in [(0,(1,0,0),3),(440,(-1,0,0),437)]:
   for z in (313,381.45):
-   fast(f'Upper_vent_side_M3x8_{x}_{z}',(x,424,z),ax,'M3',8)
+   add(f'Upper_vent_side_captive_thumbscrew_{x}_{z}',captive_screw((1.5 if x==0 else 438.5,424,z),ax,5),'fasteners',dark)
    add(f'Upper_vent_captive_nut_{x}_{z}',nut((nx,424,z),ax,'M3'),'fasteners',gold)
  # The lid is a flat top with two welded inset strips.
- lid_tools=[side_holes(y,H-10,1.8) for y in (65,380)]+[box(-3,y-4.5,H-18.1,446,9,5.3) for y in (F+12,424)]
+ lid_tools=[side_holes(y,H-10,1.8) for y in (75,380)]+[box(-3,y-4.5,H-18.1,446,9,5.3) for y in (F+12,424)]
  lid_pieces=[form('Lid_top_sheet',box(0,F+2,H-1.5,W,D-F-2,1.5),1.5,[],lid_tools)[1]]
  lid_pieces+=[form(f'Lid_{side}_return_strip',box(x,F+22,H-18,1.5,394-F,16.5),1.5,[],lid_tools)[1] for side,x in (('left',1.5),('right',W-3))]
  add('Lid_with_separate_side_fasteners',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
- for y in (65,380):
+ # Lid thumbscrews sit behind the rack ears so their heads clear the ear legs.
+ for y in (75,380):
   for side,x,ax,nx in [('left',0,(1,0,0),3),('right',440,(-1,0,0),437)]:
-   fast(f'{side}_lid_M3x6_{y}',(x,y,H-10),ax,'M3',6,'lid_screws',visible=False)
+   add(f'{side}_lid_captive_thumbscrew_{y}',captive_screw((1.5 if x==0 else 438.5,y,H-10),ax,5),'lid_screws',dark,visible=False)
    add(f'{side}_lid_captive_nut_{y}',nut((nx,y,H-10),ax,'M3'),'lid_guides',gold)
  def fan(name,x,y,z,size,depth,group,moving=False):
   sp={80:71.5,120:105,140:124.5}[size]
@@ -184,7 +190,6 @@ def build(out,cache,fan_size=120,return_parts=False):
  lc=[opening,box(110,R-1,11,164,4,50)]+[cyl(x,R-1,z,1.95,4,(0,1,0)) for x,z in atx]
  lc += [box(x-7.5,R-1,host_w-.67,15,4,103) for x in host_centres]
  lc += [box(272,R-1,host_bearing,164.5,4,7)]
- lc += [box(x-9.21-5,R-1,host_bearing-1.5-2.778-.5,10,4,3.278) for x in host_centres]
  lc += [box(279,R-1,140,139,5,25)]
  lc += [cyl(x,R-1,152.5,1.7,5,(0,1,0)) for x in (275,422)]
  lc += [side_holes(424,z) for z in (22,148)]
@@ -237,6 +242,10 @@ def build(out,cache,fan_size=120,return_parts=False):
  tray=union([box(4.5,126,170,431,R-126,1.5),box(4.5,145,171.5,1.5,260,10.5),box(434,145,171.5,1.5,260,10.5)])
  # Partial-length side flanges need bend reliefs where the floor edge continues.
  tray,piece=form('GPU_tray_two_side_bends',tray,1.5,[('y',(4.5,170),(1,1),dict(span=(145,405),relief=True)),('y',(435.5,170),(-1,1),dict(span=(145,405),relief=True))],[cyl(x,y,169,2.25,4) for x,y in hold])
+ # Four M4-tapped bosses, 4.5 mm high, carry the ends of the backplane rails.
+ for x in (20,420):
+  for y in (155,405):tray=emboss_boss(tray,x,y,170,1.5,4.5,'M4')
+ piece['shape']=cut(piece['shape'],[cyl(x,y,169,1.65,4) for x in (20,420) for y in (155,405)]);piece['tapped']=[dict(thread='M4',centre=[x,y,174.5]) for x in (20,420) for y in (155,405)]
  add('GPU_tray_two_side_bends',tray,'cassette',moving=True,pieces=[piece]);profile('GPU_tray_floor_no_returns',tray,'z',170)
  for y in (146,399):
   # A 14 mm crown leaves an 8 mm flat between the two bends for standard press-brake tooling.
@@ -260,6 +269,8 @@ def build(out,cache,fan_size=120,return_parts=False):
   lift=lambda shape:shape.translate((0,0,170))
   return add(name,lift(s),group,color,role,visible,True,[dict(p,shape=lift(p['shape']),bends=transform_bends(p['bends'],lift)) for p in pieces] if pieces else None)
  supports(mount_add,[171.8,265.3,381.0],points,18,female=True)
+ for a in parts:
+  if a['name'].startswith('Rail_M4x6_screw_'):a['thread_host']='GPU_tray_two_side_bends'
  bz=188.;bt=2.5;gw=bz+bt+11.25-4.4;gb=gw+104.86
  gpu_axes=[BOARD_X+x for x in BOARD_SLOT_X[1:-1]]
  # Twenty-one positions span all twelve sockets: slots[0] serves the leading single-width socket,
@@ -290,7 +301,7 @@ def build(out,cache,fan_size=120,return_parts=False):
   b=cut(b,[cyl(sx,R+5.08,bearing-1,2.21,3),box(cx-9.22,R+2.87,bearing-1,max(.01,sx-cx+9.22),4.42,3)])
   add(name,b,group,gold,'reference',moving=moving)
   fast(name+'_6_32_screw',(sx,R+5.08,bearing+.86),(0,0,-1),'6-32',6.35,moving=moving)
-  # GPU-bank screws thread into the tapped shelf; motherboard-bank screws use captive nuts.
+  # Bracket screws thread into extruded tapped collars in the GPU shelf and the lower retention strip.
   if not tapped:add(name+'_captive_6_32_hex_nut',nut((sx,R+5.08,bearing-1.5),(0,0,-1),'6-32'),'fasteners',gold,moving=moving)
  def retention(name,centres,w,group,moving=False):
   bearing=w+104.86;tip=bearing+.86-120.02;x0=centres[0]-14;ww=min(436.5,centres[-1]+14)-x0
@@ -329,22 +340,22 @@ def build(out,cache,fan_size=120,return_parts=False):
  # Ten nominal SSI EEB positions matched to the ten holes in the ASUS manual.
  local=[('F',6.35,33.02),('M',6.35,237.49),('Z',6.35,322.58),('C',163.83,10.16),('H',163.83,165.10),('Y',163.83,322.58),('A',288.29,10.16),('G',288.29,165.10),('K',288.29,237.49),('X',293.37,322.58)]
  mh=[(n,115+x,board_rear-d) for n,x,d in local]
- tray_fix=[(118,80),(418,80),(118,402),(418,402)]
  mbtray=cut(box(112,74,6,314,336.5,2),[cyl(x,y,5,1.7,5) for _,x,y in mh]+[cyl(x,y,5,1.7,5) for x,y in tray_fix])
- add('WRX90_board_specific_replaceable_tray',mbtray,'motherboard_mounts');profile('motherboard_tray',mbtray,'z',6)
+ # Standoffs screw into extruded M3 threads in the tray; the blank carries tap-drill holes.
+ flat_tray=mbtray
+ for _,x,y in mh:
+  mbtray=form_thread(mbtray,cq.Vector(x,y,6),2,-1,2,'M3')[0];flat_tray=form_thread(flat_tray,cq.Vector(x,y,6),2,-1,2,'M3',collar=False)[0]
+ add('WRX90_board_specific_replaceable_tray',mbtray,'motherboard_mounts',pieces=[dict(name='WRX90_board_specific_replaceable_tray',shape=flat_tray,t=2,bends=[],tapped=[dict(thread='M3',centre=[x,y,6]) for _,x,y in mh])]);profile('motherboard_tray',mbtray,'z',6)
  for x,y in tray_fix:
-  foot=union([box(x-6,y-6,4.5,12,12,1.5),box(x-6,y-6,1.5,1.5,12,3),box(x+4.5,y-6,1.5,1.5,12,3)])
-  foot,piece=form(f'Motherboard_tray_welded_sheet_bridge_{x}_{y}',foot,1.5,[('y',(x-6,6),(1,-1)),('y',(x+6,6),(-1,-1))],[cyl(x,y,1,1.7,6)])
-  add(f'Motherboard_tray_welded_sheet_bridge_{x}_{y}',foot,'motherboard_mounts',pieces=[piece])
-  add(f'Motherboard_tray_bridge_captive_M3_nut_{x}_{y}',nut((x,y,4.5),(0,0,-1),'M3'),'motherboard_mounts',gold)
   fast(f'Motherboard_tray_M3x6_{x}_{y}',(x,y,8),(0,0,-1),'M3',6,'motherboard_mounts')
+  parts[-1]['thread_host']='U_shaped_body_1p5mm_two_longitudinal_bends'
  board=cut(box(115,board_front,16,304.8,330.2,1.57),[cyl(x,y,15,1.7,4) for _,x,y in mh])
  add('WRX90E_SAGE_SE_EEB_reference',board,'motherboard',green,'reference')
  for n,x,y in mh:
-  post=hex_prism(x,y,8,5,8).cut(cyl(x,y,7,1.5,10))
-  add(f'Motherboard_M3_8mm_standoff_{n}',post,'motherboard_mounts',gold)
-  add(f'Motherboard_standoff_lower_M3_washer_{n}',cyl(x,y,5.5,3.5,.5).cut(cyl(x,y,5,1.6,2)),'motherboard_mounts')
-  fast(f'Motherboard_standoff_lower_M3x6_{n}',(x,y,5.5),(0,0,1),'M3',6,'motherboard_mounts')
+  # M3 x 8 mm male-female standoff: 6 mm stud into the tray thread, 5.5 mm female thread above.
+  post=union([hex_prism(x,y,8,5,8).cut(cyl(x,y,10.5,1.5,6)),cyl(x,y,2,1.5,6)])
+  add(f'Motherboard_M3_8mm_male_female_standoff_{n}',post,'motherboard_mounts',gold)
+  parts[-1]['thread_host']='WRX90_board_specific_replaceable_tray'
   add(f'Motherboard_M3_washer_{n}',cyl(x,y,17.57,3.5,.5).cut(cyl(x,y,17,1.6,2)),'motherboard_mounts')
   fast(f'Motherboard_M3x5_{n}',(x,y,18.07),(0,0,-1),'M3',5,'motherboard_mounts')
  for i,x in enumerate(host_axes):
@@ -424,6 +435,9 @@ def build(out,cache,fan_size=120,return_parts=False):
  for a in parts:
   if 'cassette_rear_captive_nut' in a['name']:
    assert a['shape'].distance(rear_shape)<1e-5 and overlap(a['shape'],rear_shape)<1e-5,a['name']
+ # Captive nuts become extruded tapped threads in the sheet that held them; sliding crossbar nuts stay.
+ tapped_threads=tap_captive_nuts(parts,lambda p:'nut' in p['name'] and 'DIN562' not in p['name'] and '_guide_strip_' not in p['name'])
+ (out/'tapped_threads.json').write_text(json.dumps(tapped_threads,indent=2))
  lid_shape=next(a['shape'] for a in parts if a['group']=='lid')
  lid_hits=[a['name'] for a in parts if a['group']=='fasteners' and overlap(lid_shape,a['shape'])>1e-4]
  assert not lid_hits,('Lid conflicts with panel fasteners',lid_hits)
@@ -436,7 +450,7 @@ def build(out,cache,fan_size=120,return_parts=False):
   for b in parts:
    if b['name'].startswith(('Backplane_M3_washer_','Backplane_M3x6_')) and overlap(a['shape'],b['shape'])>1e-4:bp_hits.append([a['name'],b['name']])
  assert not bp_hits,('Backplane component conflicts',bp_hits)
- # Remove the lid with its captive nuts, rear cover and cables before lifting the cartridge.
+ # Remove the lid, rear cover and cables before lifting the cartridge.
 
  moving=[a for a in parts if a['moving'] and a['role']!='clearance' and a['group'] not in ('fasteners','board_alternatives')]
  fixed=[a for a in parts if not a['moving'] and a['role']!='clearance' and a['group'] not in ('lid','lid_screws','lid_guides','rear_vent','hold_downs','rear_release','fasteners','power','mcio','io_shield')]
@@ -448,7 +462,7 @@ def build(out,cache,fan_size=120,return_parts=False):
    for b in fixed:
     if overlap(s,b['shape'])>1e-4:hits.append([a['name'],b['name']])
   motion.append(dict(lift_mm=dz,intersections=hits))
- # Individual cards can rise vertically after their screws and power plugs are removed.
+ # Individual cards rise vertically after the lid, rear cover, bracket screws and power plugs are removed.
  card_motion=[]
  for dz in (1,10,50,125,170):
   hits=[]
@@ -456,7 +470,7 @@ def build(out,cache,fan_size=120,return_parts=False):
    if a['group'] not in ('gpus','aux_card','brackets'):continue
    s=a['shape'].translate((0,0,dz))
    for b in parts:
-    if b['group'] in ('shell','cassette','strain_relief','guides','partition','rear_vent') and overlap(s,b['shape'])>1e-4:hits.append([a['name'],b['name']])
+    if b['group'] in ('shell','cassette','strain_relief','guides','partition') and overlap(s,b['shape'])>1e-4:hits.append([a['name'],b['name']])
   card_motion.append(dict(lift_mm=dz,intersections=hits))
  retimer_motion=[]
  for dy,dz in ((0,5),(-12,5),(-12,30),(-12,160)):
@@ -485,14 +499,15 @@ def build(out,cache,fan_size=120,return_parts=False):
   for b in parts:
    if a is b or b['role']=='clearance' or b['group'] in ('board_alternatives','io_shield'):continue
    plastic_joint=('_self_tapping_5x8_screw_' in a['name'] and b['group']=='fans') or ('_self_tapping_5x8_screw_' in b['name'] and a['group']=='fans')
+   plastic_joint|=a.get('thread_host')==b['name'] or b.get('thread_host')==a['name']
    if not plastic_joint and overlap(a['shape'],b['shape'])>1e-4:intake_hits.append([a['name'],b['name']])
  assert not intake_hits,('Intake component interference',intake_hits)
- checks=dict(PSU_model='ASUS-PRO-WS-3000P',PSU_size_depth_width_height_mm=[175,150,86],PSU_rear_mount_holes_construction_xz_mm=atx,PSU_handedness='Rear-view counterclockwise quarter-turn of the standard ATX pattern',backplane_socket_count=12,backplane_GPU_socket_pitch_mm=40.64,backplane_auxiliary_end_slot_gap_mm=20.32,backplane_PCB_origin_construction_xy_mm=[BOARD_X,BOARD_Y],backplane_dimensions_mm=[429,225,2.5],backplane_mounting_holes_photo_estimates=True,motherboard_standoff_type="Harwin R30-1000802 female-female M3 8 mm",motherboard_lower_screw_engagement_mm=3.5,motherboard_upper_screw_engagement_mm=2.93,motherboard_screw_tip_gap_mm=1.57,backplane_supported_holes_construction_xy_mm=BOARD_MOUNT_POINTS,cartridge_removal_requires=['lid with captive nuts','upper rear vent and its fasteners','tray hold-down screws','disconnected harnesses'],enclosure_mm=[482.6,P['depth'],H],body_width_mm=W,rack_units=9,upper_rear_positions=P['upper_slot_count'],dual_slot_GPU_envelopes=10,single_width_auxiliary_card_envelopes=1,backplane_trailing_auxiliary_socket='Shares the last rear position with the tenth GPU second bracket; usable only without that GPU',lower_rear_positions=8,
+ checks=dict(PSU_model='ASUS-PRO-WS-3000P',PSU_size_depth_width_height_mm=[175,150,86],PSU_rear_mount_holes_construction_xz_mm=atx,PSU_handedness='Rear-view counterclockwise quarter-turn of the standard ATX pattern',backplane_socket_count=12,backplane_GPU_socket_pitch_mm=40.64,backplane_auxiliary_end_slot_gap_mm=20.32,backplane_PCB_origin_construction_xy_mm=[BOARD_X,BOARD_Y],backplane_dimensions_mm=[429,225,2.5],backplane_mounting_holes_photo_estimates=True,motherboard_standoff_type="M3 x 8 mm male-female hex standoff, 6 mm stud",motherboard_stud_thread_engagement_mm=3.5,motherboard_upper_screw_engagement_mm=2.93,motherboard_stud_tip_to_floor_mm=0.5,backplane_supported_holes_construction_xy_mm=BOARD_MOUNT_POINTS,cartridge_removal_requires=['lid (four captive thumbscrews)','upper rear vent and its fasteners','tray hold-down screws','disconnected harnesses'],enclosure_mm=[482.6,P['depth'],H],body_width_mm=W,rack_units=9,upper_rear_positions=P['upper_slot_count'],dual_slot_GPU_envelopes=10,single_width_auxiliary_card_envelopes=1,backplane_trailing_auxiliary_socket='Shares the last rear position with the tenth GPU second bracket; usable only without that GPU',lower_rear_positions=8,
   lid_to_panel_fastener_intersections=lid_hits,intake_component_intersections=intake_hits,gpu_deck_z_mm=170,upper_fan_centres_z_mm=[210,330],upper_fan_count=6,upper_inlet_spacer_mm=0,grille_to_GPU_fan_face_mm=2,front_intake_aperture_mm=116,grille_perforation_diameter_mm=9,grille_perforation_pitch_mm=10,slot_pitch_mm=20.32,dual_slot_pitch_mm=40.64,upper_bracket_centres_x_mm=[W-x for x in slots],lower_card_planes_x_mm=[W-x for x in host_axes],
   upper_retention_screws_x_mm=[W-x+9.21 for x in slots],lower_retention_screws_x_mm=[W-x+9.21 for x in host_centres],
   lower_bracket_centres_x_mm=[W-x for x in host_centres],upper_card_planes_x_mm=[W-x for x in gpu_axes],
   bracket_screw_offset_from_centre_mm=9.21,bracket_screw_offset_from_PCB_centre_mm=2.055,
-  bracket_screw_y_mm=R+5.08-F,upper_bracket_retention='#6-32 UNC-2B threads tapped in extruded collars of the integral 1.2 mm shelf; no nuts',upper_bracket_tap_drill_mm=2.705,lower_bracket_retention='Captive standard #6-32 UNC hex nut beneath the separate 1.5 mm strip; rear web relieved for nut corners',lower_bracket_screw_clearance_diameter_mm=3.9,
+  bracket_screw_y_mm=R+5.08-F,upper_bracket_retention='#6-32 UNC-2B threads tapped in extruded collars of the integral 1.2 mm shelf; no nuts',upper_bracket_tap_drill_mm=2.705,lower_bracket_retention='#6-32 UNC-2B threads tapped in extruded collars of the separate 1.5 mm strip; no nuts',lower_bracket_tap_drill_mm=2.705,
   fan_mount_slot_mm=[9,5.5],shared_fan_mount_slot_mm=[24,5.5],AIO_fan_mount_slot_mm=[9,4.8],AIO_shared_fan_mount_slot_mm=[24,4.8],chassis_fan_screw="5 x 8 mm self-tapping plastic fan screw",GPU_fan_screw_penetration_mm=6,rear_fan_screw_penetration_mm=6.8,fan_frame_pitch_mm=120,adjacent_fan_screw_gap_mm=15,vent_hole_diameter_mm=9,front_vent_pitch_mm=10,
   rear_upper_vent_bounds_xz_mm=[1.5,303.07,437,H-1.5-303.07],rear_upper_vent_hole_count=len(vh)-2,rear_cover_side_screw_count=4,rear_cover_screw_heights_mm=[313,381.45],
   motherboard_CPU_centre_x_mm=W-cpu_x,rear_view_order='PSU, CPU and I/O, PCIe bank (left to right)',
@@ -516,7 +531,7 @@ def build(out,cache,fan_size=120,return_parts=False):
  (out/'validation.json').write_text(json.dumps(checks,indent=2))
  print(json.dumps(checks,indent=2),flush=True)
  assert not any(v['intersections'] for v in motion), 'Cassette motion intersects fixed structure'
- assert not any(v['intersections'] for v in card_motion), 'GPU extraction intersects structure'
+ assert not any(v['intersections'] for v in card_motion), ('GPU extraction intersects structure',[v for v in card_motion if v['intersections']])
  assert not hardware_hits,'Cable or card intersects fabricated structure'
  assert not component_route_hits,'MCIO route intersects cooling or GPU envelope'
  assert not any(v['intersections'] for v in retimer_motion),'Retimer service path intersects structure'

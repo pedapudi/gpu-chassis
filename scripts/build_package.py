@@ -151,12 +151,20 @@ def viewer(variant,folder,parts,meshes):
     html=once(html,'<label><input type="checkbox" data-group="gpus" checked>Ten Max-Q GPU envelopes</label>','<label><input type="checkbox" data-group="gpus" checked>Ten Max-Q GPU envelopes</label><label><input type="checkbox" data-group="aux_card" checked>Single-width card envelope</label>')
     html=once(html,'<p>Twenty upper bracket positions ·','<p>Twenty-one upper bracket positions ·')
     html=once(html,'The Miwin board has twelve modeled sockets: ten GPU positions at an assumed 40.64 mm pitch and two additional end sockets 20.32 mm away. Rear brackets follow the ten GPU socket axes.','The Miwin board has twelve modeled sockets: ten double-width GPU positions at an assumed 40.64 mm pitch and one single-width socket 20.32 mm beyond each end. Twenty-one rear bracket positions align with all twelve sockets; the trailing single-width socket shares the last position with the tenth GPU cooler. GPU bracket screws thread into tapped collars in the integral shelf.')
+    # Lid and rear covers use captive thumbscrews; every other screw engages a formed thread.
+    html=once(html,'data-group="lid_screws" >Lid side screws</label>','data-group="lid_screws" >Lid captive thumbscrews</label>')
+    html=html.replace('<label><input type="checkbox" data-group="lid_guides" >Lid captive nuts</label>','')
+    html=once(html,'>8 mm M3 female–female standoffs</label>','>8 mm M3 female–female backplane standoffs</label>')
+    html=once(html,'>Mounting screws, washers and nuts</label>','>Mounting screws, washers and rail square nuts</label>')
     if not mod:
         html=once(html,'XE360-TR5 · 28 mm radiator + 38 mm fans','XE360-TR5 · 28 mm radiator + 38 mm fan allowance')
+        html=once(html,'<p>Remove the lid with its captive nuts and the upper rear perforated cover. Disconnect','<p>Loosen the four lid thumbscrews and the four rear-cover thumbscrews, then lift off the lid and the upper rear perforated cover. Disconnect')
+        html=once(html,'The rear cover has four side screws at two heights. Remove it before lifting the cartridge.','Four captive thumbscrews at two heights hold the rear cover. Remove it before lifting the cartridge.')
     else:
         label=MODULE_LABELS[variant];checks=json.loads((folder/'validation.json').read_text())
         html=swap(html,r'<h1>RM53-502 GPU module · [^<]*</h1>',f'<h1>RM53-502 GPU module · {label} fans</h1>')
         html=once(html,'9U combined · 399.55 mm','10U combined · 444.00 mm')
+        html=once(html,'The rear cover has two side screws and a lower return. Remove it before lifting the cartridge.','Two captive thumbscrews and a lower return hold the rear cover. Remove it before lifting the cartridge.')
         html=swap(html,r'(?<=data-group="fans" checked>)[^<]*',f'{label} GPU intake fans')
         rows='; '.join(f"{r['count']} × {r['size_mm']} × {r['depth_mm']} mm fans at X{', '.join(f'{x:g}' for x in r['centres_x_mm'])}, Z{r['centre_z_mm']:g}, {r['hole_pitch_mm']:g} mm square screw pattern, {r['screw_penetration_mm']} mm screw penetration" for r in checks['fan_rows'])
         notch=checks['MCIO_opening_z_mm'][0]
@@ -187,7 +195,7 @@ def intake_checks(variant,parts,base):
         if signature(p['shape'])==signature(q['shape']):common+=1
         else:changed.append(p['name'])
     valid=all(p['shape'].isValid() for p in parts)
-    return dict(passed=valid,mode=variant.replace('nine-u-','').replace('180','2x180').replace('120','3x120'),unchanged_common_parts=common,changed_or_added_parts=len(changed),all_shapes_valid=valid,notes='Common parts are compared with the six-fan chassis by analytic volume, bounds and face and edge counts. The upper-intake interference and forward-removal checks apply to intake geometry unchanged by the GPU rear-panel revision.')
+    return dict(passed=valid,mode=variant.replace('nine-u-','').replace('180','2x180').replace('120','3x120'),unchanged_common_parts=common,changed_or_added_parts=len(changed),all_shapes_valid=valid,notes='Common parts are compared with the six-fan chassis by analytic volume, bounds and face and edge counts. Interference between every pair of parts in this configuration is checked in assembly_overlaps.json.')
 
 def load(folder):
     ps=[]

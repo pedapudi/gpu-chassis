@@ -60,7 +60,8 @@ def consolidate_gpu_rear(parts, out=None):
     # Collars are extruded after cutting, so the flat pattern marks each collar at its tap-drill
     # diameter; the fabricator's extrusion tooling sets the actual pierce size.
     flat = panel.cut(cq.Compound.makeCompound([cq.Solid.makeCylinder(COLLAR_OD/2 + .01, COLLAR_HEIGHT + .01, cq.Vector(x,y,underside-COLLAR_HEIGHT-.01)) for x,y in axes]))
-    rear['pieces'] = [dict(name=REAR, shape=flat, t=THICKNESS, bends=bends)]
+    rear['pieces'] = [dict(name=REAR, shape=flat, t=THICKNESS, bends=bends,
+                           tapped=[dict(thread='6-32', centre=[round(x, 3), round(y, 3), round(underside, 3)]) for x, y in axes])]
     parts.remove(shelf)
     if out is not None:
         from pathlib import Path

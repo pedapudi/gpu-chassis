@@ -69,7 +69,7 @@ def enlarged_details(api,lower=False):
     c,new,para,table,view,W,H,out=api
     count=8 if lower else 21
     new(('Motherboard' if lower else 'GPU')+' bracket interface | enlarged dimension details',('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns' if lower else 'Full_width_twenty_one_slot_rear_with_side_returns')+'::dimensions')
-    para('Coordinate views below use X to the right. Dimensions define the nominal cut features; the bracket-position coordinate schedule locates them on the rear panel.'+(' Nut reliefs join the aperture edges as shown on the full rear elevation.' if lower else ' The shelf threads are tapped; the rear web has no nut reliefs.'),32,H-82,W-64,11)
+    para('Coordinate views below use X to the right. Dimensions define the nominal cut features; the bracket-position coordinate schedule locates them on the rear panel.'+(' The retention-strip threads are tapped; the rear web has no nut reliefs.' if lower else ' The shelf threads are tapped; the rear web has no nut reliefs.'),32,H-82,W-64,11)
     def dimension(x1,y1,x2,y2,text,vertical=False,label_offset=-9):
         c.setLineWidth(.5);c.line(x1,y1,x2,y2)
         for x,y in ((x1,y1),(x2,y2)):c.line(x-3,y-3,x+3,y+3)
@@ -90,14 +90,13 @@ def enlarged_details(api,lower=False):
     para(f'MAIN APERTURES<br/>{count} × 15.000 × {height:.3f}<br/>Nominal corner R0<br/>Bracket width 18.420<br/>1.710 overlap per side',335,595,230,12)
     c.setFont('Helvetica-Bold',12);c.drawString(660,680,'RETENTION SHELF - TOP VIEW')
     cx=800;cy=570;s=12;r=1.95*s
-    if not lower:
-        r=2.705/2*s;c.setDash(2,2);c.circle(cx,cy,2.05*s,stroke=1,fill=0);c.setDash()
+    r=2.705/2*s;c.setDash(2,2);c.circle(cx,cy,2.05*s,stroke=1,fill=0);c.setDash()
     c.circle(cx,cy,r,stroke=1,fill=0);c.setDash(4,3);c.line(cx-65,cy,cx+65,cy);c.line(cx,cy-55,cx,cy+55);c.setDash()
-    c.line(cx+r*.707,cy+r*.707,950,630);c.setFont('Helvetica',12);c.drawString(955,630,'DIA 3.900 / R1.950' if lower else '#6-32 UNC-2B; tap drill DIA 2.705')
-    if not lower:c.setFont('Helvetica',10);c.drawString(955,614,'Dashed: extruded collar OD 4.100, 1.300 below shelf')
+    c.line(cx+r*.707,cy+r*.707,950,630);c.setFont('Helvetica',12);c.drawString(955,630,'#6-32 UNC-2B; tap drill DIA 2.705')
+    c.setFont('Helvetica',10);c.drawString(955,614,'Dashed: extruded collar OD 4.100, '+('1.500 below strip' if lower else '1.300 below shelf'))
     c.setDash(4,3);c.line(cx-9.21*s,cy-55,cx-9.21*s,cy+55);c.setDash()
     dimension(cx-9.21*s,cy-65,cx,cy-65,'9.210 to bracket axis')
-    c.setFont('Helvetica',10);c.drawString(660,455,f'{count} bores, pitch 20.320; #6-32 screw clearance' if lower else f'{count} tapped holes, pitch 20.320; no nuts')
+    c.setFont('Helvetica',10);c.drawString(660,455,f'{count} tapped holes, pitch 20.320; no nuts')
     c.setFont('Helvetica-Bold',12);c.drawString(660,390,'TOE NOTCH - TOP VIEW')
     x=675;y=310;s=12;length=24;depth=4;left=(length-10.79)/2
     pts=[(0,0),(length,0),(length,depth),(left+10.79,depth),(left+10.79,depth-1.3),(left,depth-1.3),(left,depth),(0,depth),(0,0)]

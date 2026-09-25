@@ -43,7 +43,7 @@ def rear_elevation(shape,c,base_z,upper=True):
     xa,xb=centres[-4:-2] if upper else centres[1:3]
     dimension(c,p(xb,zhi),p(xa,zhi),'20.320',offset=42 if upper else 60)
     leader(c,p(x,zlo+48),(p(x,zlo)[0]+55,bottom-(0 if upper else 70)),[f'{count} apertures: 15.000 × {height:.3f}','Nominal R0; 5.320 web between openings'])
-    leader(c,p(centres[2]+9.21,zhi-.3),(left+500,bottom+(310 if upper else 390)),['Shelf threads: #6-32 UNC-2B, extruded collars','Every web joins the upper bend','See enlarged top view for thread offset and toe notch'] if upper else ['Nut reliefs join aperture edges','Retention bores: DIA 3.900 / R1.950, normal Z','See enlarged top view for bore offset and toe notch'])
+    leader(c,p(centres[2]+9.21,zhi-.3),(left+500,bottom+(310 if upper else 390)),['Shelf threads: #6-32 UNC-2B, extruded collars','Every web joins the upper bend','See enlarged top view for thread offset and toe notch'] if upper else ['Strip threads: #6-32 UNC-2B, extruded collars','No nut reliefs in the rear web','See enlarged top view for thread offset and toe notch'])
     if not upper:
         leader(c,p(209,110),(left+40,bottom+380),['2 × DIA 76 / R38 exhaust openings','80 mm fans: 71.500 square mounting pitch'])
         leader(c,p(428,154),(left+10,bottom-65),['4 × DIA 3.900 / R1.950','PSU mounting clearance'])
@@ -81,5 +81,5 @@ def intake_sheet(parts,checks,api):
     leader(c,p(x,270),(p(x,270)[0]-100,p(x,270)[1]+18),[f'DIA {diam:.3f} / R{diam/2:.3f}',f'{len(xs)} airflow openings'])
     leader(c,p(220 if size==180 else 160,zl),(610,210),[f'Shared slots {24.5 if size==180 else 24:.3f} × 5.500; R2.750','Outer slots 9.000 × 5.500; R2.750'])
     leader(c,p(410,270),(1000,450),['6 × DIA 3.400','R1.700 THRU','M3 × 8 screws'])
-    para('Carrier cutout 392 × 222: 1 mm clearance per insert edge. Fixed rear backing ring: 398 × 240 × 2; clear window 370 × 200. Capture six standard M3 nuts on the ring before installation; the nuts stay on the fixed carrier during service.',32,163,W-64,10)
+    para('Carrier cutout 392 × 222: 1 mm clearance per insert edge. Fixed rear backing ring: 398 × 240 × 2; clear window 370 × 200. Six M3 screws thread into collars extruded rearward from the ring, so the threads stay on the fixed carrier during service.',32,163,W-64,10)
     para('Fan screws: four 5 × 8 self-tapping screws per fan, through 2 mm insert into plastic; 6 mm penetration including tip. No fan nuts. Use manufacturer-approved screws. Backing-ring attachment strength, airflow, coating allowances and cable service require physical qualification.',32,112,W-64,10)

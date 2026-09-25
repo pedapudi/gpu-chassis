@@ -218,8 +218,19 @@ def move_part(part, fn):
     """Apply one rigid placement to a part and its formed pieces."""
     q = dict(part); q['shape'] = fn(part['shape'])
     if part.get('pieces'):
-        q['pieces'] = [dict(piece, shape=fn(piece['shape']), bends=transform_bends(piece['bends'], fn)) for piece in part['pieces']]
+        q['pieces'] = [dict(piece, shape=fn(piece['shape']), bends=transform_bends(piece['bends'], fn),
+                            tapped=[dict(h, centre=list(_point(fn, h['centre']))) for h in piece.get('tapped', [])]) for piece in part['pieces']]
+    if part.get('tapped'):
+        q['tapped'] = [dict(h, centre=list(_point(fn, h['centre']))) for h in part['tapped']]
     return q
+
+
+def _point(fn, xyz):
+    """Apply a part transform to a point; trimming functions such as cuts leave points in place."""
+    moved = fn(cq.Vertex.makeVertex(*xyz)).Vertices()
+    if len(moved) != 1: return tuple(xyz)
+    c = moved[0].Center()
+    return round(c.x, 3), round(c.y, 3), round(c.z, 3)
 
 
 def _add_bend_lines(path, bends):
@@ -242,7 +253,7 @@ def export_flat_patterns(parts, out):
     folder = Path(out) / 'flat_patterns'; folder.mkdir(parents=True, exist_ok=True)
     records = []
     for p in sheet_parts(parts):
-        pieces = p.get('pieces') or [dict(name=p['name'], shape=p['shape'], t=None, bends=[])]
+        pieces = p.get('pieces') or [dict(name=p['name'], shape=p['shape'], t=None, bends=[], tapped=p.get('tapped', []))]
         for piece in pieces:
             b = bounds(piece['shape'])
             t = piece['t'] or round(min(b[i + 3] - b[i] for i in range(3)), 4)
@@ -258,7 +269,8 @@ def export_flat_patterns(parts, out):
             lo = bounds(piece['shape'])
             cq.exporters.export(piece['shape'].translate(cq.Vector(-lo[0], -lo[1], -lo[2])), str(folder / (piece['name'] + '.step')))
             records.append(record | dict(developed=True, dxf=path.name, flat_size_mm=result['size_mm'], flat_area_mm2=result['area_mm2'],
-                                         k_factor=result['k_factor'], bends=result['bends'], holes_near_bends=result['holes_near_bends']))
+                                         k_factor=result['k_factor'], bends=result['bends'], holes_near_bends=result['holes_near_bends'],
+                                         tapped_holes=piece.get('tapped', [])))
     (folder / 'flat_patterns.json').write_text(json.dumps(records, indent=2))
     return records
 
@@ -278,7 +290,7 @@ def fastener_sheet_intersections(parts):
     for f in fasteners:
         for s in sheets:
             tapped = f['name'].endswith('_6_32_screw') and f['name'].startswith(('GPU_', 'Auxiliary_')) and 'rear' in s['name']
-            if tapped: continue
+            if tapped or f.get('thread_host') == s['name']: continue
             v = _overlap(f['shape'], s['shape'])
             if v > 1e-3: hits.append(dict(fastener=f['name'], sheet_part=s['name'], volume_mm3=round(v, 4)))
     return hits
@@ -335,7 +347,8 @@ def assembly_overlaps(parts):
             if v <= 1e-3:
                 continue
             names = (a['name'], b['name']); groups = (a['group'], b['group'])
-            thread = any(n.endswith('_6_32_screw') and n.startswith(('GPU_', 'Auxiliary_')) for n in names) and any('rear' in n for n in names)
+            thread = (any(n.endswith('_6_32_screw') and n.startswith(('GPU_', 'Auxiliary_')) for n in names) and any('rear' in n for n in names)) \
+                or a.get('thread_host') == b['name'] or b.get('thread_host') == a['name']
             fan = any('_self_tapping_5x8_screw_' in n for n in names) and any(g in ('fans', 'fan_pads', 'exhaust') for g in groups)
             route = any(g in ROUTING_GROUPS for g in groups)
             row = dict(parts=list(names), volume_mm3=round(v, 4))

@@ -2,6 +2,9 @@
 import math, collections, json, csv
 from pathlib import Path
 
+# Outside diameters of the M3, M4 and #6-32 extruded thread collars.
+COLLAR_DIAMETERS={3.7,4.9,4.1}
+
 
 def features(shape):
     from OCP.BRepClass3d import BRepClass3d_SolidClassifier
@@ -55,7 +58,10 @@ def features(shape):
             else:clusters.append([f])
         for cluster in clusters:
             f=cluster[0].copy();f['stations']=[cluster[0]['station'],cluster[-1]['station']]
-            if len(cluster)==1:f['kind']='Step boundary'
+            if len(cluster)==1:
+                # The root circle of an extruded thread collar is covered by the tapped-hole callout.
+                if f['kind']=='Round hole' and round(2*f['radii'][0],3) in COLLAR_DIAMETERS:continue
+                f['kind']='Step boundary'
             del f['station'];del f['normal_sign'];result.append(f)
     return result
 
@@ -87,14 +93,22 @@ def draw_feature_pages(a, api):
     for number,rows in groups:planes[(rows[0]['axis'],tuple(rows[0]['stations']))].append((number,rows))
     def detail(f):
         size=f['size'];r=f['radii'];kind=f['kind']
+        tapped={2.5:'M3',3.3:'M4',2.705:'#6-32 UNC-2B'}.get(round(2*r[0],3)) if kind=='Round hole' else None
+        if tapped:return f'{tapped} TAPPED, extruded collar; tap drill DIA {fmt(2*r[0])}'
         if kind=='Round hole':return f'DIA {fmt(2*r[0])}; R{fmt(r[0])} THRU'
         if kind=='Obround':return f'SLOT {fmt(max(size))} overall × {fmt(min(size))}; end R{fmt(r[0])} THRU'
         if kind=='Rounded rectangle':return f'{fmt(size[0])} × {fmt(size[1])}; corner R{fmt(r[0])} THRU'
         if kind=='Rectangle':return f'{fmt(size[0])} × {fmt(size[1])}; nominal R0 THRU'
         if kind=='Step boundary':return f'{fmt(size[0])} × {fmt(size[1])} boundary; not a through-hole pair'
         return f'Exact profile shown; bounds {fmt(size[0])} × {fmt(size[1])}; '+('edge R'+', R'.join(fmt(q) for q in r) if r else 'straight edges')
+    def face_station(axis,stations):
+        # Draw on the larger sheet face: a tapped hole also ends on its small extruded-collar ring.
+        def area(station):
+            return sum(q.Area() for q in a['shape'].Faces() if q.geomType()=='PLANE' and abs(abs(q.normalAt().toTuple()[axis])-1)<1e-6 and abs(q.Center().toTuple()[axis]-station)<1e-4)
+        areas=[area(q) for q in stations]
+        return stations[0] if areas[0]>=.5*max(areas) else stations[areas.index(max(areas))]
     for (axis,stations),families in planes.items():
-        f=families[0][1][0];axes=f['u']+'/'+f['v'];station=stations[0]
+        f=families[0][1][0];axes=f['u']+'/'+f['v'];station=face_station(axis,stations)
         for start in range(0,len(families),4):
             chunk=families[start:start+4]
             new(name.replace('_',' ')+f' | {axes} at {f["plane"]}={fmt(station)}',name+'::locations')
@@ -127,7 +141,7 @@ def draw_feature_pages(a, api):
             chunk=entries[start:start+10]
             new(name.replace('_',' ')+f' | feature {number} row locations',name+'::coordinates')
             para(f'Feature {number}: {len(group)} × {detail(f)}. The highlighted centres identify the rows in the adjacent schedule. Every page repeats the complete face outline. Ranges include both ends; unlisted positions remain solid.',32,H-82,W-64,10)
-            p,lo,hi=planar(c,a['shape'],f['axis'],f['stations'][0],(35,150,650,530))
+            p,lo,hi=planar(c,a['shape'],f['axis'],face_station(f['axis'],f['stations']),(35,150,650,530))
             rows={float(row[0]) for row in chunk};c.setStrokeColor(ACCENT);c.setLineWidth(.8)
             for g in group:
                 if g['centre'][1] in rows:

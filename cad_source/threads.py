@@ -1,4 +1,4 @@
-"""Extruded tapped threads, embossed bosses and captive panel screws.
+"""Extruded tapped threads and embossed bosses.
 
 Captive hex nuts are replaced by threads formed in the sheet that held them:
 the clearance hole becomes a tap-drill hole and a collar extruded from the
@@ -125,11 +125,3 @@ def emboss_boss(shape, x, y, z_bottom, t, height, thread='M3', base_radius=10.0,
     assert len(shape.Solids()) == 1, 'Boss must join its sheet'
     return form_thread(shape, cq.Vector(x, y, top - t), 2, -1, t, thread)[0]
 
-
-def captive_screw(point, axis, length, panel_t=1.5):
-    """Captive knurled panel screw: press-fit ferrule in the panel hole, 8 mm knurled head outside."""
-    from mounting_hardware import cyl, union, orient
-    head = cyl(0, 0, -4 - panel_t, 4, 4)
-    ferrule = cyl(0, 0, -panel_t, 3.15, panel_t)
-    shank = cyl(0, 0, 0, 1.5, length)
-    return orient(union([head, ferrule, shank]), point, axis)

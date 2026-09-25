@@ -65,17 +65,15 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  floor=cut(box(0,2,bottom,W,D-2,1.5),passage+holes)
  body=union([floor,box(0,2,bottom+1.5,1.5,D-2,H-bottom-3),box(W-1.5,2,bottom+1.5,1.5,D-2,H-bottom-3)])
  bh=[]
- for y,z in [(233.2,230.25),(343.2,230.25),(443.2,230.25),(143.2,252.25),(143.2,272.25),(475.3,277.25),(475.3,362.25)]:bh.append(hole_side(y,z))
+ for y,z in [(233.2,230.25),(343.2,230.25),(443.2,230.25),(143.2,252.25),(143.2,272.25),(477.2,277.25),(477.2,362.25)]:bh.append(hole_side(y,z))
  for z in (242,320,388,430):bh.append(hole_side(12,z))
  bh += [hole_side(477.2,233.75)]
- # Rear-facing thumbscrews: the walls end in two tapped rear flanges; the lid front locates on wall studs.
- vb=375.32;cover_low=390;cover_high=H-10;lid_studs=[(118.2,H-10),(433.2,H-10)]
- flange_adds,flange_notch,flange_folds,flange_holes=rc.body_flanges(W,D,vb,H-1.5,cover_low,cover_high)
- bh += flange_holes+rc.stud_holes(W,lid_studs)
- body=union([body]+flange_adds).cut(flange_notch)
+ # The rear cover takes side screws; the sliding lid locates on wall studs and two rear retention screws.
+ vb=375.32;cover_side_z=(390,);lid_z=H-10;lid_studs=[(118.2,H-10),(433.2,H-10)]
+ bh += rc.body_side_holes(W,D,cover_side_z)+rc.stud_holes(W,lid_studs)
  for y in (100,240,380):bh.append(hole_side(y,231,2.25))
  bh += ear_holes(0,(252,354))
- body,piece=form('Upper_module_U_body_with_cable_passages',body,1.5,[('y',(0,bottom),(1,1)),('y',(W,bottom),(-1,1))]+flange_folds,bh)
+ body,piece=form('Upper_module_U_body_with_cable_passages',body,1.5,[('y',(0,bottom),(1,1)),('y',(W,bottom),(-1,1))],bh)
  body=add('Upper_module_U_body_with_cable_passages',body,'shell',pieces=[piece]);profile('upper_module_floor_no_returns',body,'z',bottom)
  front=union([box(0,0,bottom,440,2,H-bottom),box(1.5,2,bottom+2,1.5,18,H-bottom-4),box(437,2,bottom+2,1.5,18,H-bottom-4)])
  tools=[]
@@ -139,7 +137,7 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
   add(f'Rear_sill_M3x8_{x}',screw((x,477.2,233.75),ax,'M3',8),'fasteners')
   add(f'Rear_sill_nut_{x}',nut((nx,477.2,233.75),ax,'M3'),'fasteners')
  # The cassette occupies the lower rear; a separate panel closes the area above its brackets.
- vent,vent_folds,vh=rc.cover(W,D,vb,H-3,cover_low,cover_high)
+ vent,vent_folds,vh=rc.cover(W,D,vb,H-3,cover_side_z,lid_z)
  # The top-open notch accepts plugs after the folded brush cap is removed.
  notch=380.5+rise
  vh.append(box(150,482,notch,140,5,25))
@@ -149,12 +147,11 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  # Perforation rows stay two thicknesses clear of the lower lip bend.
  for row,z in enumerate(range(386,int(H-10),10)):
   for x in range(14+5*(row%2),427,10):
-   if 132<x<308 or not rc.perforation_allowed(W,H,x,z):continue
+   if 132<x<308 or not rc.perforation_allowed(W,H,x,z,lid_z):continue
    vh.append(cyl(x,482,z,4,5,(0,1,0)))
  vent,piece=form('Upper_module_rear_perforated_cover',vent,1.5,vent_folds,vh)
  vent=add('Upper_module_rear_perforated_cover',vent,'rear_vent','#304553',pieces=[piece]);profile('upper_module_rear_vent_face',vent,'y',485)
- for name,shape in rc.cover_thumbscrews(W,D,cover_low):add(name,shape,'fasteners')
- for name,shape in rc.flange_nuts(W,D,cover_low,cover_high):add(name,shape,'fasteners')
+ for name,shape,group in rc.cover_fasteners(W,D,cover_side_z,lid_z):add(name,shape,group,visible=group!='lid_screws')
  # Two lower screws retain the U-frame; two upper screws release the folded cap.
  base=box(138,485,vb,164,1.5,H-1.5-vb).cut(box(150,484,notch,140,4,25))
  base=base.cut(cq.Compound.makeCompound([cyl(x,484,z,1.7,5,(0,1,0)) for x,z in entry_fix]))
@@ -170,12 +167,11 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
   add(f'Rear_MCIO_captive_M3_nut_{x}_{z:g}',nut((x,483.5,z),(0,-1,0),'M3'),'entry_fasteners','#b39451')
  add('Rear_MCIO_35x14_plug_transit_cap_removed',box(202.5,440,383+rise,35,100,14),'clearance','#cb843c','clearance',False)
  # The lid top reaches over the cover and folds two rear tabs; its welded side returns carry L-slots for the wall studs.
- lid_top,lid_folds,lid_holes=rc.lid_top(W,D,H,2,cover_high)
+ lid_top,lid_folds,lid_holes=rc.lid_top(W,D,H,2,lid_z)
  lid_tools=rc.lid_slots(W,H,lid_studs)
  lid_pieces=[form('Upper_module_lid_top_sheet_with_rear_tabs',lid_top,1.5,lid_folds,lid_holes)[1]]
  lid_pieces+=[form(f'Upper_module_lid_{side}_return_strip',box(x,22,H-18,1.5,438,16.5),1.5,[],lid_tools)[1] for side,x in (('left',1.5),('right',437))]
  add('Upper_module_lid_with_rear_tabs',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
- for name,shape in rc.lid_thumbscrews(W,D,cover_high):add(name,shape,'lid_screws',visible=False)
  for name,shape in rc.lid_studs(W,lid_studs):add(name,shape,'lid_guides')
  # OEM mating holes are intentionally absent: transfer from the actual removed cover.
  ring=cut(box(0,0,220,W,D,1.5),[box(15,15,219,410,455,4)]+[cyl(x,y,219,1.7,4) for x,y in mounting])
@@ -214,7 +210,7 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  # Captive nuts become extruded tapped threads in the sheet that held them.
  tapped_threads=tap_captive_nuts(parts,lambda p:'nut' in p['name'] and 'DIN562' not in p['name'] and '_guide_strip_' not in p['name'])
  (out/'tapped_threads.json').write_text(json.dumps(tapped_threads,indent=2))
- # With its thumbscrews loosened, the lid slides rearward off the wall studs and lifts clear.
+ # With its two rear retention screws removed, the lid slides rearward off the wall studs and lifts clear.
  lid_shape=next(p['shape'] for p in parts if p['group']=='lid')
  lid_removal=rc.lid_removal_hits(lid_shape,[p for p in parts if p['group'] not in ('lid','lid_screws') and p['role']!='clearance'],overlap)
  assert not lid_removal,('Lid removal path is blocked',lid_removal[:6])

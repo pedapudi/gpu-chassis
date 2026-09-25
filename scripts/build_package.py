@@ -151,20 +151,18 @@ def viewer(variant,folder,parts,meshes):
     html=once(html,'<label><input type="checkbox" data-group="gpus" checked>Ten Max-Q GPU envelopes</label>','<label><input type="checkbox" data-group="gpus" checked>Ten Max-Q GPU envelopes</label><label><input type="checkbox" data-group="aux_card" checked>Single-width card envelope</label>')
     html=once(html,'<p>Twenty upper bracket positions ·','<p>Twenty-one upper bracket positions ·')
     html=once(html,'The Miwin board has twelve modeled sockets: ten GPU positions at an assumed 40.64 mm pitch and two additional end sockets 20.32 mm away. Rear brackets follow the ten GPU socket axes.','The Miwin board has twelve modeled sockets: ten double-width GPU positions at an assumed 40.64 mm pitch and one single-width socket 20.32 mm beyond each end. Twenty-one rear bracket positions align with all twelve sockets; the trailing single-width socket shares the last position with the tenth GPU cooler. GPU bracket screws thread into tapped collars in the integral shelf.')
-    # Lid and rear cover use rear-facing captive thumbscrews; every other screw engages a formed thread.
-    html=once(html,'data-group="lid_screws" >Lid side screws</label>','data-group="lid_screws" >Lid rear thumbscrews</label>')
+    # The lid slides on wall studs and two rear retention screws hold it; every screw engages a formed thread.
+    html=once(html,'data-group="lid_screws" >Lid side screws</label>','data-group="lid_screws" >Lid rear retention screws</label>')
     html=once(html,'data-group="lid_guides" >Lid captive nuts</label>','data-group="lid_guides" >Lid locating studs</label>')
     html=once(html,'>8 mm M3 female–female standoffs</label>','>8 mm M3 female–female backplane standoffs</label>')
     html=once(html,'>Mounting screws, washers and nuts</label>','>Mounting screws, washers and rail square nuts</label>')
     if not mod:
         html=once(html,'XE360-TR5 · 28 mm radiator + 38 mm fans','XE360-TR5 · 28 mm radiator + 38 mm fan allowance')
-        html=once(html,'<p>Remove the lid with its captive nuts and the upper rear perforated cover. Disconnect','<p>From the rear, loosen the two lid thumbscrews, slide the lid 10 mm rearward and lift it off, then loosen the two cover thumbscrews and withdraw the upper rear perforated cover. Disconnect')
-        html=once(html,'The rear cover has four side screws at two heights. Remove it before lifting the cartridge.','Two rear-facing captive thumbscrews hold the rear cover to flanges on the body walls. Remove it before lifting the cartridge.')
+        html=once(html,'<p>Remove the lid with its captive nuts and the upper rear perforated cover. Disconnect','<p>Remove the two lid retention screws at the rear, slide the lid 10 mm rearward and lift it off, then remove the side screws and the upper rear perforated cover. Disconnect')
     else:
         label=MODULE_LABELS[variant];checks=json.loads((folder/'validation.json').read_text())
         html=swap(html,r'<h1>RM53-502 GPU module · [^<]*</h1>',f'<h1>RM53-502 GPU module · {label} fans</h1>')
         html=once(html,'9U combined · 399.55 mm','10U combined · 444.00 mm')
-        html=once(html,'The rear cover has two side screws and a lower return. Remove it before lifting the cartridge.','Two rear-facing captive thumbscrews hold the rear cover to flanges on the body walls. Remove it before lifting the cartridge.')
         html=swap(html,r'(?<=data-group="fans" checked>)[^<]*',f'{label} GPU intake fans')
         rows='; '.join(f"{r['count']} × {r['size_mm']} × {r['depth_mm']} mm fans at X{', '.join(f'{x:g}' for x in r['centres_x_mm'])}, Z{r['centre_z_mm']:g}, {r['hole_pitch_mm']:g} mm square screw pattern, {r['screw_penetration_mm']} mm screw penetration" for r in checks['fan_rows'])
         notch=checks['MCIO_opening_z_mm'][0]

@@ -4,9 +4,6 @@ from OCP.BRepAdaptor import BRepAdaptor_Surface
 from sheetmetal import fold,bounds
 
 REAR = 'Full_width_twenty_one_slot_rear_with_side_returns'
-# Shelf corner notches: width from each return's outer face and cutback from the shelf's rear edge.
-CORNER_NOTCH_WIDTH = 17.2
-CORNER_CUTBACK = 2.5
 THICKNESS, INSIDE_RADIUS = 1.2, 1.2
 # #6-32 UNC-2B tapped in an extruded collar: #36 tap drill, 2.5 mm total thread length.
 TAP_DRILL, COLLAR_OD, COLLAR_HEIGHT = 2.705, 4.1, 1.3
@@ -49,11 +46,6 @@ def consolidate_gpu_rear(parts, out=None):
     panel = fold(panel, bends, 'z', (xmin, rear_y), (1, 1), THICKNESS, INSIDE_RADIUS, span=(zmin, return_top))
     panel = fold(panel, bends, 'z', (xmax, rear_y), (-1, 1), THICKNESS, INSIDE_RADIUS, span=(zmin, return_top))
     panel = fold(panel, bends, 'x', (rear_y, top), (1, -1), THICKNESS, INSIDE_RADIUS, span=(x0, x1))
-    # The shelf's rear corners are cut back behind the outermost bracket feet, so the thread
-    # collars on the body rear flanges stay clear as the cartridge lifts.
-    for corner in (box(xmin - 1, end_y - CORNER_CUTBACK, top - THICKNESS - .5, CORNER_NOTCH_WIDTH + 1, 10, THICKNESS + 1.5),
-                   box(xmax - CORNER_NOTCH_WIDTH, end_y - CORNER_CUTBACK, top - THICKNESS - .5, CORNER_NOTCH_WIDTH + 1, 10, THICKNESS + 1.5)):
-        panel = panel.cut(corner)
     axes = retention_axes(parts)
     underside = top - THICKNESS
     collars = [cq.Solid.makeCylinder(COLLAR_OD/2, COLLAR_HEIGHT, cq.Vector(x,y,underside-COLLAR_HEIGHT)) for x,y in axes]

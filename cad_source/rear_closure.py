@@ -1,93 +1,93 @@
-"""Lid and upper rear cover retained by rear-facing captive thumbscrews.
+"""Sliding lid and upper rear cover.
 
-Rack slides and posts leave no room for fasteners on the body sides, so every
-thumbscrew faces rearward:
-
-- The body side walls end in two inward flanges behind the GPU brackets. Each
-  flange carries two extruded M3 threads.
-- The upper rear cover is a flat perforated web behind the flanges. Two
-  captive thumbscrews in the web thread into the lower flange threads.
-- Two tabs folded down from the lid's rear edge carry the lid thumbscrews.
-  They pass through clearance holes in the cover and thread into the upper
-  flange threads.
-- At the front, L-shaped slots in the lid side returns engage flush-head
-  press-in studs in the body walls. The lid drops on 10 mm behind its seated
-  position, slides forward against the front carrier and is then screwed at
-  the rear; removal reverses this.
+- The lid slides on four flush-head press-in studs in the body walls. L-shaped
+  slots in its side returns take a vertical entry from the lower edge, then a
+  rearward leg. The lid drops on 10 mm behind its seated position and slides
+  forward against the front carrier. Removal reverses this.
+- Two tabs folded down from the lid's rear edge sit behind the rear cover.
+  Two M3 retention screws, one per tab, thread into extruded threads in the
+  cover web and stop the lid sliding back.
+- The rear cover is a perforated web with two side returns and a forward
+  lower lip. M3 screws through the body walls thread into its returns.
 
 Coordinates follow the calling build: X across the body, Y rearward, Z up.
+`D` is the body's rear plane.
 """
 import cadquery as cq
-from mounting_hardware import box, cyl, nut
-from threads import captive_screw
+from mounting_hardware import box, cyl, nut, screw
 
-T = 1.5                # sheet thickness of the body, cover and lid
-FLANGE_WIDTH = 17.0    # rear flange width from the body's outer face
-SCREW_INSET = 10.0     # thumbscrew axes from the body's outer faces
-TAB_SPAN = (4.0, 44.0)  # lid tab extent from each body side
-TAB_DROP = 17.0        # lid tab depth below the lid top
-LIP_SPAN = (19.0, 421.0)  # cover lower lip; it stops short of the flanges
-SLIDE = 10.0           # lid travel between the seated and lift-off positions
+T = 1.5                  # sheet thickness of the body, cover and lid
+LID_SCREW_INSET = 24.0   # lid retention screw axes from the body's outer faces
+TAB_SPAN = (14.0, 34.0)  # lid tab extent from each body side
+TAB_DROP = 17.0          # lid tab depth below the lid top
+LIP_SPAN = (15.0, 425.0)
+RETURN_DEPTH = 13.3      # cover side returns run forward from the web
+SIDE_SCREW_Y = 7.8       # cover side-screw axes ahead of the rear plane
+SLIDE = 10.0             # lid travel between the seated and lift-off positions
 STUD_RADIUS = 2.0
 SLOT_WIDTH = 4.6
-FERRULE_HOLE = 3.2     # radius of the press-fit ferrule hole
 CLEARANCE_HOLE = 1.7
 
 
-def screw_x(W):
-    return (SCREW_INSET, W - SCREW_INSET)
+def lid_screw_x(W):
+    return (LID_SCREW_INSET, W - LID_SCREW_INSET)
 
 
-def body_flanges(W, D, z0, z_top, z_low, z_high):
-    """Solids to add, the wall-end notch, folds and holes that form the two rear flanges.
+def cover(W, D, bottom, top, side_z, lid_z):
+    """Perforated web between the walls with two side returns and a forward lower lip.
 
-    The flanges lie in Y D-3 to D-1.5, so the cover web closes the body's rear
-    plane behind them. The wall ends are cut back to the flange plane over the
-    cover height.
+    `top` sits one thickness below the lid underside: the lid tab bends occupy
+    the corner above it. Returns the formed shape, its folds and its holes.
     """
-    adds = [box(0, D - 2 * T, z0, FLANGE_WIDTH, T, z_top - z0), box(W - FLANGE_WIDTH, D - 2 * T, z0, FLANGE_WIDTH, T, z_top - z0)]
-    notch = box(-1, D - T, z0 - T, W + 2, T + 1, z_top - z0 + T + 1)
-    folds = [('z', (0, D - T), (1, -1), dict(span=(z0, z_top), relief=True)),
-             ('z', (W, D - T), (-1, -1), dict(span=(z0, z_top), relief=True))]
-    holes = [cyl(x, D - 5, z, CLEARANCE_HOLE, 5, (0, 1, 0)) for x in screw_x(W) for z in (z_low, z_high)]
-    return adds, notch, folds, holes
+    web = box(T, D - T, bottom, W - 2 * T, T, top - bottom)
+    returns = [box(x, D - T - RETURN_DEPTH, bottom, T, RETURN_DEPTH, top - bottom) for x in (T, W - 2 * T)]
+    lip = box(LIP_SPAN[0], D - T - 2.5, bottom, LIP_SPAN[1] - LIP_SPAN[0], 2.5, T)
+    shape = cq.Workplane().add(web).union(returns[0]).union(returns[1]).union(lip).val()
+    folds = [('z', (T, D), (1, -1)), ('z', (W - T, D), (-1, -1)),
+             ('x', (D, bottom), (-1, 1), dict(span=LIP_SPAN, relief=True))]
+    holes = [cyl(-1, D - SIDE_SCREW_Y, z, CLEARANCE_HOLE, W + 2, (1, 0, 0)) for z in side_z]
+    holes += [cyl(x, D - 2, lid_z, CLEARANCE_HOLE, 3, (0, 1, 0)) for x in lid_screw_x(W)]
+    return shape, folds, holes
 
 
-def flange_nuts(W, D, z_low, z_high):
-    """Nut placeholders on the flange fronts; the build converts them to extruded threads."""
-    return [(f'Rear_flange_thread_nut_{x:g}_{z:g}', nut((x, D - 2 * T, z), (0, -1, 0), 'M3')) for x in screw_x(W) for z in (z_low, z_high)]
+def body_side_holes(W, D, side_z):
+    return [cyl(-1, D - SIDE_SCREW_Y, z, CLEARANCE_HOLE, W + 2, (1, 0, 0)) for z in side_z]
 
 
-def cover(W, D, bottom, top, z_low, z_high, extra_holes=()):
-    """Flat perforated web across the full width with a forward lower lip.
+def cover_fasteners(W, D, side_z, lid_z):
+    """Side screws into the cover returns and the lid retention screws into the cover web.
 
-    `top` should sit one thickness below the lid underside: the lid tab bends
-    occupy the corner above it.
+    Nut placeholders mark each thread; the build converts them into extruded
+    threads in the cover.
     """
-    shape = cq.Workplane().add(box(0, D - T, bottom, W, T, top - bottom)).union(
-        box(LIP_SPAN[0], D - T - 2.5, bottom, LIP_SPAN[1] - LIP_SPAN[0], 2.5, T)).val()
-    folds = [('x', (D, bottom), (-1, 1), dict(span=LIP_SPAN, relief=True))]
-    holes = [cyl(x, D - 2, z_low, FERRULE_HOLE, 3, (0, 1, 0)) for x in screw_x(W)]
-    holes += [cyl(x, D - 2, z_high, CLEARANCE_HOLE, 3, (0, 1, 0)) for x in screw_x(W)]
-    return shape, folds, holes + list(extra_holes)
+    y = D - SIDE_SCREW_Y
+    parts = []
+    for z in side_z:
+        parts += [(f'left_rear_cover_M3x6_{z:g}', screw((0, y, z), (1, 0, 0), 'M3', 6), 'fasteners'),
+                  (f'right_rear_cover_M3x6_{z:g}', screw((W, y, z), (-1, 0, 0), 'M3', 6), 'fasteners'),
+                  (f'left_rear_cover_thread_nut_{z:g}', nut((2 * T, y, z), (1, 0, 0), 'M3'), 'fasteners'),
+                  (f'right_rear_cover_thread_nut_{z:g}', nut((W - 2 * T, y, z), (-1, 0, 0), 'M3'), 'fasteners')]
+    for x in lid_screw_x(W):
+        parts += [(f'Lid_rear_retention_M3x6_{x:g}', screw((x, D + T, lid_z), (0, -1, 0), 'M3', 6), 'lid_screws'),
+                  (f'Lid_retention_thread_nut_{x:g}', nut((x, D - T, lid_z), (0, -1, 0), 'M3'), 'fasteners')]
+    return parts
 
 
-def perforation_allowed(W, H, x, z, r=4.0):
-    """Perforations stay clear of the thumbscrew holes and of the area behind the lid tabs."""
-    if x - r < SCREW_INSET + FERRULE_HOLE + 2 or x + r > W - SCREW_INSET - FERRULE_HOLE - 2:
-        return False
-    behind_tab = z + r > H - TAB_DROP and (x - r < TAB_SPAN[1] + 4 or x + r > W - TAB_SPAN[1] - 4)
-    return not behind_tab
+def perforation_allowed(W, H, x, z, lid_z, r=4.0):
+    """Perforations stay clear of the lid screw holes and of the area behind the lid tabs."""
+    behind_tab = z + r > H - TAB_DROP - 2 and (x - r < TAB_SPAN[1] + 2 or x + r > W - TAB_SPAN[1] - 2)
+    near_screw = any(abs(x - sx) < r + CLEARANCE_HOLE + 2 and abs(z - lid_z) < r + CLEARANCE_HOLE + 2 for sx in lid_screw_x(W))
+    return not (behind_tab or near_screw)
 
 
-def lid_top(W, D, H, y0, z_high):
+def lid_top(W, D, H, y0, lid_z):
     """Lid top sheet reaching over the cover, with two rear tabs folded down behind it."""
     top = box(0, y0, H - T, W, D + T - y0, T)
     spans = [TAB_SPAN, (W - TAB_SPAN[1], W - TAB_SPAN[0])]
     tabs = [box(a, D, H - TAB_DROP, b - a, T, TAB_DROP - T) for a, b in spans]
     shape = cq.Workplane().add(top).union(tabs[0]).union(tabs[1]).val()
     folds = [('x', (D + T, H), (-1, -1), dict(span=s, relief=True)) for s in spans]
-    holes = [cyl(x, D - 1, z_high, FERRULE_HOLE, 3, (0, 1, 0)) for x in screw_x(W)]
+    holes = [cyl(x, D - 1, lid_z, CLEARANCE_HOLE, 3, (0, 1, 0)) for x in lid_screw_x(W)]
     return shape, folds, holes
 
 
@@ -119,16 +119,6 @@ def lid_studs(W, studs):
         out.append((f'Lid_locating_stud_left_{y:g}', cyl(0, y, z, STUD_RADIUS - .01, T + 2.5, (1, 0, 0))))
         out.append((f'Lid_locating_stud_right_{y:g}', cyl(W - T - 2.5, y, z, STUD_RADIUS - .01, T + 2.5, (1, 0, 0))))
     return out
-
-
-def lid_thumbscrews(W, D, z_high):
-    """Captive thumbscrews in the lid tabs; they pass the cover and thread into the upper flange threads."""
-    return [(f'Lid_rear_captive_thumbscrew_{x:g}', captive_screw((x, D, z_high), (0, -1, 0), 5.5)) for x in screw_x(W)]
-
-
-def cover_thumbscrews(W, D, z_low):
-    """Captive thumbscrews in the cover web; they thread into the lower flange threads."""
-    return [(f'Rear_cover_captive_thumbscrew_{x:g}', captive_screw((x, D - T, z_low), (0, -1, 0), 4.5)) for x in screw_x(W)]
 
 
 def lid_removal_hits(lid, fixed, overlap):

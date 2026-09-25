@@ -18,8 +18,8 @@ def interface_details(parts,mod,api):
         for p in extra:
             if p['name']!=name:selected.append((p['name'].replace('_',' '),p['shape']))
         anchors_by_name={
-          'Upper_module_rear_perforated_cover':[(100,485,386),(220,485,380.5+r),(430,485,390),(220,481,376.82),(143,485,390+r),(297,485,380.5+r)],
-          'Upper_rear_perforated_cover':[(220,485,350),(220,481,303.07),(10,485,320),(10,485,389.25),(14,483.5,360),(24,486.5,389.25)],
+          'Upper_module_rear_perforated_cover':[(100,485,386),(220,485,380.5+r),(438.5,476,385),(220,481,376.82),(143,485,390+r),(24,485,389.55+r)],
+          'Upper_rear_perforated_cover':[(220,485,350),(438.5,476,340),(220,481,303.07),(24,485,389.25),(24,486.5,389.25)],
           'Rear_MCIO_lower_U_frame_140mm_top_open_entry':[(140,486.5,378),(220,486.5,380.5+r),(297,488,390+r),(220,488,395+r),(220,494,398.05+r),(143,488,390+r),(220,486.5,380.5+r)],
           'Replacement_lid_adapter_with_undrilled_OEM_side_returns':[(220,240,top),(3,240,top-9.55),(3,118.2,top-10),(7.5,240,221.5),(3,240,212.5),(7.5,240,221.5),(3,100,212.5)],
           'Screw_mounted_3mm_rack_ear_left':[(440,30,200),(441.5,32,185),(220,240,399.25),(3,240,389),(3,128.2,389.25)]}
@@ -40,11 +40,11 @@ def interface_details(parts,mod,api):
         context_pages(api,title,name+'::edge-details',rows,note,selected,anchors)
     if mod:
         sheet('Rear cover | open cable notch and folded edges','Upper_module_rear_perforated_cover',[
-            ['Rear web',f'1.500 thick; X0–440, Y483.5–485, Z375.32–{z(396.55)}. The web top stops 1.500 below the lid underside, clear of the lid tab bends.'],
+            ['Rear web',f'1.500 thick; X1.5–438.5, Y483.5–485, Z375.32–{z(396.55)}. The web top stops 1.500 below the lid underside, clear of the lid tab bends.'],
             ['Top-open cable notch',f'140.000 wide; X150–290, from Z{z(380.5)} to the open web top. Nominal corner R0. Solid land below the notch {fmt(380.5+r-375.32)} high. With the cap removed the clear opening reaches the lid underside at Z{z(398.05)}.'],
-            ['Rear flanges and thumbscrews',f'The body walls end in inward flanges X0–17 and 423–440, Y482–483.5, with extruded M3 threads at X10/430, Z390 and {z(389.55)}. Two knurled M3 captive thumbscrews in DIA6.4 web holes at Z390 retain the cover; DIA3.4 web holes at Z{z(389.55)} pass the lid thumbscrews.'],
-            ['Lower inward lip','X19–421, Y481–483.5, Z375.32–376.82: 402.000 wide ×2.500 projection ×1.500 thick. The lip ends stop 2.000 clear of the body flanges; a 1.500 wide bend-relief slot is cut into the web at each lip end.'],
-            ['Fastener roles','Four extruded M3 threads at X143,297 and Z'+z(380.5)+','+z(390)+' take the brush-frame and cap screws.'],
+            ['Side returns and screws',f'1.500 thick; X1.5–3 and 437–438.5; Y470.2–483.5; Z375.32–{z(396.55)}. One M3 × 6 pan-head screw per side through the body wall at Y477.2/Z390 threads into an extruded M3 thread in each return.'],
+            ['Lower inward lip','X15–425, Y481–483.5, Z375.32–376.82: 410.000 wide ×2.500 projection ×1.500 thick. Ends stop 13.500 short of each web end; a 1.500 wide bend-relief slot is cut into the web at each lip end.'],
+            ['Fastener roles','Four extruded M3 threads at X143,297 and Z'+z(380.5)+','+z(390)+' take the brush-frame and cap screws. Two more at X24 and 416, Z'+z(389.55)+' take the lid retention screws.'],
             ['Service','Disconnect external cables; remove the cover with its brush frame before GPU or cartridge extraction.']],
             'The upper edge remains open when the brush cap is removed. The printed notch is a clear opening, not a closed rectangular hole. Refer to the formed sections for return direction. Bends are formed at inside radius R1.5 with relief slots at the ends of the partial lower lip.')
         sheet('MCIO frame and cap | open contours and assembly','Rear_MCIO_lower_U_frame_140mm_top_open_entry',[
@@ -57,9 +57,9 @@ def interface_details(parts,mod,api):
             ['Connector service','Remove the cap before passing a 35 ×14 plug through the 140 ×17.55 opening. Refit around the cables. Brush compression and actual latch clearance require a physical sample.']],
             'The cap and U-frame have different open profiles. Do not substitute the cable-opening rectangle for either part outline. The cap return reaches Y494, 9 mm behind the body.')
         sheet('Module lid and adapter | returns and seating datums','Replacement_lid_adapter_with_undrilled_OEM_side_returns',[
-            ['Lid top',f'X0–440; Y2–486.5; Z{z(398.05)}–{z(399.55)}. Sheet 1.500. Two rear tabs fold down at R1.5: X4–44 and 396–436, Y485–486.5, to Z{z(382.55)}.'],
+            ['Lid top',f'X0–440; Y2–486.5; Z{z(398.05)}–{z(399.55)}. Sheet 1.500. Two rear tabs fold down at R1.5: X14–34 and 406–426, Y485–486.5, to Z{z(382.55)}.'],
             ['Lid side returns',f'X1.5–3 and X437–438.5; Y22–460; Z{z(381.55)}–{z(398.05)}. Length 438.000; drop 16.500 below top underside. Each return has two L-slots 4.600 wide: a vertical entry at Y108.2 and 423.2 from the lower edge, then a 10.000 rearward leg at Z{z(389.55)}.'],
-            ['Lid retention',f'Flush-head press-in studs DIA4 in both body walls at Y118.2 and 433.2, Z{z(389.55)} project 2.500 into the slots. Knurled M3 captive thumbscrews at X10/430, Z{z(389.55)} in the rear tabs thread into the body rear flanges. Remove: loosen, slide 10 mm rearward, lift.'],
+            ['Lid retention',f'Flush-head press-in studs DIA4 in both body walls at Y118.2 and 433.2, Z{z(389.55)} project 2.500 into the slots. Two M3 × 6 pan-head retention screws through DIA3.4 holes in the rear tabs, at X24 and 416, Z{z(389.55)}, thread into the rear cover and stop the lid sliding back. Remove: unscrew, slide 10 mm rearward, lift.'],
             ['Adapter ring','X0–440; Y0–485; Z220–221.5. Inner opening X15–425/Y15–470: 410 ×455; perimeter width 15.000.'],
             ['Adapter side returns','X1.5–3 and X437–438.5; Y20–465; Z205–220. Length 445.000; drop 15.000; end setbacks 20.000; clear inside span 434.000.'],
             ['Vertical stack','Adapter top Z221.5; gasket 0.750; module bottom Z222.25. Upper module fasteners locate in the six modeled DIA3.4 bores.'],
@@ -89,17 +89,16 @@ def interface_details(parts,mod,api):
             ['Rack-ear construction','3.000 steel, formed at R3. Ears attach to the body with side M4 × 10 screws; rack-ear joints are not welded.'],
             ['Rack-ear side screws','Six per ear at Y32 and 55; Z45, 185 and 345. They thread into extruded M4 threads in the 1.5 mm body wall (tap drill DIA3.3).'],
             ['Lid top','X0–440; Y2–486.5; Z397.75–399.25. Sheet 1.500. It reaches over the rear cover and folds two rear tabs down.'],
-            ['Lid returns','X1.5–3 and X437–438.5; Y22–469.2; Z381.25–397.75. Length 447.200; drop 16.500. Each return has two L-slots 4.600 wide: a vertical entry at Y118.2 and 423.2 from the lower edge, then a 10.000 rearward leg at Z389.25.'],
+            ['Lid returns','X1.5–3 and X437–438.5; Y22–459.2; Z381.25–397.75. Length 437.200; drop 16.500; they stop 11.000 ahead of the rear-cover returns so the lid can slide 10.000 rearward. Each return has two L-slots 4.600 wide: a vertical entry at Y118.2 and 423.2 from the lower edge, then a 10.000 rearward leg at Z389.25.'],
             ['Lid locating studs','Four flush-head press-in studs DIA4 in the body walls at Y128.2 and 433.2, Z389.25, projecting 2.500 inside. Their heads are flush with the outer wall faces.']],
-            'The lid drops on 10 mm behind its seated position and slides forward until the studs reach the rear ends of the slots; the rear thumbscrews then stop it sliding back. Nothing on the body sides projects beyond the wall faces except the rack ears and pan-head assembly screws.')
-        sheet('Rear cover, rear flanges and lid thumbscrews','Upper_rear_perforated_cover',[
-            ['Cover web','X0–440, Y483.5–485, Z303.07–396.25; 1.500 sheet. DIA8 perforations on a 10.000 pitch stay clear of the thumbscrew holes and of the lid tabs.'],
-            ['Lower lip','X19–421, Y481–483.5, Z303.07–304.57, folded forward at R1.5. A 1.500 wide relief slot is cut at each lip end; the lip stops 2.000 clear of the body flanges.'],
-            ['Cover thumbscrews','Two knurled M3 captive screws at X10 and 430, Z320. Their ferrules press into DIA6.4 web holes; they thread into the lower flange threads.'],
-            ['Lid screw clearance','DIA3.4 web holes at X10 and 430, Z389.25 pass the lid thumbscrews to the upper flange threads.'],
-            ['Body rear flanges','Folded inward from both side walls at R1.5: X0–17 and 423–440, Y482–483.5, Z303.07–397.75, with a relief slot at the lower end. Each carries extruded M3 threads at X10 or 430, Z320 and 389.25 (tap drill DIA2.5, collars forward).'],
-            ['Lid rear tabs','Folded down from the lid rear edge at R1.5: X4–44 and 396–436, Y485–486.5, Z382.25–397.75. Each carries a knurled M3 captive thumbscrew at Z389.25.']],
-            'Remove the lid first: loosen its two thumbscrews, slide it 10 mm rearward off the wall studs and lift it. Then loosen the two cover thumbscrews and withdraw the cover rearward. All thumbscrews face rearward.')
+            'The lid drops on 10 mm behind its seated position and slides forward until the studs reach the rear ends of the slots; two rear retention screws then stop it sliding back.')
+        sheet('Rear cover and lid retention screws','Upper_rear_perforated_cover',[
+            ['Cover web','X1.5–438.5, Y483.5–485, Z303.07–396.25; 1.500 sheet. DIA8 perforations on a 10.000 pitch stay clear of the lid screw holes and of the lid tabs. The web top stops 1.500 below the lid underside, clear of the lid tab bends.'],
+            ['Side returns and screws','1.500 thick; X1.5–3 and 437–438.5; Y470.2–483.5. Two M3 × 6 pan-head screws per side through the body wall at Y477.2, Z313 and 381.45, thread into extruded M3 threads in the returns.'],
+            ['Lower lip','X15–425, Y481–483.5, Z303.07–304.57, folded forward at R1.5, with a 1.500 wide relief slot at each lip end.'],
+            ['Lid screw threads','Extruded M3 threads in the web at X24 and 416, Z389.25 (tap drill DIA2.5, collars forward).'],
+            ['Lid rear tabs','Folded down from the lid rear edge at R1.5: X14–34 and 406–426, Y485–486.5, Z382.25–397.75. Each has a DIA3.4 hole for an M3 × 6 pan-head retention screw.']],
+            'Remove the lid first: take out its two rear retention screws, slide it 10 mm rearward off the wall studs and lift it. Then remove the cover side screws and withdraw the cover.')
     sheet('Rail supports | installed levels and factory joints','Longitudinal_mount_rail_20',[
         ['GPU tray datum','Underside Z'+('242.250; top Z243.750.' if mod else '170.000; top Z171.500.')],
         ['Support and board levels',('Tray boss top /rail underside Z248.250; rail top /crossbar underside Z250.250; crossbar top Z252.250; PCB underside Z260.250; PCB top Z262.750.' if mod else 'Tray boss top /rail underside Z176.000; rail top /crossbar underside Z178.000; crossbar top Z180.000; PCB underside Z188.000; PCB top Z190.500.')],

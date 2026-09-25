@@ -47,7 +47,6 @@ def signature(record):
 
 def fastener_spec(name, shape):
     m = re.search(r'M(\d)x(\d+)', name)
-    if 'captive_thumbscrew' in name: return 'M3 captive panel screw, 8 mm knurled head, press-fit ferrule for a 6.4 mm hole in 1.5 mm steel'
     if 'locating_stud' in name: return 'Flush-head press-in locating stud, 4 mm diameter, 2.5 mm projection, for 1.5 mm steel'
     if 'self_tapping_5x8' in name: return '5 x 8 mm self-tapping plastic fan screw'
     if '6_32_screw' in name or '6_32xquarter' in name: return '#6-32 UNC x 1/4 in pan-head machine screw'

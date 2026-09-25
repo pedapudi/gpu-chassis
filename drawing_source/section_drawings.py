@@ -33,7 +33,7 @@ def wall_faces(shape,name):
         if abs(normal[axis])<.999999:continue
         b=bounds(face);uv=[i for i in range(3) if i!=axis];sizes=[b[i+3]-b[i] for i in uv]
         # Narrow thickness faces and aperture walls are described by the sections.
-        cover_lip=name in ('Upper_rear_perforated_cover','Upper_module_rear_perforated_cover') and axis==2 and abs(sizes[0]-402)<1e-4 and abs(sizes[1]-2.5)<1e-4
+        cover_lip=name in ('Upper_rear_perforated_cover','Upper_module_rear_perforated_cover') and axis==2 and abs(sizes[0]-410)<1e-4 and abs(sizes[1]-2.5)<1e-4
         if min(sizes)<3.6 and not cover_lip:continue
         row=dict(normal='XYZ'[axis],station=round(face.Center().toTuple()[axis],4),axes=''.join('XYZ'[i] for i in uv),limits=[round(b[i],4) for i in uv]+[round(b[i+3],4) for i in uv])
         key=(row['normal'],row['station'],*row['limits'])

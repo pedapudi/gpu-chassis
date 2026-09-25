@@ -3,7 +3,7 @@
 Sheet-metal GPU chassis models, engineering drawings and interactive viewers for a 9U full enclosure and a removable GPU module above a SilverStone RM53-502. The GPU carrier has twenty-one rear bracket positions: ten dual-slot GPUs plus one single-width card, matching the usable sockets of a 12-slot Miwin switch-backplane reference. The full-chassis viewer offers six 120 mm fans, two 180 mm fans or three 120 mm fans. The 5U module viewer toggles between three 140 mm fans, three 120 mm fans with five 80 mm fans above them, and two 180 mm fans; each option has its own front carrier. The toggle updates intake hardware, engineering drawings and CAD links while preserving the camera position.
 
 - [Open the interactive viewers](https://pedapudi.github.io/gpu-chassis/)
-- [Download the complete engineering package and fabrication kit](https://github.com/pedapudi/gpu-chassis/releases/tag/rear-thumbscrews-2026-09-25)
+- [Download the complete engineering package and fabrication kit](https://github.com/pedapudi/gpu-chassis/releases/tag/sliding-lid-2026-09-25)
 - [Assembly, hardware and fabrication notes](ENGINEERING.md)
 - [Analytic CAD sources](cad_source/)
 - [Dimensioned drawing sources](drawing_source/)

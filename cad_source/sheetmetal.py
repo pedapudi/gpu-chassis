@@ -205,7 +205,7 @@ def unfold(shape, bends, t, k=K_FACTOR):
 
 
 FASTENER_GROUPS = ('fasteners', 'intake_fasteners', 'adapter_fasteners', 'hold_downs', 'rear_release', 'partition_screws', 'lid_screws', 'lid_guides', 'entry_fasteners')
-FASTENER_TOKENS = ('nut', 'screw', 'standoff', 'washer', 'M3', 'M4')
+FASTENER_TOKENS = ('nut', 'screw', 'standoff', 'washer', 'stud', 'M3', 'M4')
 
 
 def sheet_parts(parts):

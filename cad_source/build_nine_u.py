@@ -8,7 +8,8 @@ import cadquery as cq
 from mounting_hardware import box,cyl,union,cut,screw,fan_screw,nut,hex_prism,supports,slot,pem_632
 import gpu_geometry
 from sheetmetal import fold,transform_bends
-from threads import tap_captive_nuts,emboss_boss,form_thread,captive_screw
+from threads import tap_captive_nuts,emboss_boss,form_thread
+import rear_closure as rc
 from front_hardware import add_ears,ear_holes,grille_holes
 from component_models import add_psu,psu_holes,psu_vent,backplane_outline,add_board_details,BOARD_X,BOARD_Y,BOARD_SLOT_X,BOARD_MOUNT_POINTS,board_hole_tools
 P=dict(width=440.,depth=485.,height=399.25,sheet=1.5,gpu_deck_z=170.,rear_bracket_plane=469.,
@@ -81,13 +82,20 @@ def build(out,cache,fan_size=120,return_parts=False):
  # One U-section: floor and sidewalls are a single bent-sheet component.
  body=union([box(0,F+2,0,W,D-F-2,1.5),box(0,F+2,1.5,1.5,D-F-2,H-3),box(W-1.5,F+2,1.5,1.5,D-F-2,H-3)])
  panel_side_z=[22,148,205,290,381.45]
- body_holes=[side_holes(y,z) for y in (F+12,424) for z in panel_side_z]+[side_holes(y,H-10,3.2) for y in (75,380)]
+ # Cartridge rear screws sit 3.5 mm ahead of the rear-panel return ends, which stop clear of the body rear flanges.
+ cassette_y=422.1
+ body_holes=[side_holes(F+12,z) for z in panel_side_z]+[side_holes(424,z) for z in (22,148)]+[side_holes(cassette_y,z) for z in (205,290)]
+ # Rear-facing thumbscrews: the walls end in two tapped rear flanges; the lid front locates on wall studs.
+ vent_bottom=303.07;cover_low=320;cover_high=H-10;lid_studs=[(75,H-10),(380,H-10)]
+ flange_adds,flange_notch,flange_folds,flange_holes=rc.body_flanges(W,D,vent_bottom,H-1.5,cover_low,cover_high)
+ body_holes += flange_holes+rc.stud_holes(W,lid_studs)
  body_holes += [psu_vent(R)]+[cyl(-1,y,16.5,1.7,5,(1,0,0)) for y in (R-165,R-10)]
  # Screw positions for fixed support angles and front cable restraints.
- body_holes += [side_holes(y,158) for y in (180,290,390)]+[side_holes(424,z,3.2) for z in (313,381.45)]
+ body_holes += [side_holes(y,158) for y in (180,290,390)]
  body_holes += [side_holes(y,z) for y,z in ((90,180),(90,200),(220,75))]
  body_holes += ear_holes(F,(45,185,345))
- body,piece=form('U_shaped_body_1p5mm_two_longitudinal_bends',body,1.5,[('y',(0,0),(1,1)),('y',(W,0),(-1,1))],body_holes)
+ body=union([body]+flange_adds).cut(flange_notch)
+ body,piece=form('U_shaped_body_1p5mm_two_longitudinal_bends',body,1.5,[('y',(0,0),(1,1)),('y',(W,0),(-1,1))]+flange_folds,body_holes)
  # Four tapped bosses embossed 4.5 mm up from the floor carry the motherboard tray.
  tray_fix=[(118,80),(418,80),(118,402),(418,402)]
  for x,y in tray_fix:body=emboss_boss(body,x,y,0,1.5,4.5,'M3')
@@ -121,35 +129,27 @@ def build(out,cache,fan_size=120,return_parts=False):
  # Upper rear side fixings belong to the removable cassette and are removed before lifting.
  for z in (205,290):
   for side,x,ax,nx in [('left',0,(1,0,0),3),('right',440,(-1,0,0),437)]:
-   fast(f'{side}_cassette_rear_M3x8_{z}',(x,424,z),ax,'M3',8,'rear_release')
-   add(f'{side}_cassette_rear_captive_nut_{z}',nut((nx,424,z),ax,'M3'),'cassette',gold,moving=True)
- # The upper rear vent is fixed to the body and remains in place with the lid removed.
- vent_bottom=303.07;vent_top=H-1.5
- vent=union([box(1.5,D-1.5,vent_bottom,437,1.5,vent_top-vent_bottom),
-  box(1.5,R+1.2,vent_bottom,1.5,D-1.5-(R+1.2),vent_top-vent_bottom),
-  box(437,R+1.2,vent_bottom,1.5,D-1.5-(R+1.2),vent_top-vent_bottom),
-  box(15,R+12,vent_bottom,410,D-1.5-(R+12),1.5)])
- vh=[side_holes(424,z) for z in (313,381.45)]
+   fast(f'{side}_cassette_rear_M3x8_{z}',(x,cassette_y,z),ax,'M3',8,'rear_release')
+   add(f'{side}_cassette_rear_captive_nut_{z}',nut((nx,cassette_y,z),ax,'M3'),'cassette',gold,moving=True)
+ # The upper rear cover sits behind the wall flanges and is removed rearward after the lid.
+ vent,vent_folds,vh=rc.cover(W,D,vent_bottom,H-3,cover_low,cover_high)
  # Perforation rows stay two thicknesses clear of the lower lip bend.
  for row,z in enumerate([313.5+9.75*i for i in range(9)]):
-  for x in range(14+5*(row%2),427,10):vh.append(cyl(x,D-2,z,4,4,(0,1,0)))
- vent,vent_piece=form('Upper_rear_perforated_panel_with_side_returns',vent,1.5,[('z',(1.5,D),(1,-1)),('z',(438.5,D),(-1,-1)),('x',(D,vent_bottom),(-1,1),dict(span=(15,425),relief=True))],vh)
- add('Upper_rear_perforated_panel_with_side_returns',vent,'rear_vent',dark,pieces=[vent_piece])
- profile('upper_rear_perforated_face_no_returns',vent,'y',D)
- for x,ax,nx in [(0,(1,0,0),3),(440,(-1,0,0),437)]:
-  for z in (313,381.45):
-   add(f'Upper_vent_side_captive_thumbscrew_{x}_{z}',captive_screw((1.5 if x==0 else 438.5,424,z),ax,5),'fasteners',dark)
-   add(f'Upper_vent_captive_nut_{x}_{z}',nut((nx,424,z),ax,'M3'),'fasteners',gold)
- # The lid is a flat top with two welded inset strips.
- lid_tools=[side_holes(y,H-10,1.8) for y in (75,380)]+[box(-3,y-4.5,H-18.1,446,9,5.3) for y in (F+12,424)]
- lid_pieces=[form('Lid_top_sheet',box(0,F+2,H-1.5,W,D-F-2,1.5),1.5,[],lid_tools)[1]]
+  for x in range(14+5*(row%2),427,10):
+   if rc.perforation_allowed(W,H,x,z):vh.append(cyl(x,D-2,z,4,4,(0,1,0)))
+ vent,vent_piece=form('Upper_rear_perforated_cover',vent,1.5,vent_folds,vh)
+ add('Upper_rear_perforated_cover',vent,'rear_vent',dark,pieces=[vent_piece])
+ profile('upper_rear_perforated_face',vent,'y',D)
+ for name,shape in rc.cover_thumbscrews(W,D,cover_low):add(name,shape,'fasteners',dark)
+ for name,shape in rc.flange_nuts(W,D,cover_low,cover_high):add(name,shape,'fasteners',gold)
+ # The lid top reaches over the cover and folds two rear tabs; its welded side returns carry L-slots for the wall studs.
+ lid_top,lid_folds,lid_holes=rc.lid_top(W,D,H,F+2,cover_high)
+ lid_tools=rc.lid_slots(W,H,lid_studs)+[box(-3,F+12-4.5,H-18.1,446,9,5.3)]
+ lid_pieces=[form('Lid_top_sheet_with_rear_tabs',lid_top,1.5,lid_folds,lid_holes)[1]]
  lid_pieces+=[form(f'Lid_{side}_return_strip',box(x,F+22,H-18,1.5,394-F,16.5),1.5,[],lid_tools)[1] for side,x in (('left',1.5),('right',W-3))]
- add('Lid_with_separate_side_fasteners',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
- # Lid thumbscrews sit behind the rack ears so their heads clear the ear legs.
- for y in (75,380):
-  for side,x,ax,nx in [('left',0,(1,0,0),3),('right',440,(-1,0,0),437)]:
-   add(f'{side}_lid_captive_thumbscrew_{y}',captive_screw((1.5 if x==0 else 438.5,y,H-10),ax,5),'lid_screws',dark,visible=False)
-   add(f'{side}_lid_captive_nut_{y}',nut((nx,y,H-10),ax,'M3'),'lid_guides',gold)
+ add('Lid_with_rear_tabs',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
+ for name,shape in rc.lid_thumbscrews(W,D,cover_high):add(name,shape,'lid_screws',dark,visible=False)
+ for name,shape in rc.lid_studs(W,lid_studs):add(name,shape,'lid_guides',gold)
  def fan(name,x,y,z,size,depth,group,moving=False):
   sp={80:71.5,120:105,140:124.5}[size]
   f=cut(box(x-size/2,y,z-size/2,size,depth,size),[cyl(x,y-1,z,size/2-5,depth+2,(0,1,0))]+[cyl(x+dx,y-1,z+dz,(2.2 if size==120 else 2.25),depth+2,(0,1,0)) for dx in (-sp/2,sp/2) for dz in (-sp/2,sp/2)])
@@ -315,9 +315,9 @@ def build(out,cache,fan_size=120,return_parts=False):
   add(name+'_toe_receiver',toe,group,moving=moving)
  retention('Upper_bank',slots,gw,'cassette',True);retention('Lower_bank',host_centres,host_w,'shell')
  # Rear bank ends at the bracket shelf. The removable lid closes the space above it.
- rear=union([box(1.8,R,171.5,436.4,1.2,gb-171.5),box(1.8,R+1.2,171.5,1.2,12.8,gb-171.5),box(437,R+1.2,171.5,1.2,12.8,gb-171.5),box(1.8,R,171.5,436.4,1.2,3)])
+ rear=union([box(1.8,R,171.5,436.4,1.2,gb-171.5),box(1.8,R+1.2,171.5,1.2,9.8,gb-171.5),box(437,R+1.2,171.5,1.2,9.8,gb-171.5),box(1.8,R,171.5,436.4,1.2,3)])
  # Apertures stop two thicknesses below the shelf bend tangent so forming does not distort them.
- rear=cut(rear,[box(x-7.5,R-1,gw-.67,15,4,100.5) for x in slots]+[side_holes(424,z) for z in (205,290)])
+ rear=cut(rear,[box(x-7.5,R-1,gw-.67,15,4,100.5) for x in slots]+[side_holes(cassette_y,z) for z in (205,290)])
  rear=add('Full_width_twenty_one_slot_rear_with_side_returns',rear,'cassette',moving=True);profile('upper_rear_face_no_returns',rear,'y',R)
  for i,x in enumerate((BOARD_X+BOARD_SLOT_X[0],BOARD_X+BOARD_SLOT_X[-1]),1):
   socket(f'Backplane_auxiliary_single_width_socket_{i}',x,190.5,'backplane',True)
@@ -441,6 +441,9 @@ def build(out,cache,fan_size=120,return_parts=False):
  lid_shape=next(a['shape'] for a in parts if a['group']=='lid')
  lid_hits=[a['name'] for a in parts if a['group']=='fasteners' and overlap(lid_shape,a['shape'])>1e-4]
  assert not lid_hits,('Lid conflicts with panel fasteners',lid_hits)
+ # With its thumbscrews loosened, the lid slides rearward off the wall studs and lifts clear.
+ lid_removal=rc.lid_removal_hits(lid_shape,[a for a in parts if a['group'] not in ('lid','lid_screws','board_alternatives') and a['role']!='clearance'],overlap)
+ assert not lid_removal,('Lid removal path is blocked',lid_removal[:6])
  # Board components must clear one another and the selected mounting fasteners.
  bp=[a for a in parts if a['group']=='backplane' and 'PCB_photo_reference' not in a['name']]
  bp_hits=[]
@@ -503,7 +506,7 @@ def build(out,cache,fan_size=120,return_parts=False):
    if not plastic_joint and overlap(a['shape'],b['shape'])>1e-4:intake_hits.append([a['name'],b['name']])
  assert not intake_hits,('Intake component interference',intake_hits)
  checks=dict(PSU_model='ASUS-PRO-WS-3000P',PSU_size_depth_width_height_mm=[175,150,86],PSU_rear_mount_holes_construction_xz_mm=atx,PSU_handedness='Rear-view counterclockwise quarter-turn of the standard ATX pattern',backplane_socket_count=12,backplane_GPU_socket_pitch_mm=40.64,backplane_auxiliary_end_slot_gap_mm=20.32,backplane_PCB_origin_construction_xy_mm=[BOARD_X,BOARD_Y],backplane_dimensions_mm=[429,225,2.5],backplane_mounting_holes_photo_estimates=True,motherboard_standoff_type="M3 x 8 mm male-female hex standoff, 6 mm stud",motherboard_stud_thread_engagement_mm=3.5,motherboard_upper_screw_engagement_mm=2.93,motherboard_stud_tip_to_floor_mm=0.5,backplane_supported_holes_construction_xy_mm=BOARD_MOUNT_POINTS,cartridge_removal_requires=['lid (four captive thumbscrews)','upper rear vent and its fasteners','tray hold-down screws','disconnected harnesses'],enclosure_mm=[482.6,P['depth'],H],body_width_mm=W,rack_units=9,upper_rear_positions=P['upper_slot_count'],dual_slot_GPU_envelopes=10,single_width_auxiliary_card_envelopes=1,backplane_trailing_auxiliary_socket='Shares the last rear position with the tenth GPU second bracket; usable only without that GPU',lower_rear_positions=8,
-  lid_to_panel_fastener_intersections=lid_hits,intake_component_intersections=intake_hits,gpu_deck_z_mm=170,upper_fan_centres_z_mm=[210,330],upper_fan_count=6,upper_inlet_spacer_mm=0,grille_to_GPU_fan_face_mm=2,front_intake_aperture_mm=116,grille_perforation_diameter_mm=9,grille_perforation_pitch_mm=10,slot_pitch_mm=20.32,dual_slot_pitch_mm=40.64,upper_bracket_centres_x_mm=[W-x for x in slots],lower_card_planes_x_mm=[W-x for x in host_axes],
+  lid_to_panel_fastener_intersections=lid_hits,lid_removal_intersections=lid_removal,intake_component_intersections=intake_hits,gpu_deck_z_mm=170,upper_fan_centres_z_mm=[210,330],upper_fan_count=6,upper_inlet_spacer_mm=0,grille_to_GPU_fan_face_mm=2,front_intake_aperture_mm=116,grille_perforation_diameter_mm=9,grille_perforation_pitch_mm=10,slot_pitch_mm=20.32,dual_slot_pitch_mm=40.64,upper_bracket_centres_x_mm=[W-x for x in slots],lower_card_planes_x_mm=[W-x for x in host_axes],
   upper_retention_screws_x_mm=[W-x+9.21 for x in slots],lower_retention_screws_x_mm=[W-x+9.21 for x in host_centres],
   lower_bracket_centres_x_mm=[W-x for x in host_centres],upper_card_planes_x_mm=[W-x for x in gpu_axes],
   bracket_screw_offset_from_centre_mm=9.21,bracket_screw_offset_from_PCB_centre_mm=2.055,

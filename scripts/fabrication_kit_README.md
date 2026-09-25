@@ -7,7 +7,7 @@ This kit contains the files a sheet-metal fabricator needs to quote and make the
 - `parts_list.csv`: one row per distinct sheet blank (item `SM###`). Each row gives the source piece name, the assemblies that use it, material, thickness, nearest gauge, developed blank size, bend count, inside radius, K-factor, quantity for each configuration, tapping, joining, finish, fabrication holds and a SendCutSend review.
 - `step/`: one formed 3D STEP model per item, moved to its own origin. Most fabricators develop the blank from this file with their own bend tooling.
 - `flat/`: one developed flat-pattern DXF per item, in millimetres. Cut geometry is solid; bend centrelines are dashed lines on the same layer. The flat patterns use inside radius equal to thickness and K-factor 0.40. A fabricator with different tooling must re-develop the blanks from the STEP files.
-- `hardware_list.csv`: purchased screws, captive thumbscrews, square nuts, washers and standoffs, with quantities per configuration.
+- `hardware_list.csv`: purchased screws, captive thumbscrews, locating studs, square nuts, washers and standoffs, with quantities per configuration.
 - `tapped_thread_schedule.csv`: every formed thread, its size, the sheet piece that carries it and its position, for the 9U and module base configurations.
 - `drawings/`: the complete drawing set for each configuration, including a flat-pattern sheet for every piece.
 - `kit_summary.json`: item counts and the SendCutSend review totals.
@@ -18,7 +18,7 @@ Coordinates in the drawings and schedules use the assembly datum: X = 0 at the b
 
 All sheet parts are cold-rolled low-carbon steel (1008/1010). Modeled thicknesses are 1.0, 1.2, 1.5, 2.0 and 3.0 mm; `parts_list.csv` gives the nearest US gauge. Every bend is 90 degrees with inside radius equal to the thickness. Partial bends have relief slots one thickness wide.
 
-Deburr all edges. Weld joined assemblies before finishing, then zinc plate or powder coat. Mask the tapped threads during finishing, and press the captive thumbscrews in afterward.
+Deburr all edges. Weld joined assemblies before finishing, then zinc plate or powder coat. Mask the tapped threads during finishing. Press in the captive thumbscrews and locating studs afterward.
 
 ## Joining and hardware
 
@@ -28,7 +28,7 @@ Screws fasten into threads formed in the sheet; the chassis has no captive hex n
 
 The body floor and GPU tray carry eight conical bosses, 20 mm at the base, 10 mm at the top and 4.5 mm high, each with a formed thread in its top. They need an embossing die; M3 and M4 press-in standoffs of the same height are a substitute.
 
-The lid and rear covers are held by M3 captive panel screws. Their ferrules press into 6.4 mm holes in the 1.5 mm body walls.
+The lid and rear cover are held by rear-facing M3 captive panel screws. Their ferrules press into 6.4 mm holes in the 1.5 mm lid tabs and cover web; they thread into the rear flanges folded inward from the body side walls. The lid front locates on four flush-head press-in studs, 4 mm diameter, in the body walls.
 
 ## Fabrication holds
 

@@ -4,12 +4,12 @@ The full chassis and replacement-lid module include complete part views with dim
 
 | Configuration | Fabricated parts | Sheets | Section sheets | Face sheets | Flat-pattern sheets |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 9U, six 120 mm fans | 36 | 258 | 20 | 48 | 42 |
-| 9U, two 180 mm fans | 37 | 265 | 20 | 48 | 44 |
-| 9U, three 120 mm fans | 37 | 265 | 20 | 48 | 44 |
-| Module, three 140 mm fans | 32 | 233 | 20 | 46 | 40 |
-| Module, three 120 mm + five 80 mm fans | 32 | 235 | 20 | 46 | 40 |
-| Module, two 180 mm fans | 32 | 233 | 20 | 46 | 40 |
+| 9U, six 120 mm fans | 36 | 257 | 20 | 47 | 42 |
+| 9U, two 180 mm fans | 37 | 264 | 20 | 47 | 44 |
+| 9U, three 120 mm fans | 37 | 264 | 20 | 47 | 44 |
+| Module, three 140 mm fans | 32 | 230 | 20 | 45 | 40 |
+| Module, three 120 mm + five 80 mm fans | 32 | 232 | 20 | 45 | 40 |
+| Module, two 180 mm fans | 32 | 230 | 20 | 45 | 40 |
 
 Feature-location sheets show complete physical face contours, including actual holes and open-edge cuts. Opposite walls have separate views. Circular holes use analytic circles; leaders specify counts, diameters, radii, and slot dimensions. Dense coordinate tables share the page with the face outline and highlighted hole rows. Complex cutouts retain their actual contours.
 

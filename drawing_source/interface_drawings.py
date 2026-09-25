@@ -6,7 +6,7 @@ from section_drawings import bounds,fmt
 def interface_details(parts,mod,api):
     c,new,para,table,view,W,H,out=api;lookup={a['name']:a for a in parts}
     # Module rear-entry and lid features follow the module top; 399.55 is the 4U reference top.
-    top=bounds(lookup['Upper_module_side_fastened_lid']['shape'])[5] if mod else 399.25;r=top-399.55
+    top=bounds(lookup['Upper_module_lid_with_rear_tabs']['shape'])[5] if mod else 399.25;r=top-399.55
     def z(v):return fmt(v+r)
     def sheet(title,name,rows,note):
         from annotated_geometry import context_pages
@@ -18,10 +18,11 @@ def interface_details(parts,mod,api):
         for p in extra:
             if p['name']!=name:selected.append((p['name'].replace('_',' '),p['shape']))
         anchors_by_name={
-          'Upper_module_rear_perforated_cover':[(100,485,386),(220,485,380.5+r),(438.5,476,385),(220,481,376.82),(438.5,477.2,390),(143,485,390+r)],
+          'Upper_module_rear_perforated_cover':[(100,485,386),(220,485,380.5+r),(430,485,390),(220,481,376.82),(143,485,390+r),(297,485,380.5+r)],
+          'Upper_rear_perforated_cover':[(220,485,350),(220,481,303.07),(10,485,320),(10,485,389.25),(14,483.5,360),(24,486.5,389.25)],
           'Rear_MCIO_lower_U_frame_140mm_top_open_entry':[(140,486.5,378),(220,486.5,380.5+r),(297,488,390+r),(220,488,395+r),(220,494,398.05+r),(143,488,390+r),(220,486.5,380.5+r)],
           'Replacement_lid_adapter_with_undrilled_OEM_side_returns':[(220,240,top),(3,240,top-9.55),(3,118.2,top-10),(7.5,240,221.5),(3,240,212.5),(7.5,240,221.5),(3,100,212.5)],
-          'Screw_mounted_3mm_rack_ear_left':[(440,30,200),(441.5,32,185),(220,240,399.25),(3,240,389),(0,128.2,389.25),(0,477.2,313)]}
+          'Screw_mounted_3mm_rack_ear_left':[(440,30,200),(441.5,32,185),(220,240,399.25),(3,240,389),(3,128.2,389.25)]}
         if name=='Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns':
             if 'bank' in title:
                 anchors=[(5.845,470.2,75.25),(13.345,470.2,75.25),(27.555,470.2,127.78),(22.555,474.08,129.28),(13.345,467.7,12.62),(18.74,468.35,12.62),(23.505,469,11.12)]
@@ -39,11 +40,11 @@ def interface_details(parts,mod,api):
         context_pages(api,title,name+'::edge-details',rows,note,selected,anchors)
     if mod:
         sheet('Rear cover | open cable notch and folded edges','Upper_module_rear_perforated_cover',[
-            ['Rear web',f'1.500 thick; X1.5–438.5, Y483.5–485, Z375.32–{z(398.05)}.'],
-            ['Top-open cable notch',f'140.000 wide ×17.550 deep; X150–290, Z{z(380.5)}–{z(398.05)}. Nominal corner R0. Solid land below the notch {fmt(380.5+r-375.32)} high.'],
-            ['Side returns',f'1.500 thick; X1.5–3 and 437–438.5; Y470.2–483.5; Z375.32–{z(398.05)}. Projection 13.300; height {fmt(398.05+r-375.32)}.'],
-            ['Lower inward lip','X15–425, Y481–483.5, Z375.32–376.82: 410.000 wide ×2.500 projection ×1.500 thick. Ends stop 13.500 short of each web end; a 1.500 wide bend-relief slot is cut into the web at each lip end.'],
-            ['Fastener roles','Two side-return DIA3.4/R1.7 holes at Y477.2/Z390 retain the cover. Four rear DIA3.4/R1.7 holes at X143,297 and Z'+z(380.5)+','+z(390)+' attach the brush assembly. All are clearance holes.'],
+            ['Rear web',f'1.500 thick; X0–440, Y483.5–485, Z375.32–{z(396.55)}. The web top stops 1.500 below the lid underside, clear of the lid tab bends.'],
+            ['Top-open cable notch',f'140.000 wide; X150–290, from Z{z(380.5)} to the open web top. Nominal corner R0. Solid land below the notch {fmt(380.5+r-375.32)} high. With the cap removed the clear opening reaches the lid underside at Z{z(398.05)}.'],
+            ['Rear flanges and thumbscrews',f'The body walls end in inward flanges X0–17 and 423–440, Y482–483.5, with extruded M3 threads at X10/430, Z390 and {z(389.55)}. Two knurled M3 captive thumbscrews in DIA6.4 web holes at Z390 retain the cover; DIA3.4 web holes at Z{z(389.55)} pass the lid thumbscrews.'],
+            ['Lower inward lip','X19–421, Y481–483.5, Z375.32–376.82: 402.000 wide ×2.500 projection ×1.500 thick. The lip ends stop 2.000 clear of the body flanges; a 1.500 wide bend-relief slot is cut into the web at each lip end.'],
+            ['Fastener roles','Four extruded M3 threads at X143,297 and Z'+z(380.5)+','+z(390)+' take the brush-frame and cap screws.'],
             ['Service','Disconnect external cables; remove the cover with its brush frame before GPU or cartridge extraction.']],
             'The upper edge remains open when the brush cap is removed. The printed notch is a clear opening, not a closed rectangular hole. Refer to the formed sections for return direction. Bends are formed at inside radius R1.5 with relief slots at the ends of the partial lower lip.')
         sheet('MCIO frame and cap | open contours and assembly','Rear_MCIO_lower_U_frame_140mm_top_open_entry',[
@@ -56,9 +57,9 @@ def interface_details(parts,mod,api):
             ['Connector service','Remove the cap before passing a 35 ×14 plug through the 140 ×17.55 opening. Refit around the cables. Brush compression and actual latch clearance require a physical sample.']],
             'The cap and U-frame have different open profiles. Do not substitute the cable-opening rectangle for either part outline. The cap return reaches Y494, 9 mm behind the body.')
         sheet('Module lid and adapter | returns and seating datums','Replacement_lid_adapter_with_undrilled_OEM_side_returns',[
-            ['Lid top',f'X0–440; Y2–485; Z{z(398.05)}–{z(399.55)}. Sheet 1.500.'],
-            ['Lid side returns',f'X1.5–3 and X437–438.5; Y22–460; Z{z(381.55)}–{z(398.05)}. Length 438.000; drop 16.500 below top underside; front/rear setbacks 20.000 /25.000 from top-sheet ends.'],
-            ['Lid threads',f'Extruded M3 threads normal X at Y118.2 and 433.2, Z{z(389.55)}; two per side. Knurled M3 captive thumbscrews in DIA6.4 body-wall holes engage them.'],
+            ['Lid top',f'X0–440; Y2–486.5; Z{z(398.05)}–{z(399.55)}. Sheet 1.500. Two rear tabs fold down at R1.5: X4–44 and 396–436, Y485–486.5, to Z{z(382.55)}.'],
+            ['Lid side returns',f'X1.5–3 and X437–438.5; Y22–460; Z{z(381.55)}–{z(398.05)}. Length 438.000; drop 16.500 below top underside. Each return has two L-slots 4.600 wide: a vertical entry at Y108.2 and 423.2 from the lower edge, then a 10.000 rearward leg at Z{z(389.55)}.'],
+            ['Lid retention',f'Flush-head press-in studs DIA4 in both body walls at Y118.2 and 433.2, Z{z(389.55)} project 2.500 into the slots. Knurled M3 captive thumbscrews at X10/430, Z{z(389.55)} in the rear tabs thread into the body rear flanges. Remove: loosen, slide 10 mm rearward, lift.'],
             ['Adapter ring','X0–440; Y0–485; Z220–221.5. Inner opening X15–425/Y15–470: 410 ×455; perimeter width 15.000.'],
             ['Adapter side returns','X1.5–3 and X437–438.5; Y20–465; Z205–220. Length 445.000; drop 15.000; end setbacks 20.000; clear inside span 434.000.'],
             ['Vertical stack','Adapter top Z221.5; gasket 0.750; module bottom Z222.25. Upper module fasteners locate in the six modeled DIA3.4 bores.'],
@@ -84,14 +85,21 @@ def interface_details(parts,mod,api):
             ['Motherboard height chain','Tray underside/top Z6 /8; posts 8 high; PCB underside/top Z16 /17.57; lower bracket bearing Z129.28. I/O and PCIe openings share these installed datums.']],
             'Use the stepped PSU-opening profile on the following sheet; its bounding rectangle omits the screw lands. Rear-view diagrams place PSU left, I/O middle and PCIe positions right. Coordinate profiles explicitly use X increasing right.')
         psu_profile(lookup['Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns']['shape'],api)
-        sheet('Rack ears, lid returns and captive thumbscrews','Screw_mounted_3mm_rack_ear_left',[
+        sheet('Rack ears, lid returns and locating studs','Screw_mounted_3mm_rack_ear_left',[
             ['Rack-ear construction','3.000 steel, formed at R3. Ears attach to the body with side M4 × 10 screws; rack-ear joints are not welded.'],
             ['Rack-ear side screws','Six per ear at Y32 and 55; Z45, 185 and 345. They thread into extruded M4 threads in the 1.5 mm body wall (tap drill DIA3.3).'],
-            ['Lid top','X0–440; Y2–485; Z397.75–399.25. Sheet 1.500.'],
-            ['Lid returns','X1.5–3 and X437–438.5; Y22–469.2; Z381.25–397.75. Length 447.200; drop 16.500. Each return carries two extruded M3 threads at Y128.2 and 433.2, Z389.25.'],
-            ['Lid thumbscrews','Four knurled M3 captive screws. Their ferrules press into DIA6.4 holes in the body walls at Y128.2 and 433.2, clear of the rack-ear legs, which end at Y64.'],
-            ['Rear-cover thumbscrews','Four knurled M3 captive screws in DIA6.4 body-wall holes at Y477.2; Z313 and 381.45. They thread into extruded M3 threads in the cover returns.']],
-            'Captive screws stay in the body walls when the lid and rear cover are removed. Heads project 4 mm beyond the body sides; confirm clearance to the chosen rack slide rails.')
+            ['Lid top','X0–440; Y2–486.5; Z397.75–399.25. Sheet 1.500. It reaches over the rear cover and folds two rear tabs down.'],
+            ['Lid returns','X1.5–3 and X437–438.5; Y22–469.2; Z381.25–397.75. Length 447.200; drop 16.500. Each return has two L-slots 4.600 wide: a vertical entry at Y118.2 and 423.2 from the lower edge, then a 10.000 rearward leg at Z389.25.'],
+            ['Lid locating studs','Four flush-head press-in studs DIA4 in the body walls at Y128.2 and 433.2, Z389.25, projecting 2.500 inside. Their heads are flush with the outer wall faces.']],
+            'The lid drops on 10 mm behind its seated position and slides forward until the studs reach the rear ends of the slots; the rear thumbscrews then stop it sliding back. Nothing on the body sides projects beyond the wall faces except the rack ears and pan-head assembly screws.')
+        sheet('Rear cover, rear flanges and lid thumbscrews','Upper_rear_perforated_cover',[
+            ['Cover web','X0–440, Y483.5–485, Z303.07–396.25; 1.500 sheet. DIA8 perforations on a 10.000 pitch stay clear of the thumbscrew holes and of the lid tabs.'],
+            ['Lower lip','X19–421, Y481–483.5, Z303.07–304.57, folded forward at R1.5. A 1.500 wide relief slot is cut at each lip end; the lip stops 2.000 clear of the body flanges.'],
+            ['Cover thumbscrews','Two knurled M3 captive screws at X10 and 430, Z320. Their ferrules press into DIA6.4 web holes; they thread into the lower flange threads.'],
+            ['Lid screw clearance','DIA3.4 web holes at X10 and 430, Z389.25 pass the lid thumbscrews to the upper flange threads.'],
+            ['Body rear flanges','Folded inward from both side walls at R1.5: X0–17 and 423–440, Y482–483.5, Z303.07–397.75, with a relief slot at the lower end. Each carries extruded M3 threads at X10 or 430, Z320 and 389.25 (tap drill DIA2.5, collars forward).'],
+            ['Lid rear tabs','Folded down from the lid rear edge at R1.5: X4–44 and 396–436, Y485–486.5, Z382.25–397.75. Each carries a knurled M3 captive thumbscrew at Z389.25.']],
+            'Remove the lid first: loosen its two thumbscrews, slide it 10 mm rearward off the wall studs and lift it. Then loosen the two cover thumbscrews and withdraw the cover rearward. All thumbscrews face rearward.')
     sheet('Rail supports | installed levels and factory joints','Longitudinal_mount_rail_20',[
         ['GPU tray datum','Underside Z'+('242.250; top Z243.750.' if mod else '170.000; top Z171.500.')],
         ['Support and board levels',('Tray boss top /rail underside Z248.250; rail top /crossbar underside Z250.250; crossbar top Z252.250; PCB underside Z260.250; PCB top Z262.750.' if mod else 'Tray boss top /rail underside Z176.000; rail top /crossbar underside Z178.000; crossbar top Z180.000; PCB underside Z188.000; PCB top Z190.500.')],

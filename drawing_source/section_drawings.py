@@ -33,7 +33,7 @@ def wall_faces(shape,name):
         if abs(normal[axis])<.999999:continue
         b=bounds(face);uv=[i for i in range(3) if i!=axis];sizes=[b[i+3]-b[i] for i in uv]
         # Narrow thickness faces and aperture walls are described by the sections.
-        cover_lip=name in ('Upper_rear_perforated_panel_with_side_returns','Upper_module_rear_perforated_cover') and axis==2 and abs(sizes[0]-410)<1e-4 and abs(sizes[1]-2.5)<1e-4
+        cover_lip=name in ('Upper_rear_perforated_cover','Upper_module_rear_perforated_cover') and axis==2 and abs(sizes[0]-402)<1e-4 and abs(sizes[1]-2.5)<1e-4
         if min(sizes)<3.6 and not cover_lip:continue
         row=dict(normal='XYZ'[axis],station=round(face.Center().toTuple()[axis],4),axes=''.join('XYZ'[i] for i in uv),limits=[round(b[i],4) for i in uv]+[round(b[i+3],4) for i in uv])
         key=(row['normal'],row['station'],*row['limits'])
@@ -56,7 +56,7 @@ def draw_sections(a,api):
         # A section must cross the defining fold, not an unbent end margin.
         # Through a tapped hole over an interior web: the second-largest thread axis X.
         if name=='Full_width_twenty_one_slot_rear_with_side_returns' and axis==0:stations=[sorted({round(e.Center().x,4) for e in shape.Edges() if e.geomType()=='CIRCLE' and abs(e.radius()-1.3525)<1e-4})[-2]]
-        if name in ('GPU_tray_two_side_bends','Lid_with_separate_side_fasteners','Upper_module_side_fastened_lid') and axis==1:stations=[328.2 if name=='GPU_tray_two_side_bends' else 240.0]
+        if name in ('GPU_tray_two_side_bends','Lid_with_rear_tabs','Upper_module_lid_with_rear_tabs') and axis==1:stations=[328.2 if name=='GPU_tray_two_side_bends' else 240.0]
         thin_axis=min(range(3),key=lambda i:dims[i])
         for station in stations:
             sec=section_at(shape,axis,station)

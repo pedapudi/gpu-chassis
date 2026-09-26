@@ -2,8 +2,8 @@
 import math, collections, json, csv
 from pathlib import Path
 
-# Outside diameters of the M3, M4 and #6-32 extruded thread collars.
-COLLAR_DIAMETERS={3.7,4.9,4.1}
+# Outside diameters of the M3 and M4 extruded thread collars.
+COLLAR_DIAMETERS={3.7,4.9}
 
 
 def features(shape):
@@ -93,7 +93,7 @@ def draw_feature_pages(a, api):
     for number,rows in groups:planes[(rows[0]['axis'],tuple(rows[0]['stations']))].append((number,rows))
     def detail(f):
         size=f['size'];r=f['radii'];kind=f['kind']
-        tapped={2.5:'M3',3.3:'M4',2.705:'#6-32 UNC-2B'}.get(round(2*r[0],3)) if kind=='Round hole' else None
+        tapped={2.5:'M3',3.3:'M4'}.get(round(2*r[0],3)) if kind=='Round hole' else None
         if tapped:return f'{tapped} TAPPED, extruded collar; tap drill DIA {fmt(2*r[0])}'
         if kind=='Round hole':return f'DIA {fmt(2*r[0])}; R{fmt(r[0])} THRU'
         if kind=='Obround':return f'SLOT {fmt(max(size))} overall × {fmt(min(size))}; end R{fmt(r[0])} THRU'

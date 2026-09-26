@@ -1,8 +1,10 @@
 """Sliding lid and upper rear cover.
 
-- The lid slides on four flush-head press-in studs in the body walls. L-shaped
-  slots in its side returns take a vertical entry from the lower edge, then a
-  rearward leg. The lid drops on 10 mm behind its seated position and slides
+- The lid slides on four M3 x 6 pan-head screws threaded into the body walls;
+  their shanks project 3 mm inside. The threads are tapped directly in the
+  1.5 mm walls, without a collar, so the lid returns lie flat against them.
+  L-shaped slots in the lid side returns take a vertical entry from the lower
+  edge, then a rearward leg. The lid drops on 10 mm behind its seated position and slides
   forward against the front carrier. Removal reverses this.
 - Two tabs folded down from the lid's rear edge sit behind the rear cover.
   Two M3 retention screws, one per tab, thread into extruded threads in the
@@ -24,8 +26,8 @@ LIP_SPAN = (15.0, 425.0)
 RETURN_DEPTH = 13.3      # cover side returns run forward from the web
 SIDE_SCREW_Y = 7.8       # cover side-screw axes ahead of the rear plane
 SLIDE = 10.0             # lid travel between the seated and lift-off positions
-STUD_RADIUS = 2.0
-SLOT_WIDTH = 4.6
+PIN_TAP_DRILL = 2.5     # M3 tap drill for the lid pin threads in the walls
+SLOT_WIDTH = 3.4        # M3 clearance for the pin shanks
 CLEARANCE_HOLE = 1.7
 
 
@@ -108,16 +110,22 @@ def lid_slots(W, H, studs):
     return tools
 
 
-def stud_holes(W, studs):
-    return [cyl(-1, y, z, STUD_RADIUS, W + 2, (1, 0, 0)) for y, z in studs]
+def pin_holes(W, pins):
+    """Tap-drill holes for the lid pin threads in both body walls."""
+    return [cyl(-1, y, z, PIN_TAP_DRILL / 2, W + 2, (1, 0, 0)) for y, z in pins]
 
 
-def lid_studs(W, studs):
-    """Flush-head press-in studs, 4 mm diameter, projecting 2.5 mm inside each wall."""
+def pin_threads(W, pins):
+    """Tapped-hole records for the body blank: M3 threads tapped directly in the walls."""
+    return [dict(thread='M3', centre=[x, y, z]) for y, z in pins for x in (0, W)]
+
+
+def lid_pins(W, pins):
+    """M3 x 6 pan-head screws from outside each wall; the shank is the lid pin."""
     out = []
-    for y, z in studs:
-        out.append((f'Lid_locating_stud_left_{y:g}', cyl(0, y, z, STUD_RADIUS - .01, T + 2.5, (1, 0, 0))))
-        out.append((f'Lid_locating_stud_right_{y:g}', cyl(W - T - 2.5, y, z, STUD_RADIUS - .01, T + 2.5, (1, 0, 0))))
+    for y, z in pins:
+        out.append((f'Lid_pin_left_M3x6_{y:g}', screw((0, y, z), (1, 0, 0), 'M3', 6)))
+        out.append((f'Lid_pin_right_M3x6_{y:g}', screw((W, y, z), (-1, 0, 0), 'M3', 6)))
     return out
 
 

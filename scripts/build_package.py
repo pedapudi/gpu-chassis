@@ -151,13 +151,18 @@ def viewer(variant,folder,parts,meshes):
     html=once(html,'<label><input type="checkbox" data-group="gpus" checked>Ten Max-Q GPU envelopes</label>','<label><input type="checkbox" data-group="gpus" checked>Ten Max-Q GPU envelopes</label><label><input type="checkbox" data-group="aux_card" checked>Single-width card envelope</label>')
     html=once(html,'<p>Twenty upper bracket positions ·','<p>Twenty-one upper bracket positions ·')
     html=once(html,'The Miwin board has twelve modeled sockets: ten GPU positions at an assumed 40.64 mm pitch and two additional end sockets 20.32 mm away. Rear brackets follow the ten GPU socket axes.','The Miwin board has twelve modeled sockets: ten double-width GPU positions at an assumed 40.64 mm pitch and one single-width socket 20.32 mm beyond each end. Twenty-one rear bracket positions align with all twelve sockets; the trailing single-width socket shares the last position with the tenth GPU cooler. GPU bracket screws thread into tapped collars in the integral shelf.')
-    # The lid slides on wall studs and two rear retention screws hold it; every screw engages a formed thread.
+    # The lid slides on four wall pin screws and two rear retention screws hold it.
     html=once(html,'data-group="lid_screws" >Lid side screws</label>','data-group="lid_screws" >Lid rear retention screws</label>')
-    html=once(html,'data-group="lid_guides" >Lid captive nuts</label>','data-group="lid_guides" >Lid locating studs</label>')
+    html=once(html,'data-group="lid_guides" >Lid captive nuts</label>','data-group="lid_guides" >Lid pin screws</label>')
     html=once(html,'>8 mm M3 female–female standoffs</label>','>8 mm M3 female–female backplane standoffs</label>')
     html=once(html,'>Mounting screws, washers and nuts</label>','>Mounting screws, washers and rail square nuts</label>')
+    # Fans use the common M5 x 10 mm self-tapping case-fan screw.
+    for a,b in (('GPU fans use four short 5 × 8 mm self-tapping screws into the plastic frame, without nuts or inlet spacers. Nominal penetration through the 2 mm carrier is 6 mm.','GPU fans use four M5 × 10 mm self-tapping case-fan screws into the plastic frame, without nuts or inlet spacers. Nominal penetration through the 2 mm carrier is 8 mm.'),
+                ('Fan screws are 5 × 8 mm self-tapping with 6 mm plastic penetration and no nuts.','Fan screws are M5 × 10 mm self-tapping case-fan screws with 8 mm plastic penetration and no nuts.')):
+        html=html.replace(a,b)
     if not mod:
         html=once(html,'XE360-TR5 · 28 mm radiator + 38 mm fans','XE360-TR5 · 28 mm radiator + 38 mm fan allowance')
+        html=once(html,'>Motherboard tray and 8 mm standoffs</label>','>Motherboard tray and 6.5 mm M3 ATX-height standoffs</label>')
         html=once(html,'<p>Remove the lid with its captive nuts and the upper rear perforated cover. Disconnect','<p>Remove the two lid retention screws at the rear, slide the lid 10 mm rearward and lift it off, then remove the side screws and the upper rear perforated cover. Disconnect')
     else:
         label=MODULE_LABELS[variant];checks=json.loads((folder/'validation.json').read_text())
@@ -167,11 +172,12 @@ def viewer(variant,folder,parts,meshes):
         rows='; '.join(f"{r['count']} × {r['size_mm']} × {r['depth_mm']} mm fans at X{', '.join(f'{x:g}' for x in r['centres_x_mm'])}, Z{r['centre_z_mm']:g}, {r['hole_pitch_mm']:g} mm square screw pattern, {r['screw_penetration_mm']} mm screw penetration" for r in checks['fan_rows'])
         notch=checks['MCIO_opening_z_mm'][0]
         a=html.index('<p>One uninterrupted full-face grille') if '<p>One uninterrupted full-face grille' in html else html.index('<p>The 5U module');b=html.index('</p>',a)+4
-        html=html[:a]+f"<p>The 5U module is {checks['module_height_mm']:.2f} mm tall with {checks['clearance_above_GPU_envelope_mm']:.1f} mm above the GPU envelopes. This option has its own front carrier: {rows}. One full-face grille serves all three intake options and has tool-access holes at every fan screw axis. GPU fans use short 5 × 8 mm self-tapping screws into the plastic frame, without nuts. The rear MCIO notch is 140 × 17.55 mm at Z{notch:.2f}–{notch+17.55:.2f} with its folded top cap removed. Remove the two upper cap screws, feed connectors, then refit the cap around the cables. Disconnect external cables and remove the rear cover with its brush assembly before extracting GPUs or the cartridge.</p>"+html[b:]
+        html=html[:a]+f"<p>The 5U module is {checks['module_height_mm']:.2f} mm tall with {checks['clearance_above_GPU_envelope_mm']:.1f} mm above the GPU envelopes. This option has its own front carrier: {rows}. One full-face grille serves all three intake options and has tool-access holes at every fan screw axis. GPU fans use M5 × 10 mm self-tapping case-fan screws into the plastic frame, without nuts. The rear MCIO notch is 140 × 17.55 mm at Z{notch:.2f}–{notch+17.55:.2f} with its folded top cap removed. Remove the two upper cap screws, feed connectors, then refit the cap around the cables. Disconnect external cables and remove the rear cover with its brush assembly before extracting GPUs or the cartridge.</p>"+html[b:]
         a=html.index('<section><h2>Intake configuration</h2>');b=html.index('</section>',a)+10
         html=html[:a]+'<section><h2>Intake configuration</h2><p>'+' · '.join(f'<a href="../{v}/interactive_model.html">{l}</a>' for v,l in MODULE_LABELS.items())+'</p><p>Each option has its own removable front carrier with matching openings and mounting slots. The grille, body and GPU cartridge are common.</p></section>'+html[b:]
     html=once(html,'<a href="engineering_validation.json">Validation and unresolved fit checks</a>','<a href="validation.json">Validation and unresolved fit checks</a>')
     html=html.replace("for(const g of ['gpus','brackets','lid','lid_screws','fasteners'])show(g,false);","for(const g of ['gpus','aux_card','brackets','lid','lid_screws','fasteners'])show(g,false);")
+    assert '5 × 8 mm' not in html,'Viewer text still names the old fan screw'
     (folder/'interactive_model.html').write_text(html)
 
 def sheets(folder):

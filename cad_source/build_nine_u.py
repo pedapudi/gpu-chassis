@@ -85,17 +85,17 @@ def build(out,cache,fan_size=120,return_parts=False):
  body_holes=[side_holes(F+12,z) for z in panel_side_z]+[side_holes(424,z) for z in (22,148,205,290)]
  # The rear cover takes side screws; the sliding lid locates on wall studs and two rear retention screws.
  vent_bottom=303.07;cover_side_z=(313,381.45);lid_z=H-10;lid_studs=[(75,H-10),(380,H-10)]
- body_holes += rc.body_side_holes(W,D,cover_side_z)+rc.stud_holes(W,lid_studs)
+ body_holes += rc.body_side_holes(W,D,cover_side_z)+rc.pin_holes(W,lid_studs)
  body_holes += [psu_vent(R)]+[cyl(-1,y,16.5,1.7,5,(1,0,0)) for y in (R-165,R-10)]
  # Screw positions for fixed support angles and front cable restraints.
  body_holes += [side_holes(y,158) for y in (180,290,390)]
  body_holes += [side_holes(y,z) for y,z in ((90,180),(90,200),(220,75))]
  body_holes += ear_holes(F,(45,185,345))
  body,piece=form('U_shaped_body_1p5mm_two_longitudinal_bends',body,1.5,[('y',(0,0),(1,1)),('y',(W,0),(-1,1))],body_holes)
- # Four tapped bosses embossed 4.5 mm up from the floor carry the motherboard tray.
+ # Four tapped bosses embossed 6 mm up from the floor carry the motherboard tray, whose top sits 6.5 mm below the board.
  tray_fix=[(118,80),(418,80),(118,402),(418,402)]
- for x,y in tray_fix:body=emboss_boss(body,x,y,0,1.5,4.5,'M3')
- piece['shape']=cut(piece['shape'],[cyl(x,y,-1,1.25,4) for x,y in tray_fix]);piece['tapped']=[dict(thread='M3',centre=[x,y,4.5]) for x,y in tray_fix]
+ for x,y in tray_fix:body=emboss_boss(body,x,y,0,1.5,6.0,'M3',base_radius=11.5)
+ piece['shape']=cut(piece['shape'],[cyl(x,y,-1,1.25,4) for x,y in tray_fix]);piece['tapped']=[dict(thread='M3',centre=[x,y,6.0]) for x,y in tray_fix]+rc.pin_threads(W,lid_studs)
  add('U_shaped_body_1p5mm_two_longitudinal_bends',body,'shell',pieces=[piece])
  # Front carrier cutouts; the face and its two side angles are separate pieces below.
  fc=[]
@@ -144,7 +144,8 @@ def build(out,cache,fan_size=120,return_parts=False):
  # The returns stop 11 mm ahead of the rear-cover returns so the lid can slide 10 mm rearward.
  lid_pieces+=[form(f'Lid_{side}_return_strip',box(x,F+22,H-18,1.5,384-F,16.5),1.5,[],lid_tools)[1] for side,x in (('left',1.5),('right',W-3))]
  add('Lid_with_rear_tabs',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
- for name,shape in rc.lid_studs(W,lid_studs):add(name,shape,'lid_guides',gold)
+ for name,shape in rc.lid_pins(W,lid_studs):
+  add(name,shape,'lid_guides',dark);parts[-1]['thread_host']='U_shaped_body_1p5mm_two_longitudinal_bends'
  def fan(name,x,y,z,size,depth,group,moving=False):
   sp={80:71.5,120:105,140:124.5}[size]
   f=cut(box(x-size/2,y,z-size/2,size,depth,size),[cyl(x,y-1,z,size/2-5,depth+2,(0,1,0))]+[cyl(x+dx,y-1,z+dz,(2.2 if size==120 else 2.25),depth+2,(0,1,0)) for dx in (-sp/2,sp/2) for dz in (-sp/2,sp/2)])
@@ -168,7 +169,7 @@ def build(out,cache,fan_size=120,return_parts=False):
    for dx in (-52.5,52.5):
     for dz in (-52.5,52.5):
      sx,sz=x+dx,z+dz
-     add(f'GPU_fan_self_tapping_5x8_screw_{sx}_{sz}',fan_screw((sx,F,sz),(0,1,0)),'intake_fasteners',dark)
+     add(f'GPU_fan_self_tapping_5x10_screw_{sx}_{sz}',fan_screw((sx,F,sz),(0,1,0)),'intake_fasteners',dark)
  # The PSU reference includes the actual envelope and photo-derived interfaces.
  cradle_y=add_psu(add,R)
  for y in cradle_y:
@@ -194,7 +195,7 @@ def build(out,cache,fan_size=120,return_parts=False):
   fan(f'Lower_rear_80mm_exhaust_{x}',x,R-25,110,80,25,'exhaust')
   for dx in (-35.75,35.75):
    for dz in (-35.75,35.75):
-    add(f'Rear_fan_self_tapping_5x8_screw_{x+dx}_{110+dz}',fan_screw((x+dx,R+1.2,110+dz),(0,-1,0)),'fasteners',dark)
+    add(f'Rear_fan_self_tapping_5x10_screw_{x+dx}_{110+dz}',fan_screw((x+dx,R+1.2,110+dz),(0,-1,0)),'fasteners',dark)
  # Joined assembly: 1.2 mm rear web and two 1.5 mm return strips.
  # Parts in the body's floor-to-wall corners stop clear of its inside bend radius.
  corner_clear=[box(0,R-1,0,3,20,3),box(437,R-1,0,3,20,3)]
@@ -295,9 +296,9 @@ def build(out,cache,fan_size=120,return_parts=False):
   b=union([b,box(cx-5.095,R-.86,tip,10.19,.86,7.27),box(cx-9.21,R-.86,bearing,18.42,11.43,.86)])
   b=cut(b,[cyl(sx,R+5.08,bearing-1,2.21,3),box(cx-9.22,R+2.87,bearing-1,max(.01,sx-cx+9.22),4.42,3)])
   add(name,b,group,gold,'reference',moving=moving)
-  fast(name+'_6_32_screw',(sx,R+5.08,bearing+.86),(0,0,-1),'6-32',6.35,moving=moving)
+  fast(name+'_M3x5_screw',(sx,R+5.08,bearing+.86),(0,0,-1),'M3',5,moving=moving)
   # Bracket screws thread into extruded tapped collars in the GPU shelf and the lower retention strip.
-  if not tapped:add(name+'_captive_6_32_hex_nut',nut((sx,R+5.08,bearing-1.5),(0,0,-1),'6-32'),'fasteners',gold,moving=moving)
+  if not tapped:add(name+'_captive_M3_hex_nut',nut((sx,R+5.08,bearing-1.5),(0,0,-1),'M3'),'fasteners',gold,moving=moving)
  def retention(name,centres,w,group,moving=False):
   bearing=w+104.86;tip=bearing+.86-120.02;x0=centres[0]-14;ww=min(436.5,centres[-1]+14)-x0
   shelf=cut(box(x0-3,R+1.2,bearing-1.5,ww+3,10.8,1.5),[cyl(x-9.21,R+5.08,bearing-2,1.95,4) for x in centres])
@@ -335,24 +336,25 @@ def build(out,cache,fan_size=120,return_parts=False):
  # Ten nominal SSI EEB positions matched to the ten holes in the ASUS manual.
  local=[('F',6.35,33.02),('M',6.35,237.49),('Z',6.35,322.58),('C',163.83,10.16),('H',163.83,165.10),('Y',163.83,322.58),('A',288.29,10.16),('G',288.29,165.10),('K',288.29,237.49),('X',293.37,322.58)]
  mh=[(n,115+x,board_rear-d) for n,x,d in local]
- mbtray=cut(box(112,74,6,314,336.5,2),[cyl(x,y,5,1.7,5) for _,x,y in mh]+[cyl(x,y,5,1.7,5) for x,y in tray_fix])
- # Standoffs screw into extruded M3 threads in the tray; the blank carries tap-drill holes.
+ mbtray=cut(box(112,74,7.5,314,336.5,2),[cyl(x,y,6,1.7,5) for _,x,y in mh]+[cyl(x,y,6,1.7,5) for x,y in tray_fix])
+ # ATX-height M3 standoffs screw into extruded M3 threads in the tray; the blank carries tap-drill holes.
  flat_tray=mbtray
  for _,x,y in mh:
-  mbtray=form_thread(mbtray,cq.Vector(x,y,6),2,-1,2,'M3')[0];flat_tray=form_thread(flat_tray,cq.Vector(x,y,6),2,-1,2,'M3',collar=False)[0]
- add('WRX90_board_specific_replaceable_tray',mbtray,'motherboard_mounts',pieces=[dict(name='WRX90_board_specific_replaceable_tray',shape=flat_tray,t=2,bends=[],tapped=[dict(thread='M3',centre=[x,y,6]) for _,x,y in mh])]);profile('motherboard_tray',mbtray,'z',6)
+  mbtray=form_thread(mbtray,cq.Vector(x,y,7.5),2,-1,2,'M3')[0];flat_tray=form_thread(flat_tray,cq.Vector(x,y,7.5),2,-1,2,'M3',collar=False)[0]
+ add('WRX90_board_specific_replaceable_tray',mbtray,'motherboard_mounts',pieces=[dict(name='WRX90_board_specific_replaceable_tray',shape=flat_tray,t=2,bends=[],tapped=[dict(thread='M3',centre=[x,y,7.5]) for _,x,y in mh])]);profile('motherboard_tray',mbtray,'z',7.5)
  for x,y in tray_fix:
-  fast(f'Motherboard_tray_M3x6_{x}_{y}',(x,y,8),(0,0,-1),'M3',6,'motherboard_mounts')
+  fast(f'Motherboard_tray_M3x6_{x}_{y}',(x,y,9.5),(0,0,-1),'M3',6,'motherboard_mounts')
   parts[-1]['thread_host']='U_shaped_body_1p5mm_two_longitudinal_bends'
- board=cut(box(115,board_front,16,304.8,330.2,1.57),[cyl(x,y,15,1.7,4) for _,x,y in mh])
+ # ATX mounting holes are 0.156 in (3.96 mm) in diameter.
+ board=cut(box(115,board_front,16,304.8,330.2,1.57),[cyl(x,y,15,1.98,4) for _,x,y in mh])
  add('WRX90E_SAGE_SE_EEB_reference',board,'motherboard',green,'reference')
  for n,x,y in mh:
-  # M3 x 8 mm male-female standoff: 6 mm stud into the tray thread, 5.5 mm female thread above.
-  post=union([hex_prism(x,y,8,5,8).cut(cyl(x,y,10.5,1.5,6)),cyl(x,y,2,1.5,6)])
-  add(f'Motherboard_M3_8mm_male_female_standoff_{n}',post,'motherboard_mounts',gold)
+  # ATX-height brass standoff: M3 male x M3 female, 5 mm hex, 6.5 mm body, 6 mm stud into the tray thread.
+  post=union([hex_prism(x,y,9.5,5,6.5).cut(cyl(x,y,11,1.5,6)),cyl(x,y,3.5,1.5,6)])
+  add(f'Motherboard_M3_ATX_male_female_standoff_{n}',post,'motherboard_mounts',gold)
   parts[-1]['thread_host']='WRX90_board_specific_replaceable_tray'
-  add(f'Motherboard_M3_washer_{n}',cyl(x,y,17.57,3.5,.5).cut(cyl(x,y,17,1.6,2)),'motherboard_mounts')
-  fast(f'Motherboard_M3x5_{n}',(x,y,18.07),(0,0,-1),'M3',5,'motherboard_mounts')
+  fast(f'Motherboard_M3x5_{n}',(x,y,17.57),(0,0,-1),'M3',5,'motherboard_mounts')
+  parts[-1]['thread_host']=f'Motherboard_M3_ATX_male_female_standoff_{n}'
  for i,x in enumerate(host_axes):
   socket(f'Motherboard_native_x16_socket_{i+1}',x,17.57,'motherboard')
   # Short retimer geometry is a configurable fit envelope; no specific card is selected.
@@ -496,21 +498,21 @@ def build(out,cache,fan_size=120,return_parts=False):
   if a['group'] not in ('fans','intake_grilles','intake_spacers','intake_fasteners'):continue
   for b in parts:
    if a is b or b['role']=='clearance' or b['group'] in ('board_alternatives','io_shield'):continue
-   plastic_joint=('_self_tapping_5x8_screw_' in a['name'] and b['group']=='fans') or ('_self_tapping_5x8_screw_' in b['name'] and a['group']=='fans')
+   plastic_joint=('_self_tapping_5x10_screw_' in a['name'] and b['group']=='fans') or ('_self_tapping_5x10_screw_' in b['name'] and a['group']=='fans')
    plastic_joint|=a.get('thread_host')==b['name'] or b.get('thread_host')==a['name']
    if not plastic_joint and overlap(a['shape'],b['shape'])>1e-4:intake_hits.append([a['name'],b['name']])
  assert not intake_hits,('Intake component interference',intake_hits)
- checks=dict(PSU_model='ASUS-PRO-WS-3000P',PSU_size_depth_width_height_mm=[175,150,86],PSU_rear_mount_holes_construction_xz_mm=atx,PSU_handedness='Rear-view counterclockwise quarter-turn of the standard ATX pattern',backplane_socket_count=12,backplane_GPU_socket_pitch_mm=40.64,backplane_auxiliary_end_slot_gap_mm=20.32,backplane_PCB_origin_construction_xy_mm=[BOARD_X,BOARD_Y],backplane_dimensions_mm=[429,225,2.5],backplane_mounting_holes_photo_estimates=True,motherboard_standoff_type="M3 x 8 mm male-female hex standoff, 6 mm stud",motherboard_stud_thread_engagement_mm=3.5,motherboard_upper_screw_engagement_mm=2.93,motherboard_stud_tip_to_floor_mm=0.5,backplane_supported_holes_construction_xy_mm=BOARD_MOUNT_POINTS,cartridge_removal_requires=['lid (two rear retention screws, then a 10 mm rearward slide)','upper rear vent and its fasteners','tray hold-down screws','disconnected harnesses'],enclosure_mm=[482.6,P['depth'],H],body_width_mm=W,rack_units=9,upper_rear_positions=P['upper_slot_count'],dual_slot_GPU_envelopes=10,single_width_auxiliary_card_envelopes=1,backplane_trailing_auxiliary_socket='Shares the last rear position with the tenth GPU second bracket; usable only without that GPU',lower_rear_positions=8,
+ checks=dict(PSU_model='ASUS-PRO-WS-3000P',PSU_size_depth_width_height_mm=[175,150,86],PSU_rear_mount_holes_construction_xz_mm=atx,PSU_handedness='Rear-view counterclockwise quarter-turn of the standard ATX pattern',backplane_socket_count=12,backplane_GPU_socket_pitch_mm=40.64,backplane_auxiliary_end_slot_gap_mm=20.32,backplane_PCB_origin_construction_xy_mm=[BOARD_X,BOARD_Y],backplane_dimensions_mm=[429,225,2.5],backplane_mounting_holes_photo_estimates=True,motherboard_standoff_type="ATX-height M3 male x M3 female brass standoff, 6.5 mm body, 5 mm hex, 6 mm stud",motherboard_stud_thread_engagement_mm=3.5,motherboard_upper_screw_engagement_mm=3.43,motherboard_stud_tip_to_floor_mm=2.0,backplane_supported_holes_construction_xy_mm=BOARD_MOUNT_POINTS,cartridge_removal_requires=['lid (two rear retention screws, then a 10 mm rearward slide)','upper rear vent and its fasteners','tray hold-down screws','disconnected harnesses'],enclosure_mm=[482.6,P['depth'],H],body_width_mm=W,rack_units=9,upper_rear_positions=P['upper_slot_count'],dual_slot_GPU_envelopes=10,single_width_auxiliary_card_envelopes=1,backplane_trailing_auxiliary_socket='Shares the last rear position with the tenth GPU second bracket; usable only without that GPU',lower_rear_positions=8,
   lid_to_panel_fastener_intersections=lid_hits,lid_removal_intersections=lid_removal,intake_component_intersections=intake_hits,gpu_deck_z_mm=170,upper_fan_centres_z_mm=[210,330],upper_fan_count=6,upper_inlet_spacer_mm=0,grille_to_GPU_fan_face_mm=2,front_intake_aperture_mm=116,grille_perforation_diameter_mm=9,grille_perforation_pitch_mm=10,slot_pitch_mm=20.32,dual_slot_pitch_mm=40.64,upper_bracket_centres_x_mm=[W-x for x in slots],lower_card_planes_x_mm=[W-x for x in host_axes],
   upper_retention_screws_x_mm=[W-x+9.21 for x in slots],lower_retention_screws_x_mm=[W-x+9.21 for x in host_centres],
   lower_bracket_centres_x_mm=[W-x for x in host_centres],upper_card_planes_x_mm=[W-x for x in gpu_axes],
   bracket_screw_offset_from_centre_mm=9.21,bracket_screw_offset_from_PCB_centre_mm=2.055,
-  bracket_screw_y_mm=R+5.08-F,upper_bracket_retention='#6-32 UNC-2B threads tapped in extruded collars of the integral 1.2 mm shelf; no nuts',upper_bracket_tap_drill_mm=2.705,lower_bracket_retention='#6-32 UNC-2B threads tapped in extruded collars of the separate 1.5 mm strip; no nuts',lower_bracket_tap_drill_mm=2.705,
-  fan_mount_slot_mm=[9,5.5],shared_fan_mount_slot_mm=[24,5.5],AIO_fan_mount_slot_mm=[9,4.8],AIO_shared_fan_mount_slot_mm=[24,4.8],chassis_fan_screw="5 x 8 mm self-tapping plastic fan screw",GPU_fan_screw_penetration_mm=6,rear_fan_screw_penetration_mm=6.8,fan_frame_pitch_mm=120,adjacent_fan_screw_gap_mm=15,vent_hole_diameter_mm=9,front_vent_pitch_mm=10,
+  bracket_screw_y_mm=R+5.08-F,upper_bracket_retention='M3 threads tapped in extruded collars of the integral 1.2 mm shelf; M3 x 5 bracket screws; no nuts',upper_bracket_tap_drill_mm=2.5,lower_bracket_retention='M3 threads tapped in extruded collars of the separate 1.5 mm strip; M3 x 5 bracket screws; no nuts',lower_bracket_tap_drill_mm=2.5,
+  fan_mount_slot_mm=[9,5.5],shared_fan_mount_slot_mm=[24,5.5],AIO_fan_mount_slot_mm=[9,4.8],AIO_shared_fan_mount_slot_mm=[24,4.8],chassis_fan_screw="M5 x 10 mm self-tapping case-fan screw",GPU_fan_screw_penetration_mm=8,rear_fan_screw_penetration_mm=8.8,fan_frame_pitch_mm=120,adjacent_fan_screw_gap_mm=15,vent_hole_diameter_mm=9,front_vent_pitch_mm=10,
   rear_upper_vent_bounds_xz_mm=[1.5,303.07,437,H-1.5-303.07],rear_upper_vent_hole_count=len(vh)-2,rear_cover_side_screw_count=4,rear_cover_screw_heights_mm=[313,381.45],
   motherboard_CPU_centre_x_mm=W-cpu_x,rear_view_order='PSU, CPU and I/O, PCIe bank (left to right)',
 
-  motherboard_standoff_mm=8,motherboard_PCB_bottom_z_mm=16,motherboard_PCB_top_z_mm=17.57,
+  motherboard_standoff_mm=6.5,motherboard_tray_top_z_mm=9.5,motherboard_PCB_bottom_z_mm=16,motherboard_PCB_top_z_mm=17.57,
   IO_aperture_mm=[158.75,44.45],IO_aperture_origin_xz_mm=[W-io_x-158.75,io_z],rear_IO_sheet_mm=1.2,IO_outer_face_to_board_datum_mm=R-board_datum_y,ATX_IO_depth_nominal_mm=12.2682,ATX_IO_depth_tolerance_mm=.254,
   lower_card_datum_W_mm=host_w,lower_bracket_bearing_z_mm=host_bearing,upper_card_datum_W_mm=gw,upper_bracket_bearing_z_mm=gb,
   upper_fan_hole_pitch_mm=105,lower_80mm_fan_hole_pitch_mm=71.5,AIO_fan_hole_pitch_mm=105,

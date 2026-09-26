@@ -55,7 +55,7 @@ def draw_sections(a,api):
         stations=[round(b[axis]+dims[axis]*fraction,5) for fraction in (.05,.25,.5,.75,.95)]
         # A section must cross the defining fold, not an unbent end margin.
         # Through a tapped hole over an interior web: the second-largest thread axis X.
-        if name=='Full_width_twenty_one_slot_rear_with_side_returns' and axis==0:stations=[sorted({round(e.Center().x,4) for e in shape.Edges() if e.geomType()=='CIRCLE' and abs(e.radius()-1.3525)<1e-4})[-2]]
+        if name=='Full_width_twenty_one_slot_rear_with_side_returns' and axis==0:stations=[sorted({round(e.Center().x,4) for e in shape.Edges() if e.geomType()=='CIRCLE' and abs(e.radius()-1.25)<1e-4})[-2]]
         if name in ('GPU_tray_two_side_bends','Lid_with_rear_tabs','Upper_module_lid_with_rear_tabs') and axis==1:stations=[328.2 if name=='GPU_tray_two_side_bends' else 240.0]
         thin_axis=min(range(3),key=lambda i:dims[i])
         for station in stations:

@@ -27,7 +27,7 @@ JOINS = [('Rail_square_nut_guide_strip_', 'Weld to the underside of its longitud
          ('Tray_handhold_', 'Weld the horizontal leg to the top of the GPU tray.'),
          ('Upper_bank_toe_receiver', 'Stitch weld to the GPU rear-panel web: 6 mm welds with 1 mm legs between notches, underside only.'),
          ('Lower_bank_toe_receiver', 'Stitch weld to the lower rear web: 6 mm welds with 1 mm legs between notches, underside only.'),
-         ('Lower_bank_retention_flange', 'Weld to the back face of the lower rear web after extruding and tapping its eight #6-32 collars.'),
+         ('Lower_bank_retention_flange', 'Weld to the back face of the lower rear web after extruding and tapping its eight M3 collars.'),
          ('Front_bearing_angle_spot_welded_to_side_angles', 'Spot weld each end to the side bearing angles.')]
 
 
@@ -47,17 +47,16 @@ def signature(record):
 
 def fastener_spec(name, shape):
     m = re.search(r'M(\d)x(\d+)', name)
-    if 'locating_stud' in name: return 'Flush-head press-in locating stud, 4 mm diameter, 2.5 mm projection, for 1.5 mm steel'
-    if 'self_tapping_5x8' in name: return '5 x 8 mm self-tapping plastic fan screw'
-    if '6_32_screw' in name or '6_32xquarter' in name: return '#6-32 UNC x 1/4 in pan-head machine screw'
+    if 'self_tapping_5x10' in name: return 'M5 x 10 mm self-tapping case-fan screw'
+    if '6_32xquarter' in name: return '#6-32 UNC x 1/4 in pan-head PSU screw'
     if m and 'nut' not in name and 'washer' not in name: return f'M{m.group(1)} x {m.group(2)} mm pan-head machine screw (ISO 7045)'
-    if 'washer' in name: return 'M3 flat washer, 7 mm OD x 0.5 mm'
-    if 'female_female_standoff' in name: return 'Harwin R30-1000802 M3 x 8 mm female-female hex spacer'
-    if 'male_female_standoff' in name: return 'M3 x 8 mm male-female hex standoff, 5 mm across flats, 6 mm stud'
+    if 'washer' in name: return 'M3 flat washer, 7 mm OD x 0.5 mm (ISO 7089)'
+    if 'female_female_standoff' in name: return 'M3 x 8 mm female-female brass hex standoff, 5 mm across flats'
+    if 'ATX_male_female_standoff' in name: return 'ATX-height motherboard standoff, M3 male x M3 female, 6.5 mm brass body, 5 mm hex, 6 mm stud'
     if 'DIN562' in name: return 'DIN 562 M4 square thin nut'
     if 'nut' in name:
         b = bounds(shape); h = round(min(b[3] - b[0], b[4] - b[1], b[5] - b[2]), 2)
-        return {2.4: 'M3 hex nut (ISO 4032)', 3.2: 'M4 hex nut (ISO 4032)', 2.78: '#6-32 UNC hex nut, 5/16 in across flats'}.get(h, f'nut, {h} mm thick')
+        return {2.4: 'M3 hex nut (ISO 4032)', 3.2: 'M4 hex nut (ISO 4032)'}.get(h, f'nut, {h} mm thick')
     return None
 
 
@@ -95,7 +94,7 @@ def main(build, out):
         shutil.copy2(item['folder'] / 'flat_patterns' / (r['piece'] + '.step'), kit / 'step' / f"{ident}_{item['name']}.step")
         joins = [text for prefix, text in JOINS if item['name'].startswith(prefix)]
         if item['weldment']: joins.append('Weld to the other pieces of ' + ', '.join(sorted(item['weldment'])) + ' per the drawing set.')
-        counts = collections.Counter(h['thread'].replace('6-32', '#6-32 UNC-2B') for h in r.get('tapped_holes', []))
+        counts = collections.Counter(h['thread'] for h in r.get('tapped_holes', []))
         tapping = ('; '.join(f'{n} x {t}' for t, n in sorted(counts.items())) + ' in extruded collars; extrude and tap after forming the adjacent bends') if counts else ''
         size = sorted(r['flat_size_mm'])
         scs_notes = []

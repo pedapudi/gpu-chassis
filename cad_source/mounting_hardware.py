@@ -24,12 +24,11 @@ def screw(point,axis,thread,length):
     shape=union([cyl(0,0,0,d/2,length),cyl(0,0,-head_h,head_d/2,head_h)])
     return orient(shape,point,axis)
 
-def fan_screw(point,axis,length=8):
-    """Nominal 5 x 8 mm plastic-thread-forming fan screw; thread envelope only.
+def fan_screw(point,axis,length=10):
+    """Common M5 x 10 mm self-tapping case-fan screw; thread envelope only.
 
     The 5 mm major diameter intentionally overlaps the plastic pilot bore.
-    A 2 mm panel leaves 6 mm penetration including the tapered lead.
-    Actual fan-supplied screw geometry and permitted penetration control fit.
+    A 2 mm panel leaves 8 mm penetration including the tapered lead.
     """
     head=cyl(0,0,-2.5,4.25,2.5)
     recess=union([box(-2,-.55,-2.6,4,1.1,1.1),box(-.55,-2,-2.6,1.1,4,1.1)])

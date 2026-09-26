@@ -289,7 +289,7 @@ def fastener_sheet_intersections(parts):
     hits = []
     for f in fasteners:
         for s in sheets:
-            tapped = f['name'].endswith('_6_32_screw') and f['name'].startswith(('GPU_', 'Auxiliary_')) and 'rear' in s['name']
+            tapped = f['name'].endswith('_M3x5_screw') and f['name'].startswith(('GPU_', 'Auxiliary_')) and 'rear' in s['name']
             if tapped or f.get('thread_host') == s['name']: continue
             v = _overlap(f['shape'], s['shape'])
             if v > 1e-3: hits.append(dict(fastener=f['name'], sheet_part=s['name'], volume_mm3=round(v, 4)))
@@ -347,9 +347,9 @@ def assembly_overlaps(parts):
             if v <= 1e-3:
                 continue
             names = (a['name'], b['name']); groups = (a['group'], b['group'])
-            thread = (any(n.endswith('_6_32_screw') and n.startswith(('GPU_', 'Auxiliary_')) for n in names) and any('rear' in n for n in names)) \
+            thread = (any(n.endswith('_M3x5_screw') and n.startswith(('GPU_', 'Auxiliary_')) for n in names) and any('rear' in n for n in names)) \
                 or a.get('thread_host') == b['name'] or b.get('thread_host') == a['name']
-            fan = any('_self_tapping_5x8_screw_' in n for n in names) and any(g in ('fans', 'fan_pads', 'exhaust') for g in groups)
+            fan = any('_self_tapping_5x10_screw_' in n for n in names) and any(g in ('fans', 'fan_pads', 'exhaust') for g in groups)
             route = any(g in ROUTING_GROUPS for g in groups)
             row = dict(parts=list(names), volume_mm3=round(v, 4))
             (intended if (thread or fan or route) else unexpected).append(row | dict(reason='thread engagement' if thread else 'fan screw thread' if fan else 'routing envelope' if route else 'collision'))

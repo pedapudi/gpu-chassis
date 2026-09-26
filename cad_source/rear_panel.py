@@ -5,8 +5,8 @@ from sheetmetal import fold,bounds
 
 REAR = 'Full_width_twenty_one_slot_rear_with_side_returns'
 THICKNESS, INSIDE_RADIUS = 1.2, 1.2
-# #6-32 UNC-2B tapped in an extruded collar: #36 tap drill, 2.5 mm total thread length.
-TAP_DRILL, COLLAR_OD, COLLAR_HEIGHT = 2.705, 4.1, 1.3
+# M3 tapped in an extruded collar: 2.5 mm tap drill, 2.5 mm total thread length (five turns).
+TAP_DRILL, COLLAR_OD, COLLAR_HEIGHT = 2.5, 3.7, 1.3
 
 
 def box(x, y, z, dx, dy, dz):
@@ -16,7 +16,7 @@ def box(x, y, z, dx, dy, dz):
 def retention_axes(parts):
     """GPU-bank bracket screw axes (X, Y), sorted by X."""
     screws = [p['shape'].BoundingBox() for p in parts
-              if p['name'].startswith(('GPU_', 'Auxiliary_')) and p['name'].endswith('_6_32_screw')]
+              if p['name'].startswith(('GPU_', 'Auxiliary_')) and p['name'].endswith('_M3x5_screw')]
     return sorted((b.center.x, b.center.y) for b in screws)
 
 
@@ -61,7 +61,7 @@ def consolidate_gpu_rear(parts, out=None):
     # diameter; the fabricator's extrusion tooling sets the actual pierce size.
     flat = panel.cut(cq.Compound.makeCompound([cq.Solid.makeCylinder(COLLAR_OD/2 + .01, COLLAR_HEIGHT + .01, cq.Vector(x,y,underside-COLLAR_HEIGHT-.01)) for x,y in axes]))
     rear['pieces'] = [dict(name=REAR, shape=flat, t=THICKNESS, bends=bends,
-                           tapped=[dict(thread='6-32', centre=[round(x, 3), round(y, 3), round(underside, 3)]) for x, y in axes])]
+                           tapped=[dict(thread='M3', centre=[round(x, 3), round(y, 3), round(underside, 3)]) for x, y in axes])]
     parts.remove(shelf)
     if out is not None:
         from pathlib import Path
@@ -82,7 +82,7 @@ def gpu_rear_panel_design(parts):
     return {'sheet_thickness_mm':THICKNESS,'top_bend_inside_radius_mm':INSIDE_RADIUS,
             'top_bend_outside_radius_mm':THICKNESS+INSIDE_RADIUS,'top_bend_angle_deg':90,
             'bend_span_x_mm':[min(b.xmin for b in bend),max(b.xmax for b in bend)],
-            'retention_top_z_mm':top,'retention_thread':'#6-32 UNC-2B, tapped through an extruded collar',
+            'retention_top_z_mm':top,'retention_thread':'M3, tapped through an extruded collar',
             'tap_drill_diameter_mm':TAP_DRILL,'collar_outside_diameter_mm':COLLAR_OD,
             'collar_height_below_shelf_mm':COLLAR_HEIGHT,'thread_length_mm':THICKNESS+COLLAR_HEIGHT,
             'retention_hole_axes_xy_mm':axes,'retention_integral':True,

@@ -88,7 +88,7 @@ def configure(parts,mode):
   add(f'Upper_{size}mm_fan_{x}_270',frame,'fans','reference')
   for dx in (-pitch/2,pitch/2):
    for dz in (-pitch/2,pitch/2):
-    sx,sz=x+dx,270+dz;add(f'GPU_fan_self_tapping_5x8_screw_{sx}_{sz}',fan_screw((sx,0,sz),(0,1,0)),'intake_fasteners')
+    sx,sz=x+dx,270+dz;add(f'GPU_fan_self_tapping_5x10_screw_{sx}_{sz}',fan_screw((sx,0,sz),(0,1,0)),'intake_fasteners')
  # The insert and grille nuts become extruded tapped threads in the carrier.
  from threads import tap_captive_nuts
  tap_captive_nuts(result,lambda a:a['name'].startswith(('Intake_insert_captive_M3_nut_','Intake_grille_M3_nut_')))
@@ -97,7 +97,7 @@ def configure(parts,mode):
 def export_variant(parts,base_checks,out,mode):
  out=Path(out);out.mkdir(parents=True,exist_ok=True);(out/'formed_parts').mkdir(exist_ok=True);(out/'cut_profiles').mkdir(exist_ok=True)
  checks=dict(base_checks);s=settings(mode)
- checks.update(full_intake_mode=mode,upper_fan_size_mm=s['size'],upper_fan_centres_x_mm=s['x_centres'],upper_fan_centres_z_mm=[270],upper_fan_count=len(s['x_centres']),upper_fan_depth_mm=s['depth'],upper_fan_hole_pitch_mm=s['pitch'],front_intake_aperture_mm=s['opening'],grille_to_GPU_fan_face_mm=2,fan_frame_pitch_mm=s['x_centres'][1]-s['x_centres'][0],GPU_fan_screw_penetration_mm=6,valid_shapes=len(parts),fan_size_mm=s['size'],upper_fan_reference='SilverStone AP183 mounting drawing' if s['size']==180 else '120 mm frame, ARCTIC 105 mm square mounting reference; 38 mm depth allowance',intake_insert_bounds_xyz_mm=[[25,0,160],[415,2,380]],intake_insert_fixing_axes_xz_mm=INSERT_FIXES)
+ checks.update(full_intake_mode=mode,upper_fan_size_mm=s['size'],upper_fan_centres_x_mm=s['x_centres'],upper_fan_centres_z_mm=[270],upper_fan_count=len(s['x_centres']),upper_fan_depth_mm=s['depth'],upper_fan_hole_pitch_mm=s['pitch'],front_intake_aperture_mm=s['opening'],grille_to_GPU_fan_face_mm=2,fan_frame_pitch_mm=s['x_centres'][1]-s['x_centres'][0],GPU_fan_screw_penetration_mm=8,valid_shapes=len(parts),fan_size_mm=s['size'],upper_fan_reference='SilverStone AP183 mounting drawing' if s['size']==180 else '120 mm frame, ARCTIC 105 mm square mounting reference; 38 mm depth allowance',intake_insert_bounds_xyz_mm=[[25,0,160],[415,2,380]],intake_insert_fixing_axes_xz_mm=INSERT_FIXES)
  for stale in ('intake_component_intersections','cassette_motion','individual_GPU_motion','lower_retimer_motion'):
   checks.pop(stale,None)
  checks['validation_scope']='Inherited rear/motherboard datums; use full_intake_checks.json for changed intake geometry and sampled service paths.'

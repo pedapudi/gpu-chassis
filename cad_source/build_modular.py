@@ -70,10 +70,11 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  bh += [hole_side(477.2,233.75)]
  # The rear cover takes side screws; the sliding lid locates on wall studs and two rear retention screws.
  vb=375.32;cover_side_z=(390,);lid_z=H-10;lid_studs=[(118.2,H-10),(433.2,H-10)]
- bh += rc.body_side_holes(W,D,cover_side_z)+rc.stud_holes(W,lid_studs)
+ bh += rc.body_side_holes(W,D,cover_side_z)+rc.pin_holes(W,lid_studs)
  for y in (100,240,380):bh.append(hole_side(y,231,2.25))
  bh += ear_holes(0,(252,354))
  body,piece=form('Upper_module_U_body_with_cable_passages',body,1.5,[('y',(0,bottom),(1,1)),('y',(W,bottom),(-1,1))],bh)
+ piece['tapped']=rc.pin_threads(W,lid_studs)
  body=add('Upper_module_U_body_with_cable_passages',body,'shell',pieces=[piece]);profile('upper_module_floor_no_returns',body,'z',bottom)
  front=union([box(0,0,bottom,440,2,H-bottom),box(1.5,2,bottom+2,1.5,18,H-bottom-4),box(437,2,bottom+2,1.5,18,H-bottom-4)])
  tools=[]
@@ -113,7 +114,7 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
      for yy in (fan_y-1,fan_y+depth):pads.append(box(xx,yy,zz,12,1,12).cut(cyl(x+dx*mount,yy-.1,z+dz*mount,2.75,1.2,(0,1,0))))
    add(f'Fan_{size}mm_corner_pads_{pw}x{pw}x27_envelope_{x:g}',cq.Compound.makeCompound(pads),'fan_pads','#655148','reference')
   for x,zz in fan_axes(row):
-   add(f'Upper_fan_self_tapping_5x8_screw_{x:g}_{zz:g}',fan_screw((x,0,zz),(0,1,0)),'intake_fasteners','#304553')
+   add(f'Upper_fan_self_tapping_5x10_screw_{x:g}_{zz:g}',fan_screw((x,0,zz),(0,1,0)),'intake_fasteners','#304553')
  grille=box(0,-1,bottom,440,1,H-bottom)
  gh=grille_holes(-1,bottom,H-bottom,all_fan_axes,grille_fix)
  gh += [cyl(x,-2,z,4.4,4,(0,1,0)) for x,z in all_fan_axes]+[cyl(x,-2,z,1.7,4,(0,1,0)) for x,z in grille_fix]
@@ -172,7 +173,8 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
  lid_pieces=[form('Upper_module_lid_top_sheet_with_rear_tabs',lid_top,1.5,lid_folds,lid_holes)[1]]
  lid_pieces+=[form(f'Upper_module_lid_{side}_return_strip',box(x,22,H-18,1.5,438,16.5),1.5,[],lid_tools)[1] for side,x in (('left',1.5),('right',437))]
  add('Upper_module_lid_with_rear_tabs',union([p['shape'] for p in lid_pieces]),'lid',visible=False,pieces=lid_pieces)
- for name,shape in rc.lid_studs(W,lid_studs):add(name,shape,'lid_guides')
+ for name,shape in rc.lid_pins(W,lid_studs):
+  add(name,shape,'lid_guides','#304553');parts[-1]['thread_host']='Upper_module_U_body_with_cable_passages'
  # OEM mating holes are intentionally absent: transfer from the actual removed cover.
  ring=cut(box(0,0,220,W,D,1.5),[box(15,15,219,410,455,4)]+[cyl(x,y,219,1.7,4) for x,y in mounting])
  # Joined assembly: flat ring and two welded return strips.
@@ -241,13 +243,13 @@ def build_modular(full_parts,out,return_parts=False,intake='3x140'):
   if p['group'] not in ('fans','fan_pads','intake_grilles','intake_fasteners'):continue
   for q in parts:
    if q is p or q['role']=='clearance' or q['group'] in ('board_alternatives','oem_cage'):continue
-   screw_in_fan=('_self_tapping_5x8_screw_' in p['name'] and q['group'] in ('fans','fan_pads')) or ('_self_tapping_5x8_screw_' in q['name'] and p['group'] in ('fans','fan_pads'))
+   screw_in_fan=('_self_tapping_5x10_screw_' in p['name'] and q['group'] in ('fans','fan_pads')) or ('_self_tapping_5x10_screw_' in q['name'] and p['group'] in ('fans','fan_pads'))
    screw_in_fan|=p.get('thread_host')==q['name'] or q.get('thread_host')==p['name']
    if not screw_in_fan and overlap(p['shape'],q['shape'])>1e-4:intake_hits.append(sorted([p['name'],q['name']]))
  intake_hits=sorted(map(list,{tuple(h) for h in intake_hits}))
  gpu_top=max(p['shape'].BoundingBox().zmax for p in parts if p['group']=='gpus')
- fan_rows=[dict(model=r['model'],size_mm=r['size'],depth_mm=r['depth'],count=len(r['xs']),centres_x_mm=list(r['xs']),centre_z_mm=r['z'],hole_pitch_mm=r['pitch'],air_opening_diameter_mm=r['opening'],padded_envelope_mm=r['pad'],screw_penetration_mm=8-(3 if r['pad'] else 2)) for r in rows]
- checks=dict(lid_removal_intersections=lid_removal,routing_structure_intersections=route_hits,MCIO_to_components=signal_power_hits,intake_component_intersections=intake_hits,body_width_mm=440,body_depth_mm=485,module_base_z_mm=bottom,module_height_mm=H-bottom,module_rack_units=5,combined_height_mm=H,rack_units_combined=10,OEM_body_mm=[440,485,220],OEM_with_fan_cage_depth_mm=530,upper_slot_count=21,slot_pitch_mm=20.32,intake_option=intake,fan_rows=fan_rows,all_intake_options=list(INTAKES),grille_fixing_axes_xz_mm=GRILLE_FIX,GPU_envelope_top_z_mm=gpu_top,lid_underside_z_mm=H-1.5,clearance_above_GPU_envelope_mm=H-1.5-gpu_top,chassis_fan_screw="5 x 8 mm self-tapping plastic fan screw",MCIO_opening_mm=[140,17.55],MCIO_opening_z_mm=[notch,H-1.5],MCIO_entry_location="rear cover top edge, above the GPU brackets",MCIO_connector_test_mm=[35,14],MCIO_service="Remove the two cap screws and folded upper brush cap before passing plugs. Disconnect external cables and remove the rear cover with its brush assembly before GPU or cartridge extraction.",interdeck_openings_mm=[195,65],cassette_motion=motion,OEM_lid_fit='UNVERIFIED: adapter side returns and fastener locations require the actual lid as a template',OEM_fastener_holes_modeled=0,load_support='Separate rack rails or rated shelf under the upper module; OEM lid screws provide location only',valid_shapes=len(parts))
+ fan_rows=[dict(model=r['model'],size_mm=r['size'],depth_mm=r['depth'],count=len(r['xs']),centres_x_mm=list(r['xs']),centre_z_mm=r['z'],hole_pitch_mm=r['pitch'],air_opening_diameter_mm=r['opening'],padded_envelope_mm=r['pad'],screw_penetration_mm=10-(3 if r['pad'] else 2)) for r in rows]
+ checks=dict(lid_removal_intersections=lid_removal,routing_structure_intersections=route_hits,MCIO_to_components=signal_power_hits,intake_component_intersections=intake_hits,body_width_mm=440,body_depth_mm=485,module_base_z_mm=bottom,module_height_mm=H-bottom,module_rack_units=5,combined_height_mm=H,rack_units_combined=10,OEM_body_mm=[440,485,220],OEM_with_fan_cage_depth_mm=530,upper_slot_count=21,slot_pitch_mm=20.32,intake_option=intake,fan_rows=fan_rows,all_intake_options=list(INTAKES),grille_fixing_axes_xz_mm=GRILLE_FIX,GPU_envelope_top_z_mm=gpu_top,lid_underside_z_mm=H-1.5,clearance_above_GPU_envelope_mm=H-1.5-gpu_top,chassis_fan_screw="M5 x 10 mm self-tapping case-fan screw",MCIO_opening_mm=[140,17.55],MCIO_opening_z_mm=[notch,H-1.5],MCIO_entry_location="rear cover top edge, above the GPU brackets",MCIO_connector_test_mm=[35,14],MCIO_service="Remove the two cap screws and folded upper brush cap before passing plugs. Disconnect external cables and remove the rear cover with its brush assembly before GPU or cartridge extraction.",interdeck_openings_mm=[195,65],cassette_motion=motion,OEM_lid_fit='UNVERIFIED: adapter side returns and fastener locations require the actual lid as a template',OEM_fastener_holes_modeled=0,load_support='Separate rack rails or rated shelf under the upper module; OEM lid screws provide location only',valid_shapes=len(parts))
  from rear_panel import gpu_rear_panel_design
  (out/'rear_panel_design.json').write_text(json.dumps(gpu_rear_panel_design(parts),indent=2))
  (out/'validation.json').write_text(json.dumps(checks,indent=2));assert not any(x['intersections'] for x in motion),motion

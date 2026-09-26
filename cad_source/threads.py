@@ -12,8 +12,8 @@ import cadquery as cq
 from sheetmetal import sheet_parts, bounds
 
 # Tap drill and extruded-collar outside diameter for each thread.
-TAP = {'M3': (2.5, 3.7), 'M4': (3.3, 4.9), '6-32': (2.705, 4.1)}
-NUT_HEIGHT = {2.4: 'M3', 3.2: 'M4', 2.78: '6-32', 2.2: 'M4'}
+TAP = {'M3': (2.5, 3.7), 'M4': (3.3, 4.9)}
+NUT_HEIGHT = {2.4: 'M3', 3.2: 'M4', 2.2: 'M4'}
 FILL_RADIUS = 2.3
 
 

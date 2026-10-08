@@ -1,36 +1,36 @@
 # GPU chassis
 
-Sheet-metal GPU chassis models, engineering drawings and interactive viewers for a 9U full enclosure and a removable GPU module above a SilverStone RM53-502. The GPU carrier has twenty-one rear bracket positions: ten dual-slot GPUs plus one single-width card, matching the usable sockets of a 12-slot Miwin switch-backplane reference. The full-chassis viewer offers six 120 mm fans, two 180 mm fans or three 120 mm fans. The 5U module viewer toggles between three 140 mm fans, three 120 mm fans with five 80 mm fans above them, and two 180 mm fans; each option has its own front carrier. The toggle updates intake hardware, engineering drawings and CAD links while preserving the camera position.
+Sheet-metal models and interactive engineering viewers for a 9U full chassis and a 5U upper module for the SilverStone RM53-502. Both retain a twenty-one-position GPU cartridge referenced to the twelve-socket Miwin backplane. Replaceable 8.5 mm printed adapters and standard 8 mm metric spacers locate the PCB. Separate fan carriers, screw-mounted rack ears and a removable stock-mesh cover simplify fabrication.
 
-- [Open the interactive viewers](https://pedapudi.github.io/gpu-chassis/)
-- [Download the complete engineering package and fabrication kit](https://github.com/pedapudi/gpu-chassis/releases/tag/common-hardware-2026-09-26)
-- [Assembly, hardware and fabrication notes](ENGINEERING.md)
-- [Analytic CAD sources](cad_source/)
-- [Dimensioned drawing sources](drawing_source/)
+- [Open both viewers](https://pedapudi.github.io/gpu-chassis/)
+- [Construction, metric hardware and assembly](MANUFACTURING.md)
+- [Interface dimensions and qualification limits](ENGINEERING.md)
+- [Drawing coverage](DRAWING_COVERAGE.md)
 
-The viewers show a 3D model beside selectable, zoomable engineering drawing sheets. Selecting a fabricated component opens its corresponding drawing. The release includes STEP assemblies and individual parts, OpenSCAD geometry, PDF drawings, coordinate schedules and validation reports. Drawing views directly label PCIe aperture width, height and pitch, tapped retention holes, toe-notch size, and repeated hole/slot families. Drawing schedules specify hole diameters and radii, slot lengths and end radii, local sheet thickness and feature positions. Dedicated interface sheets dimension the GPU and motherboard rear banks, toe locators, stepped PSU opening, cable-entry contours, lid returns and rail-height stack. Complete face contours accompany hole schedules and coordinate tables. Numbered leaders connect interface notes to the corresponding features. Formed sections and dimensioned face views locate folds and joined sheet components. The [drawing coverage report](DRAWING_COVERAGE.md) accounts for every fabricated part in all six configurations.
+Each chassis has one compact drawing book covering its fan options. Shared parts appear once. Individual STEP files contain manufactured chassis parts and printed adapters; assembly STEP files contain chassis structure and hardware. GPUs, motherboards, fans, cables and hoses remain optional viewer references and have no separate STEP exports. Select a part in the viewer to download its STEP.
 
-The release also carries a fabrication kit for sheet-metal suppliers: one formed STEP and one flat-pattern DXF with dashed bend lines per distinct blank, a parts list with quantities for every configuration, a hardware list, a tapped-thread schedule and a SendCutSend compatibility review. Build it with `python scripts/fabrication_kit.py BUILD OUT` after the drawings.
+Each adapter half measures 209.5 x 240 x 8.5 mm. Both fit separately on a 256 x 256 mm print bed with a 5 mm brim. The halves fasten independently to the steel tray.
 
-**Engineering review only.** OEM lid attachment dimensions and supplier backplane interfaces require physical verification. Nominal geometry checks do not establish fabrication readiness, thermal performance or structural qualification.
+The full chassis offers six 120 mm, two 180 mm or three 120 mm intake fans. The upper module offers three 140 mm, three 120 mm with five 80 mm fans, or two 180 mm fans. Fan toggles preserve the camera position.
 
-## Publish the viewer
+**Engineering review only.** Measure the OEM lid interface and backplane mounting holes before fabrication. Verify printed-material temperature performance, structural loads, production tolerances, cooling and electrical integration with a physical prototype.
 
-GitHub Pages deploys through `.github/workflows/pages.yml` when the main branch is updated or the workflow is run manually. `bundle.json` selects the release asset and its SHA-256 digest. The deployment verifies that digest before extracting the viewer and linked engineering files. Raw projection intermediates and compiled mesh duplicates remain in the downloadable bundle and are omitted from Pages. Published vector sheets use lossless gzip compression; the viewer decompresses them in the browser.
+## Build the manufacturing package
 
-To preview locally, download the release ZIP to this directory and run:
-
-```sh
-python3 scripts/prepare_pages.py chassis-engineering-annotated-drawings.zip --out _site
-python3 -m http.server 8000 --directory _site
-```
-
-Open `http://localhost:8000`. The static viewers require no external rendering service.
-
-For CAD changes, follow [the rebuild instructions](cad_source/README.md) in a virtual environment, then [regenerate the dimensioned drawings](drawing_source/README.md) for all six configurations. Then assemble the package. The previous package supplies the viewer page layout, and an OpenSCAD executable compiles the part meshes:
+Use a virtual environment with `cad_source/requirements.txt` and `drawing_source/requirements.txt`. Build into fresh directories:
 
 ```sh
-python scripts/build_package.py scratch previous/chassis-engineering . package/chassis-engineering /path/to/openscad
+python cad_source/rebuild.py --out work/baseline --variant both
+python scripts/build_manufacturing_revision.py work/baseline work/package
+python scripts/validate_manufacturing_revision.py work/baseline work/package
+python drawing_source/compact_drawings.py work/package
+python scripts/build_compact_viewers.py work/package path/to/local/threejs-libraries
 ```
 
-The script writes the OpenSCAD parts and assembly, checks every compiled mesh, rebuilds the viewer data and drawing sheets, and rewrites the checksums. Zip the `chassis-engineering` folder, upload it as a release asset, and update `bundle.json` with its release tag, file name and SHA-256 digest in the same commit.
+The viewer builder expects `three.min.js` and `OrbitControls.js` in the library directory. It writes static pages with local assets and vector drawing sheets. The analytic Python sources control dimensions. Individual part STEP files preserve assembly coordinates; printed STL files are placed on the print bed at Z0.
+
+The baseline generator supplies the established chassis interfaces. The manufacturing pass replaces PCB rails, rail bosses and front grilles, and substitutes catalog press nuts where their seating and edge requirements fit. Its reports list remaining formed-thread exceptions. Do not use baseline parts as substitutes for manufacturing-package parts.
+
+## Publish
+
+GitHub Pages deploys through `.github/workflows/pages.yml`. `bundle.json` identifies a release ZIP and its SHA-256. `scripts/prepare_pages.py` verifies the archive before publishing the viewers, compact PDFs and downloadable CAD parts. Package files live under a `chassis-engineering/` archive root.

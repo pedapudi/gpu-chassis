@@ -6,6 +6,7 @@ import json
 import shutil
 import zipfile
 import gzip,re
+import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
@@ -39,6 +40,23 @@ with zipfile.ZipFile(args.bundle) as archive:
         destination.parent.mkdir(parents=True, exist_ok=True)
         with archive.open(item) as src, destination.open('wb') as dst:
             shutil.copyfileobj(src, dst)
+if (args.out / 'compact-package.json').is_file():
+    spec = json.loads((args.out / 'compact-package.json').read_text())
+    required = ['index.html', 'hardware.html', 'full-chassis-drawings.pdf', 'module-drawings.pdf']
+    for variant in spec['variants']:
+        required += [variant + '/' + name for name in ('interactive_model.html', 'model.js', 'chassis_assembly.step', 'parts-index.json', 'revision-validation.json')]
+        check = json.loads((args.out / variant / 'revision-validation.json').read_text())
+        if not check['pass']:
+            raise SystemExit('CAD validation failed: ' + variant)
+    missing = [name for name in required if not (args.out / name).is_file()]
+    if missing:
+        raise SystemExit('Missing compact viewer files: ' + ', '.join(missing))
+    (args.out / '.nojekyll').touch()
+    size = sum(p.stat().st_size for p in args.out.rglob('*') if p.is_file())
+    if size >= 1_000_000_000:
+        raise SystemExit('Site exceeds the publication size budget')
+    print(f'Compact static site verified: {size / 1_000_000:.1f} MB')
+    sys.exit(0)
 from combine_module_viewer import combine_module_viewer
 combine_module_viewer(args.out, ROOT)
 from combine_full_viewer import combine_full_viewer

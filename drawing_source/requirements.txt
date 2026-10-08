@@ -1,3 +1,5 @@
 reportlab
 svglib
 pypdf
+PyMuPDF
+Markdown

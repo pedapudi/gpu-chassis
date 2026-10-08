@@ -1,24 +1,11 @@
 # Drawing coverage
 
-The full chassis and replacement-lid module include complete part views with dimensions and linked schedules. The six configurations repeat shared parts; counts describe each complete drawing set. Joined assemblies have one flat-pattern sheet per sheet piece, so flat-pattern sheets can outnumber fabricated parts.
+The manufacturing package has two drawing books: one for the full chassis and one for the upper module. Each includes all three fan options. Shared parts are drawn once instead of repeated for every configuration.
 
-| Configuration | Fabricated parts | Sheets | Section sheets | Face sheets | Flat-pattern sheets |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 9U, six 120 mm fans | 36 | 261 | 20 | 48 | 42 |
-| 9U, two 180 mm fans | 37 | 268 | 20 | 48 | 44 |
-| 9U, three 120 mm fans | 37 | 268 | 20 | 48 | 44 |
-| Module, three 140 mm fans | 32 | 236 | 20 | 46 | 40 |
-| Module, three 120 mm + five 80 mm fans | 32 | 238 | 20 | 46 | 40 |
-| Module, two 180 mm fans | 32 | 236 | 20 | 46 | 40 |
+Each book groups related information into assembly and service access, rear interfaces and PCB seating, the printed adapter and metric hardware, fan carriers and the stock mesh cover, and compact part-detail sheets. Complete face contours and small formed views accompany dimensions, hole-family leaders and notes. Technical tables do not occupy standalone sheets.
 
-Feature-location sheets show complete physical face contours, including actual holes and open-edge cuts. Opposite walls have separate views. Circular holes use analytic circles; leaders specify counts, diameters, radii, and slot dimensions. Dense coordinate tables share the page with the face outline and highlighted hole rows. Complex cutouts retain their actual contours.
+The CSV feature schedules contain exact circular-feature centres and diameters. Nominal part STEP geometry defines the complete formed contours, including slots, reliefs and bends. The books summarize those details for human review; the STEP files and CSVs supply data for CAD inspection. Production flat patterns must use the selected fabricator's material thickness, bend tooling and tolerances.
 
-Interface tables use numbered leaders tied to specific features. Rear elevations directly dimension PCIe apertures and pitch; enlarged details show tapped retention holes, toe notches, and the integral retention bend. Each bracket position in the rear schedule names the card it serves. Additional CAD sections illustrate the adjacent-GPU gap, PSU screw-tip clearance, lower exhaust/I/O clearance, and installed backplane support height. Fan-option drawings dimension mounting pitch on the carrier geometry.
+Every manufactured chassis component has an individual STEP file and an entry in its configuration's parts index. Hardware is counted separately. Printed adapters also have print-bed-oriented STL files. Component fit references are excluded from STEP exports.
 
-Every sheet piece also has a flat-pattern sheet drawn from its developed DXF, with dashed bend centrelines and a bend table giving direction, inside radius, bend allowance, length and flange lengths.
-
-Formed sections carry overall dimensions directly on the profile, with coordinate levels beside the diagram. Face sheets show the actual surface perimeter and coordinate limits. Drawing indexes remain separate navigation tables.
-
-Each drawing set includes a diagram-completeness report. The generator rejects technical table pages without drawing geometry. `specificity_coverage.json` records each fabricated part and its section and face sheets. Every PDF page is converted to a vector sheet for the viewer. The structural checks do not detect every annotation collision; inspect rendered sheets before release.
-
-Nominal dimensions do not establish production tolerances or physical supplier fit. Backplane measurements, OEM lid interfaces, fabricator confirmation of bend radii and K-factor, fixed-joint strength, cooling, and power qualification remain release requirements.
+Drawing validation includes rendered-page inspection, text-boundary checks and geometry coverage. CAD validation includes solid validity, individual STEP round trips, changed-part interference and top-down access to the printed-adapter screws. Reports state the checks performed; they do not certify supplier fit, thermal performance or load capacity.

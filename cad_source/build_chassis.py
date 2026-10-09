@@ -1,5 +1,5 @@
 """Eight-unit sheet-metal chassis with a removable twenty-one-position GPU deck.
-All lengths are millimetres. Hardware envelopes do not certify supplier fit.
+All lengths are millimeters. Hardware envelopes do not certify supplier fit.
 """
 from pathlib import Path
 import argparse,json,math,re

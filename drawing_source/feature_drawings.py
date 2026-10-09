@@ -114,16 +114,16 @@ def draw_feature_pages(a, api):
             new(name.replace('_',' ')+f' | {axes} at {f["plane"]}={fmt(station)}',name+'::locations')
             para(f'Complete physical face, including outer contour and actual cutouts. Sheet faces {f["plane"]}={fmt(stations[0])} to {fmt(stations[1])}. Opposite walls have separate views. Assembly-coordinate projection; exterior rear viewpoints are on the rear-interface sheets. Sizes are finished openings. Dimensions in mm.',32,H-82,W-64,10)
             p,lo,hi=planar(c,a['shape'],axis,station,(35,170,650,510))
-            para(f'Face limits: {f["u"]} {fmt(lo[0])} to {fmt(hi[0])}; {f["v"]} {fmt(lo[1])} to {fmt(hi[1])}. Overall dimensions enclose this face. Feature centres below use the same axes.',45,145,610,10)
+            para(f'Face limits: {f["u"]} {fmt(lo[0])} to {fmt(hi[0])}; {f["v"]} {fmt(lo[1])} to {fmt(hi[1])}. Overall dimensions enclose this face. Feature centers below use the same axes.',45,145,610,10)
             for j,(number,group) in enumerate(chunk):
                 g=group[-1];target=p(g['centre'][0]+g['size'][0]/2,g['centre'][1]);yy=H-145-j*145
                 mark(c,target,'Feature '+number,(710,yy))
                 y=para(f'<b>{len(group)} × {detail(g)}</b>',710,yy-12,W-750,10)
                 if len(group)<=12:
                     coords='; '.join('('+', '.join(fmt(n) for n in q['centre'])+')' for q in group)
-                    para(f'Centres ({f["u"]}, {f["v"]}): '+coords,710,y,W-750,9)
+                    para(f'Centers ({f["u"]}, {f["v"]}): '+coords,710,y,W-750,9)
                 else:
-                    para('Repeated pattern: centre coordinates are on the following annotated row sheets. Only listed positions are cut.',710,y,W-750,9)
+                    para('Repeated pattern: center coordinates are on the following annotated row sheets. Only listed positions are cut.',710,y,W-750,9)
     for number,group in groups:
         if len(group)<=12:continue
         f=group[0];byrow=collections.defaultdict(list)
@@ -140,12 +140,12 @@ def draw_feature_pages(a, api):
         for start in range(0,len(entries),10):
             chunk=entries[start:start+10]
             new(name.replace('_',' ')+f' | feature {number} row locations',name+'::coordinates')
-            para(f'Feature {number}: {len(group)} × {detail(f)}. The highlighted centres identify the rows in the adjacent schedule. Every page repeats the complete face outline. Ranges include both ends; unlisted positions remain solid.',32,H-82,W-64,10)
+            para(f'Feature {number}: {len(group)} × {detail(f)}. The highlighted centers identify the rows in the adjacent schedule. Every page repeats the complete face outline. Ranges include both ends; unlisted positions remain solid.',32,H-82,W-64,10)
             p,lo,hi=planar(c,a['shape'],f['axis'],face_station(f['axis'],f['stations']),(35,150,650,530))
             rows={float(row[0]) for row in chunk};c.setStrokeColor(ACCENT);c.setLineWidth(.8)
             for g in group:
                 if g['centre'][1] in rows:
                     x,y=p(*g['centre']);c.line(x-2,y,x+2,y);c.line(x,y-2,x,y+2)
-            table([[f'{f["v"]} row',f'{f["u"]} centres / ranges','Count']]+chunk,720,H-150,[70,270,65],9)
-            para(f'Face {f["plane"]}={fmt(f["stations"][0])}; centres share the labeled assembly axes. Pattern dimensions are nominal, not manufacturing tolerances.',720,180,400,10)
+            table([[f'{f["v"]} row',f'{f["u"]} centers / ranges','Count']]+chunk,720,H-150,[70,270,65],9)
+            para(f'Face {f["plane"]}={fmt(f["stations"][0])}; centers share the labeled assembly axes. Pattern dimensions are nominal, not manufacturing tolerances.',720,180,400,10)
     return records

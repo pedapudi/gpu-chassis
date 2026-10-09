@@ -69,19 +69,19 @@ def interface_details(parts,mod,api):
         centres=[13.345+20.32*i for i in range(8)]
         sheet('Lower rear bank | apertures, retention and toe engagement','Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns',[
             ['Eight bracket apertures','15.000 wide ×103.000 high, nominal corner R0. Z23.750–126.750; through rear web Y469–470.2. Pitch 20.320; nominal web 5.320.'],
-            ['Aperture centre X','13.345, 33.665, 53.985, 74.305, 94.625, 114.945, 135.265, 155.585.'],
+            ['Aperture center X','13.345, 33.665, 53.985, 74.305, 94.625, 114.945, 135.265, 155.585.'],
             ['Rear web above the bank','Solid between the apertures and the tab slot. The tapped collars under the retention strip stay 1.83 clear of the web, so the web needs no nut reliefs.'],
             ['Retention strip','1.500 thick; underside Z127.780; bracket bearing Z129.280. Eight M3 extruded tapped holes (tap drill DIA2.5, collar OD3.7 × 1.5 below the strip), normal Z, at Y474.080 and X22.555 +20.320n for n=0…7. M3 × 5 bracket screws.'],
-            ['Lower toe receiver','1.500 thick; X3.5–165.5, Y465–469, Z11.120–12.620. Eight top-view notches, 10.790 wide ×1.300 deep, open to Y469; root Y467.700. Same centre X schedule as apertures.'],
+            ['Lower toe receiver','1.500 thick; X3.5–165.5, Y465–469, Z11.120–12.620. Eight top-view notches, 10.790 wide ×1.300 deep, open to Y469; root Y467.700. Same center X schedule as apertures.'],
             ['Toe clearance','Reference toe 10.190 wide ×0.860 thick. Total nominal clearance 0.600 across X and 0.440 along Y. Toe projects 1.000 below strip underside.'],
-            ['Toe factory attachment','Proposed seven underside stitch fillet welds: nominal 1 mm leg ×6 mm length, along X at Y469/Z11.12. Centres X23.505 +20.320n, n=0…6. Fixture to bracket datum, weld and deburr before rear assembly installation.']],
+            ['Toe factory attachment','Proposed seven underside stitch fillet welds: nominal 1 mm leg ×6 mm length, along X at Y469/Z11.12. Centers X23.505 +20.320n, n=0…6. Fixture to bracket datum, weld and deburr before rear assembly installation.']],
             'The separate retention strip requires factory attachment before motherboard installation; extrude and tap its collars first. Qualify weld strength, distortion, screw torque and bracket seating with a physical gauge. The sheet openings are clearance features, not tapped holes.')
         sheet('Lower rear | hardware functions and mounting datums','Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns',[
             ['Panel construction','Rear web 1.200 thick; side returns 1.500. The thickness transition represents joined pieces, not a uniform-sheet bend.'],
-            ['PSU mounting','Four DIA3.9/R1.95 clearance bores normal Y for standard #6-32 screws. X/Z centres: (428,16), (428,154), (354,130), (364,16). Rear-view orientation: PSU left.'],
-            ['80 mm exhaust fans','Eight horizontal obrounds: 9.000 overall ×5.500 width, end R2.750. Centres X173.25,244.75,255.25,326.75 at Z74.25 and145.75. Two DIA76/R38 air openings at X209,291/Z110. Frame size 80; screw pitch 71.500 square. Verify supplied fan screws.'],
+            ['PSU mounting','Four DIA3.9/R1.95 clearance bores normal Y for standard #6-32 screws. X/Z centers: (428,16), (428,154), (354,130), (364,16). Rear-view orientation: PSU left.'],
+            ['80 mm exhaust fans','Eight horizontal obrounds: 9.000 overall ×5.500 width, end R2.750. Centers X173.25,244.75,255.25,326.75 at Z74.25 and145.75. Two DIA76/R38 air openings at X209,291/Z110. Frame size 80; screw pitch 71.500 square. Verify supplied fan screws.'],
             ['Motherboard I/O clearance','Rear web: 164.000 ×50.000, X166–330/Z11–61. The separate 1.2 mm carrier locates the 158.750 ×44.450 shield reference at X168.6884–327.4384/Z13.7648–58.2148. Do not use shield size as the rear-web cut size.'],
-            ['Rear attachment holes','Four DIA3.4/R1.7 clearance holes for the separate I/O carrier, whose screws thread into extruded M3 collars in the carrier, and two extruded M3 threads in the web for the external MCIO frame. The part hole schedule controls their individual centres.'],
+            ['Rear attachment holes','Four DIA3.4/R1.7 clearance holes for the separate I/O carrier, whose screws thread into extruded M3 collars in the carrier, and two extruded M3 threads in the web for the external MCIO frame. The part hole schedule controls their individual centers.'],
             ['Motherboard height chain','Tray underside/top Z7.5 /9.5; ATX standoffs 6.5 high; PCB underside/top Z16 /17.57; lower bracket bearing Z129.28. I/O and PCIe openings share these installed datums.']],
             'Use the stepped PSU-opening profile on the following sheet; its bounding rectangle omits the screw lands. Rear-view diagrams place PSU left, I/O middle and PCIe positions right. Coordinate profiles explicitly use X increasing right.')
         psu_profile(lookup['Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns']['shape'],api)
@@ -102,8 +102,8 @@ def interface_details(parts,mod,api):
     sheet('Rail supports | installed levels and factory joints','Longitudinal_mount_rail_20',[
         ['GPU tray datum','Underside Z'+('242.250; top Z243.750.' if mod else '170.000; top Z171.500.')],
         ['Support and board levels',('Tray boss top /rail underside Z248.250; rail top /crossbar underside Z250.250; crossbar top Z252.250; PCB underside Z260.250; PCB top Z262.750.' if mod else 'Tray boss top /rail underside Z176.000; rail top /crossbar underside Z178.000; crossbar top Z180.000; PCB underside Z188.000; PCB top Z190.500.')],
-        ['X adjustment','Crossbar slot 382.000 overall ×3.500 width, end R1.750. Permitted post centre X32–408. Catalog 8 mm M3 female–female posts attach from below the loose crossbar with M3 ×6 screws and 0.5 washers.'],
-        ['Y adjustment','Guide strips span Y219.2–447.2; 7.000 square nuts give centre limits Y222.7–443.7. Selected crossbar Y225.0,318.5,434.2.'],
+        ['X adjustment','Crossbar slot 382.000 overall ×3.500 width, end R1.750. Permitted post center X32–408. Catalog 8 mm M3 female–female posts attach from below the loose crossbar with M3 ×6 screws and 0.5 washers.'],
+        ['Y adjustment','Guide strips span Y219.2–447.2; 7.000 square nuts give center limits Y222.7–443.7. Selected crossbar Y225.0,318.5,434.2.'],
         ['Guide channel','7.200 clear guide gap for DIN562 M4 square nuts, nominal 7.000 AF ×2.200 high. Guide strips are 1.200 thick ×3.800 high ×228.000 long beneath the 2.000 rail.'],
         ['Guide-strip attachment','Factory-attach guide strips to the rail underside with the 7.200 gauge in place. Keep joint material outside the nut channel and sliding path. Load nuts from an open end before rail installation. Joint size and pitch require fabrication release.'],
         ['Tray bosses','Four bosses embossed 4.500 up from the 1.5 mm GPU tray at X20 and 420, Y208.2 and 458.2: DIA20 base, DIA10 top. Each carries an extruded M4 thread; the rails screw down onto them.'],

@@ -12,8 +12,12 @@ from sheetmetal import bounds
 
 def run(folder):
     parts=load(folder);rows=[]
-    for name in ('chassis_assembly','gpu_cartridge'):
+    for name in ('chassis_assembly','gpu_cartridge','front_cover'):
+        if not (folder/(name+'.step')).exists():
+            assert name == 'front_cover'
+            continue
         included=[p for p in parts if p['role'] in ('fabricated','purchased') and not p.get('optional') and (name!='gpu_cartridge' or p['moving'])]
+        if name == 'front_cover':included=[p for p in included if p['group']=='intake_grilles']
         source=cq.Compound.makeCompound([step_shape(p) for p in included])
         exported=cq.importers.importStep(str(folder/(name+'.step'))).val()
         error=max(abs(a-b) for a,b in zip(bounds(source),bounds(exported)))

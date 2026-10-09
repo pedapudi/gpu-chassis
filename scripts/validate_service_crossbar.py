@@ -88,6 +88,7 @@ def run(folder):
         checks['motion'].append(dict(operation='lid rearward slide then lift with bar installed',rearward_mm=dy,lift_mm=dz,collisions=hits))
     checks['clearances']=dict(lid_to_crossbar_screw_head_mm=bounds(lid['shape'])[5]-1.5-report['top_z_mm']-3.1,
         fixed_ledge_to_GPU_nose_mm=report['gpu_nose_y_mm']-report['fixed_bracket_y_mm'][1],
+        crossbar_to_GPU_nose_y_mm=report['gpu_nose_y_mm']-report['span_y_mm'][1],
         crossbar_to_GPU_top_mm=report['top_z_mm']-20-report['gpu_top_z_mm'])
     rear=next(p for p in parts if p['group']=='rear_vent')
     checks['clearances']['rear_frame_to_cartridge_mm']=bounds(rear['shape'])[1]-max(bounds(p['shape'])[4] for p in cartridge)

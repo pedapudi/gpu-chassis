@@ -1,4 +1,4 @@
-"""Check inward PSU geometry and mounting centres in exported STEP files."""
+"""Check inward PSU geometry and mounting centers in exported STEP files."""
 import json
 import sys
 from pathlib import Path

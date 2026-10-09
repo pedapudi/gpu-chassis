@@ -234,11 +234,11 @@ def _point(fn, xyz):
 
 
 def _add_bend_lines(path, bends):
-    """Mark bend centrelines as dashed lines on the cut layer and declare millimetre units."""
+    """Mark bend centerlines as dashed lines on the cut layer and declare millimeter units."""
     import ezdxf
     doc = ezdxf.readfile(str(path))
     if 'DASHED' not in doc.linetypes:
-        doc.linetypes.add('DASHED', pattern=[6.0, 4.0, -2.0], description='Bend centreline')
+        doc.linetypes.add('DASHED', pattern=[6.0, 4.0, -2.0], description='Bend centerline')
     doc.header['$INSUNITS'] = 4; doc.header['$MEASUREMENT'] = 1
     msp = doc.modelspace()
     for b in bends:

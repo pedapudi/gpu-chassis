@@ -10,7 +10,7 @@ def rear_details(parts, root, api):
     axes=[x for x,y in data['retention_hole_axes_xy_mm']];centres=[x-9.21 for x in axes];count=len(centres)
     rear=next(p for p in parts if p['name']==name)
     toe=next(p for p in parts if p['name']=='Upper_bank_toe_receiver')
-    # Each rear position is labelled with the card whose bracket occupies it.
+    # Each rear position is labeled with the card whose bracket occupies it.
     owners=[((bounds(p['shape'])[0]+bounds(p['shape'])[3])/2,p['name']) for p in parts if p['group']=='brackets']
     def card(x):
         centre,owner=min(owners,key=lambda q:abs(q[0]-x));assert abs(centre-x)<1e-3,(x,owner)
@@ -19,12 +19,12 @@ def rear_details(parts, root, api):
     para(f'{count} rear bracket positions. Position {count}, at the largest X, serves the leading single-width backplane socket; positions 1 to {count-1} serve ten dual-slot GPUs. Position 1 also aligns with the trailing single-width socket, which lies beneath the GPU 10 cooler; it can hold a card only when GPU 10 is absent. Every backplane socket therefore has a rear opening. Chassis openings below are design dimensions; the PCIe bracket and slot-pitch references do not certify the supplier backplane mounting datum.',32,H-82,W-64,11)
     from drawing_annotations import rear_elevation
     rear_elevation(rear['shape'],c,180+shift,True)
-    rows=[['Feature','Dimensions and location'],[f'{count} main PCIe apertures','15.000 wide × 100.500 high; nominal R0 corners. X centre = bracket axis. Bottom Z'+f'{196.68+shift:.3f}; top Z{297.18+shift:.3f}, 2.630 below the shelf bend tangent.'],['Bracket spacing','20.320 centre pitch; 40.640 per dual-slot card; 5.320 nominal web between 15.000 apertures. Every web joins the upper bend.'],[f'{count} tapped holes',f'M3 THRU the shelf and an extruded collar, normal Z. Tap drill DIA {data["tap_drill_diameter_mm"]:.3f}; collar OD {data["collar_outside_diameter_mm"]:.3f}, {data["collar_height_below_shelf_mm"]:.3f} below the shelf. Y474.080; X = bracket centre + 9.210.'],['4 side-return holes','DIA 3.400 / R1.700 THRU, normal X. Y477.200; Z'+f'{205+shift:.3f} and {290+shift:.3f}; two holes per side.']]
+    rows=[['Feature','Dimensions and location'],[f'{count} main PCIe apertures','15.000 wide × 100.500 high; nominal R0 corners. X center = bracket axis. Bottom Z'+f'{196.68+shift:.3f}; top Z{297.18+shift:.3f}, 2.630 below the shelf bend tangent.'],['Bracket spacing','20.320 center pitch; 40.640 per dual-slot card; 5.320 nominal web between 15.000 apertures. Every web joins the upper bend.'],[f'{count} tapped holes',f'M3 THRU the shelf and an extruded collar, normal Z. Tap drill DIA {data["tap_drill_diameter_mm"]:.3f}; collar OD {data["collar_outside_diameter_mm"]:.3f}, {data["collar_height_below_shelf_mm"]:.3f} below the shelf. Y474.080; X = bracket center + 9.210.'],['4 side-return holes','DIA 3.400 / R1.700 THRU, normal X. Y477.200; Z'+f'{205+shift:.3f} and {290+shift:.3f}; two holes per side.']]
     table(rows,32,288,[205,W-269],10)
     from annotated_geometry import planar,mark
     for start in range(0,count,11):
         new('GPU rear panel | numbered bracket and screw locations',name+'::axes')
-        para('Assembly coordinate view: X increases right. Position 1 has the smallest X. Numbers identify aperture centres in the adjacent schedule; tapped holes lie on the folded shelf at Y474.080. Bracket-bearing plane Z'+f'{top:.3f}.',32,H-82,W-64,11)
+        para('Assembly coordinate view: X increases right. Position 1 has the smallest X. Numbers identify aperture centers in the adjacent schedule; tapped holes lie on the folded shelf at Y474.080. Bracket-bearing plane Z'+f'{top:.3f}.',32,H-82,W-64,11)
         p,lo,hi=planar(c,rear['shape'],1,469,(35,180,640,500))
         rows=[['Position','Aperture X','Thread X','Card']]
         for i in range(start,min(start+11,count)):
@@ -32,7 +32,7 @@ def rear_details(parts, root, api):
             c.setFont('Helvetica-Bold',9);c.drawCentredString(xx,zz,str(i+1))
             rows.append([i+1,f'{x:.3f}',f'{axes[i]:.3f}',card(x)+(' or trailing single-width socket' if i==0 else '')])
         table(rows,710,H-150,[65,95,95,180],10)
-        para('Each aperture is 15 × 100.5; centre pitch 20.320. Tapped M3 hole offset +9.210 in X from its aperture. Each dual-slot GPU occupies two adjacent positions. These axes do not certify the supplier backplane datum.',710,215,420,11)
+        para('Each aperture is 15 × 100.5; center pitch 20.320. Tapped M3 hole offset +9.210 in X from its aperture. Each dual-slot GPU occupies two adjacent positions. These axes do not certify the supplier backplane datum.',710,215,420,11)
     span=data['bend_span_x_mm'];xw=(centres[-1]-7.5+centres[-2]+7.5)/2
     rows=[['Formed feature','Nominal specification'],['Rear web and integral upper shelf','1.200 sheet; one connected formed part. Upper shelf extends to Y481.000.'],['Top bend','90 degrees outward; inside R1.200, outside R2.400. Bend axis parallel X at Y471.400, Z'+f'{top-2.4:.3f}.'],['Tangencies','Vertical web tangent Z'+f'{top-2.4:.3f}; horizontal shelf tangent Y471.400. Flat bearing surface Z{top:.3f}.'],['Bend span',f'X{span[0]:.3f} to X{span[1]:.3f}, uninterrupted. Every web between apertures joins the bend. Each side return is formed at R1.200 and ends one thickness below the shelf bend; a relief slot 1.200 high separates the two bends.'],['Retention joint',f'GPU bracket 0.860 on the 1.200 shelf. The M3 thread runs through the shelf and a {data["collar_height_below_shelf_mm"]:.3f} extruded collar: {data["thread_length_mm"]:.3f} total. An M3 × 5 bracket screw projects {5-.86-data["thread_length_mm"]:.3f} below the collar at nominal dimensions, without a washer. Collar bottom Z{top-data["thread_length_mm"]:.3f}.'],['Thread forming','Pierce the collar pilot holes in the flat blank, form the shelf, then extrude and tap the collars. Each collar edge lies 0.63 from the bend tangent, inside the press-brake die footprint, so extrusion follows bending. No nuts or nut welds. Protect threads during finishing and qualify thread strength for tightening torque and repeated GPU service.'],['Forming access','Cut openings and pierce pilot holes first. Form the upper shelf before the side returns; confirm tooling access on a sample. Clamp the bracket-bearing datum while attaching the toe strip.']]
     from annotated_geometry import context_pages
@@ -55,12 +55,12 @@ def rear_details(parts, root, api):
     mark(c,p(469.35,top-1.15),'Outside R2.400',(660,615))
     mark(c,p(470.45,top-1.8),'Inside R1.200',(660,575))
     mark(c,p(475.6,top-2.2),f'M3: 1.200 shelf + {data["collar_height_below_shelf_mm"]:.3f} collar',(660,535))
-    para(f'Section X{station:.3f}, through a tapped hole over an interior web. Y increases right; Z increases up. Sheet 1.200; bend 90 degrees outward. Bend centre Y471.400, Z'+f'{top-2.4:.3f}. Vertical tangent at that Z; horizontal tangent Y471.400. The web continues below the bend.',650,490,470,12)
+    para(f'Section X{station:.3f}, through a tapped hole over an interior web. Y increases right; Z increases up. Sheet 1.200; bend 90 degrees outward. Bend center Y471.400, Z'+f'{top-2.4:.3f}. Vertical tangent at that Z; horizontal tangent Y471.400. The web continues below the bend.',650,490,470,12)
     para(f'Retention joint: 0.860 bracket on a {data["thread_length_mm"]:.3f} tapped thread (1.200 shelf + {data["collar_height_below_shelf_mm"]:.3f} collar). An M3 × 5 bracket screw projects {5-.86-data["thread_length_mm"]:.3f} beyond the collar without a washer.',650,340,470,11)
     new('GPU toe receiver | engagement and factory attachment',toe['name']+'::joint')
     view(toe['shape'],(32,360,1100,335),(0,0,1),'Top (+Z): comb strip inside rear face; open notches face +Y.','toe_detail')
     tx=data['toe_receiver_x_mm']
-    rows=[['Feature','Dimensions / assembly requirement'],['Locator strip',f'1.500 thick; X{tx[0]:.3f} to X{tx[1]:.3f}; Y{bounds(toe["shape"])[1]:.3f} to Y469.000 (12.000 deep). Underside Z'+f'{184.05+shift:.3f}; top Z{185.55+shift:.3f}.'],[f'{count} open toe notches','10.790 wide in X × 1.300 deep in Y, square nominal corners; open to Y469.000. Centres use the bracket X schedule; pitch 20.320.'],['Reference toe fit','10.190 × 0.860 bracket toe: 0.600 total X clearance and 0.440 total Y clearance. The toe projects 1.000 below the strip underside.'],['Factory joint to rear web',f'Underside stitch fillet weld: nominal 1 mm leg × 6 mm length, at each of the {count-1} inter-slot midpoints. Weld along X at Y469, Z'+f'{184.05+shift:.3f}. Keep welds out of toe notches; deburr before card installation.'],['Why it remains separate','The toe datum lies above the lower edge of the rear web, so a return at that edge cannot locate the toe. A separate flat strip sets this height without forming individual lanced tabs.'],['Assembly and service','Fixture the strip at its specified coordinates relative to the bracket-bearing surface. Weld before attaching the rear panel to the tray and before coating. Inspect with a bracket gauge. The strip stays on the cartridge during card insertion and vertical removal.']]
+    rows=[['Feature','Dimensions / assembly requirement'],['Locator strip',f'1.500 thick; X{tx[0]:.3f} to X{tx[1]:.3f}; Y{bounds(toe["shape"])[1]:.3f} to Y469.000 (12.000 deep). Underside Z'+f'{184.05+shift:.3f}; top Z{185.55+shift:.3f}.'],[f'{count} open toe notches','10.790 wide in X × 1.300 deep in Y, square nominal corners; open to Y469.000. Centers use the bracket X schedule; pitch 20.320.'],['Reference toe fit','10.190 × 0.860 bracket toe: 0.600 total X clearance and 0.440 total Y clearance. The toe projects 1.000 below the strip underside.'],['Factory joint to rear web',f'Underside stitch fillet weld: nominal 1 mm leg × 6 mm length, at each of the {count-1} inter-slot midpoints. Weld along X at Y469, Z'+f'{184.05+shift:.3f}. Keep welds out of toe notches; deburr before card installation.'],['Why it remains separate','The toe datum lies above the lower edge of the rear web, so a return at that edge cannot locate the toe. A separate flat strip sets this height without forming individual lanced tabs.'],['Assembly and service','Fixture the strip at its specified coordinates relative to the bracket-bearing surface. Weld before attaching the rear panel to the tray and before coating. Inspect with a bracket gauge. The strip stays on the cartridge during card insertion and vertical removal.']]
     table(rows,32,348,[215,W-279],10)
     para('The proposed toe weld requires prototype qualification for strength, distortion and bracket-gauge acceptance. Qualify forming tolerances and thread strength separately. Rack ears use screw joints.',32,105,W-64,10)
 
@@ -85,7 +85,7 @@ def enlarged_details(api,lower=False):
         c.setDash(4,3);c.line(xx+w/2,y-10,xx+w/2,y+h+30);c.setDash()
     dimension(x,y-25,x+w,y-25,'15.000')
     dimension(x-28,y,x-28,y+h,f'{height:.3f}',True)
-    dimension(x+w/2,y+h+30,x+w/2+pitch,y+h+30,'20.320 centres')
+    dimension(x+w/2,y+h+30,x+w/2+pitch,y+h+30,'20.320 centers')
     dimension(x+w,y+90,x+pitch,y+90,'5.320 web')
     para(f'MAIN APERTURES<br/>{count} × 15.000 × {height:.3f}<br/>Nominal corner R0<br/>Bracket width 18.420<br/>1.710 overlap per side',335,595,230,12)
     c.setFont('Helvetica-Bold',12);c.drawString(660,680,'RETENTION SHELF - TOP VIEW')

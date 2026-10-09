@@ -90,7 +90,7 @@ def export_openscad(parts,folder):
             src_hi=[max(v[i] for v in vs) for i in range(3)]
             pts=','.join('[%s]'%','.join(f'{round(c-o,6):g}' for c,o in zip(v,origin)) for v in vs)
             faces=','.join(f'[{c},{b},{a}]' for a,b,c in fs)
-            (sc/'parts'/f'{m}.scad').write_text(f'// Millimetres. Nominal faceted reference; STEP preserves analytic surfaces.\nmodule {m}(){{polyhedron(points=[{pts}],faces=[{faces}],convexity=20);}}\n{m}();\n')
+            (sc/'parts'/f'{m}.scad').write_text(f'// Millimeters. Nominal faceted reference; STEP preserves analytic surfaces.\nmodule {m}(){{polyhedron(points=[{pts}],faces=[{faces}],convexity=20);}}\n{m}();\n')
             stl=sc/'compiled'/f'{m}.stl'
             r=subprocess.run([str(openscad),'-o',str(stl),str(sc/'parts'/f'{m}.scad')],capture_output=True,text=True)
             assert r.returncode==0 and stl.exists(),(m,r.stderr[-400:])
@@ -109,7 +109,7 @@ def export_openscad(parts,folder):
         rgb=', '.join(f'{int(p["color"][i:i+2],16)/255:.4g}' for i in (1,3,5))
         cond=condition(p);z=f'{origin[2]:g}'+(' + cartridge_lift' if p['moving'] else '')
         lines.append((f'if ({cond}) ' if cond else '')+f'color([{rgb}]) translate([{origin[0]:g},{origin[1]:g},{z}]) {m}();')
-    head=['use <parts/%s.scad>'%r[0] for r in results]+['// Assembly controls. All lengths are millimetres.','show_lid=false;','show_reference_hardware=true;','show_gpus=true;','show_cables=false;','show_fasteners=true;','show_oem_reference=true;','cartridge_lift=0;','// OEM interface dimensions remain unverified; see the measurement drawing.']
+    head=['use <parts/%s.scad>'%r[0] for r in results]+['// Assembly controls. All lengths are millimeters.','show_lid=false;','show_reference_hardware=true;','show_gpus=true;','show_cables=false;','show_fasteners=true;','show_oem_reference=true;','cartridge_lift=0;','// OEM interface dimensions remain unverified; see the measurement drawing.']
     (sc/'assembly.scad').write_text('\n'.join(head+lines)+'\n')
     checks=[r[2] for r in results]
     passed=all(c['watertight'] and c['bounds_error_mm']<.01 and c['relative_volume_error']<.01 for c in checks)

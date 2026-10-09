@@ -42,7 +42,8 @@ with zipfile.ZipFile(args.bundle) as archive:
             shutil.copyfileobj(src, dst)
 if (args.out / 'compact-package.json').is_file():
     spec = json.loads((args.out / 'compact-package.json').read_text())
-    required = ['index.html', 'hardware.html', 'full-chassis-drawings.pdf', 'module-drawings.pdf']
+    required = ['index.html', 'hardware.html', 'full-chassis-drawings.pdf', 'module-drawings.pdf',
+                'nine-u/front_cover.step', 'modular/front_cover.step']
     for variant in spec['variants']:
         required += [variant + '/' + name for name in ('interactive_model.html', 'model.js', 'chassis_assembly.step', 'parts-index.json', 'revision-validation.json')]
         check = json.loads((args.out / variant / 'revision-validation.json').read_text())

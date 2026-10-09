@@ -12,8 +12,9 @@ SCREWS = {
     ('M4', 10): '92005A220',
 }
 DESCRIPTIONS = {
+    '97447A801': '3.2 mm blind rivet, 1.5-3.5 mm grip',
     '92010A116': 'M3 x 6 flat-head Phillips screw, 90 deg',
-    '92871A007': '5 mm spacer, 6 OD, 3.2 bore',
+    '92871A003': '3 mm spacer, 6 OD, 3.2 bore',
     '92871A009': '6 mm spacer, 6 OD, 3.2 bore',
     '92871A011': '8 mm spacer, 6 OD, 3.2 bore',
     '94459A140': 'M3 heat-set insert, 5.7 long',

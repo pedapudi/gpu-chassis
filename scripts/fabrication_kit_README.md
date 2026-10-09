@@ -6,7 +6,7 @@ This kit contains the files a sheet-metal fabricator needs to quote and make the
 
 - `parts_list.csv`: one row per distinct sheet blank (item `SM###`). Each row gives the source piece name, the assemblies that use it, material, thickness, nearest gauge, developed blank size, bend count, inside radius, K-factor, quantity for each configuration, tapping, joining, finish, fabrication holds and a SendCutSend review.
 - `step/`: one formed 3D STEP model per item, moved to its own origin. Most fabricators develop the blank from this file with their own bend tooling.
-- `flat/`: one developed flat-pattern DXF per item, in millimetres. Cut geometry is solid; bend centrelines are dashed lines on the same layer. The flat patterns use inside radius equal to thickness and K-factor 0.40. A fabricator with different tooling must re-develop the blanks from the STEP files.
+- `flat/`: one developed flat-pattern DXF per item, in millimeters. Cut geometry is solid; bend centerlines are dashed lines on the same layer. The flat patterns use inside radius equal to thickness and K-factor 0.40. A fabricator with different tooling must re-develop the blanks from the STEP files.
 - `hardware_list.csv`: purchased screws, square nuts, washers and standoffs, with quantities per configuration. Every item is a common stock part.
 - `tapped_thread_schedule.csv`: every formed thread, its size, the sheet piece that carries it and its position, for the 9U and module base configurations.
 - `drawings/`: the complete drawing set for each configuration, including a flat-pattern sheet for every piece.

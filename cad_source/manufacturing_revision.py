@@ -2,7 +2,7 @@
 
 The steel GPU tray carries the load. Two printed adapters locate metric
 spacers and heat-set inserts; changing the PCB pattern changes only the print.
-All coordinates are exported assembly coordinates, in millimetres.
+All coordinates are exported assembly coordinates, in millimeters.
 """
 import io
 import json
@@ -46,7 +46,9 @@ def step_shape(part):
         shape=cq.Workplane(obj=shape).edges('|Y').fillet(part['corner_radius_mm']).val()
     for x,z,w,h in part.get('blank_notches_xz',[]):
         shape=shape.cut(box(x,b[1]-1,z,w,b[4]-b[1]+2,h))
-    return shape.cut(cq.Compound.makeCompound([cyl(x,b[1]-1,z,1.7,b[4]-b[1]+2,(0,1,0)) for x,z in part['mounting_holes_xz']]))
+    holes = [cyl(x,b[1]-1,z,1.7,b[4]-b[1]+2,(0,1,0)) for x,z in part['mounting_holes_xz']]
+    holes += [cyl(x,b[1]-1,z,1.65,b[4]-b[1]+2,(0,1,0)) for x,z in part.get('rivet_holes_xz',[])]
+    return shape.cut(cq.Compound.makeCompound(holes))
 
 
 def add(parts, name, shape, group='hardware', role='purchased', moving=False, color='#71808b', **data):
@@ -128,7 +130,7 @@ def replace_grille(parts, modular):
     fixes = ([(20.,z0+8.75),(220.,z0+8.75),(420.,z0+8.75),(7.5,z0+202.75),(432.5,z0+202.75)] if modular
              else [(x,z) for x in (15.,425.) for z in (32.,138.,270.,383.)])
     thickness=.9144  # Catalog 20 ga / 0.036 in; purchased stock, all assembly dimensions metric.
-    mesh_back=-5.8
+    mesh_back=-3.8
     mesh_front=mesh_back-thickness
     frame_front=mesh_front-1.5
     frame=box(0,frame_front,z0,440,1.5,h).cut(box(20,frame_front-1,z0+20,400,4,h-40))
@@ -149,11 +151,11 @@ def replace_grille(parts, modular):
     mesh=cq.Solid.extrudeLinear(outer,holes,cq.Vector(0,thickness,0))
     for x,z in fixes:
         frame=frame.cut(cyl(x,frame_front-1,z,1.7,5,(0,1,0)))
-        spacer=cyl(x,-5,z,3,5,(0,1,0)).cut(cyl(x,-6,z,1.6,7,(0,1,0)))
-        washer=cyl(x,-5.8,z,4.5,.8,(0,1,0)).cut(cyl(x,-6,z,1.6,2,(0,1,0)))
-        add(parts,f'Front_cover_metric_5mm_spacer_{x}_{z}',spacer,'intake_fasteners',catalog='92871A007')
+        spacer=cyl(x,-3,z,3,3,(0,1,0)).cut(cyl(x,-4,z,1.6,5,(0,1,0)))
+        washer=cyl(x,-3.8,z,4.5,.8,(0,1,0)).cut(cyl(x,-4,z,1.6,2,(0,1,0)))
+        add(parts,f'Front_cover_metric_3mm_spacer_{x}_{z}',spacer,'intake_fasteners',catalog='92871A003')
         add(parts,f'Front_cover_M3_large_washer_{x}_{z}',washer,'intake_fasteners',specification='ISO 7093 M3, 9 mm OD x 0.8 mm')
-        add(parts,f'Front_frame_M3x16_{x}_{z}',screw((x,frame_front,z),(0,1,0),'M3',16),'intake_fasteners',thread_host=hosts.get((round(x,3),round(z,3))))
+        add(parts,f'Front_frame_M3x12_{x}_{z}',screw((x,frame_front,z),(0,1,0),'M3',12),'intake_fasteners',thread_host=hosts.get((round(x,3),round(z,3))))
     add(parts,'Front_full_face_mesh_clamping_frame',frame,'intake_grilles','fabricated',color='#304553',thickness_mm=1.5,
         notes='Remove frame and mesh for fan screw access. No fan load transfers through mesh.')
     add(parts,'Stock_hex_perforated_mesh_cut_to_size',mesh,'intake_grilles','fabricated',color='#88949a',thickness_mm=thickness,

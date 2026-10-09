@@ -1,13 +1,13 @@
 # GPU chassis
 
-Sheet-metal models and interactive engineering viewers for a 9U full chassis and a 5U upper module for the SilverStone RM53-502. Both retain a twenty-one-position GPU cartridge referenced to the twelve-socket Miwin backplane. Replaceable 8.5 mm printed adapters and standard 8 mm metric spacers locate the PCB. Separate fan carriers, screw-mounted rack ears and a removable stock-mesh cover simplify fabrication.
+Sheet-metal models and interactive engineering viewers for a 9U full chassis and a 5U upper module for the SilverStone RM53-502. Both retain a twenty-one-position GPU cartridge referenced to the twelve-socket Miwin backplane. Replaceable 8.5 mm printed adapters and standard 8 mm metric spacers locate the PCB. Separate fan carriers, screw-mounted rack ears and a riveted frame-and-mesh front cover simplify fabrication. The cover removes as one assembly using five screws on the module or eight on the full chassis.
 
 - [Open both viewers](https://pedapudi.github.io/gpu-chassis/)
 - [Construction, metric hardware and assembly](MANUFACTURING.md)
 - [Interface dimensions and qualification limits](ENGINEERING.md)
 - [Drawing coverage](DRAWING_COVERAGE.md)
 
-Each chassis has one compact drawing book covering its fan options. Shared parts appear once. Individual STEP files contain manufactured chassis parts and printed adapters; assembly STEP files contain chassis structure and hardware. GPUs, motherboards, fans, cables and hoses remain optional viewer references and have no separate STEP exports. Select a part in the viewer to download its STEP.
+Each chassis has one compact drawing book covering its fan options. Shared parts appear once. Individual STEP files contain manufactured chassis parts and printed adapters; assembly STEP files contain chassis structure and hardware. GPUs, motherboards, fans, cables and hoses remain optional viewer references and have no separate STEP exports. Select a part in the viewer to download its STEP. Each viewer also links to a front-cover assembly STEP, including the frame, mesh, rivets and backing washers.
 
 Each eight-page book has a parts list on sheet 2 beside an annotated assembly view. The list gives drawing references, linked McMaster-Carr item numbers and quantities for each fan option, including modeled fasteners and catalog spacers. Matching parts-list and hardware-list CSV files include supplier URLs. Custom parts and equipment-supplied screws are identified separately. Electronics, cooling equipment and installation consumables require a separate kit.
 
@@ -27,6 +27,7 @@ Use a virtual environment with `cad_source/requirements.txt` and `drawing_source
 python cad_source/rebuild.py --out work/baseline --variant both
 python scripts/build_manufacturing_revision.py work/baseline work/package
 python scripts/validate_manufacturing_revision.py work/baseline work/package
+python scripts/validate_front_clearance.py work/package/nine-u work/package/nine-u-180 work/package/nine-u-120 work/package/modular work/package/modular-120-80 work/package/modular-180
 python scripts/validate_service_crossbar.py work/package/nine-u work/package/nine-u-180 work/package/nine-u-120 work/package/modular work/package/modular-120-80 work/package/modular-180
 python scripts/audit_fastener_access.py work/package/nine-u work/package/nine-u-180 work/package/nine-u-120 work/package/modular work/package/modular-120-80 work/package/modular-180
 python scripts/validate_inward_psu.py work/package/nine-u work/package/nine-u-180 work/package/nine-u-120

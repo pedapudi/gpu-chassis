@@ -221,8 +221,11 @@ def consolidate(source, output):
     # Assemblies remain intact; file cleanup must not change assembly membership or placement.
     assemblies = []
     for variant in VARIANTS:
-        for name in ('chassis_assembly.step', 'gpu_cartridge.step'):
+        for name in ('chassis_assembly.step', 'gpu_cartridge.step', 'front_cover.step'):
             rel = variant+'/'+name
+            if rel not in source_hashes:
+                assert name == 'front_cover.step'
+                continue
             assert hashlib.sha256((output/rel).read_bytes()).hexdigest() == source_hashes[rel]
             assemblies.append(rel)
     assert all(hashlib.sha256((source/rel).read_bytes()).hexdigest()==digest for rel,digest in source_hashes.items())

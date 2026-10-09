@@ -24,9 +24,13 @@ from rear_mesh_closure import apply as fixed_rear_closure
 from inward_psu import apply as inward_psu
 from front_carrier_fasteners import apply as front_carrier_fasteners
 from complete_front_plate import apply as complete_front_plate
+from front_clearance import apply as front_clearance
+from riveted_front_cover import apply as riveted_front_cover
 
 
 def export(parts, report, output):
+    front_clearance(parts,report)
+    riveted_front_cover(parts,report)
     custom_support_interface(parts,report['service_crossbar'])
     joints=front_carrier_fasteners(parts)
     if joints:report['front_carrier_side_joints']=joints
@@ -69,6 +73,12 @@ def export(parts, report, output):
     for p in parts:
         if p['moving'] and p['role'] in ('fabricated','purchased'):cassette.add(p['shape'],name=p['name'])
     cassette.export(str(output/'gpu_cartridge.step'))
+    if report['configuration'] in ('nine-u','modular'):
+        cover=cq.Assembly(name='front_cover')
+        for p in parts:
+            if p['group']=='intake_grilles':
+                cover.add(step_shape(p),name=p['name'])
+        cover.export(str(output/'front_cover.step'))
     (output/'parts-index.json').write_text(json.dumps(rows,indent=2))
     interface=report['service_crossbar']['custom_support_interface']
     (output/'crossbar-interface.json').write_text(json.dumps(interface,indent=2))

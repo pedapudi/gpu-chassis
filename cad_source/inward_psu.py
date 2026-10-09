@@ -25,7 +25,7 @@ def apply(parts):
     # Retain a 6 mm inner return along the fan; full-height ends locate the PSU.
     cradle['shape']=cradle['shape'].cut(box(344,313,16,3,138,8)).clean()
     cradle['notes']='1.5 mm steel. Inner return top Z16 from Y313 to Y451 clears the inward intake; remaining end returns retain height Z22. Floor top Z10 locates the PSU.'
-    rear['notes']='PSU fan faces the chassis centre. Four diameter 3.9 clearance holes at (X,Z): (354,154), (354,16), (428,40), (418,154). Use PSU-supplied #6-32 screws. Pattern and aperture rotate together about X391/Z85; this is not a mirror.'
+    rear['notes']='PSU fan faces the chassis center. Four diameter 3.9 clearance holes at (X,Z): (354,154), (354,16), (428,40), (418,154). Use PSU-supplied #6-32 screws. Pattern and aperture rotate together about X391/Z85; this is not a mirror.'
     body['notes']=body.get('notes','')+' Solid PSU-side wall; PSU draws from inside the chassis.'
     report=dict(rotation_degrees=180,rotation_axis='Y through X391/Z85',
                 envelope_mm=[175,150,86],assembly_envelope_mm=[348,294,10,434,469,160],

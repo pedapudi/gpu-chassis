@@ -28,6 +28,9 @@ def run(root,node):
         assert not any(p['name'].startswith(('GPU_stabilizer_finger_','Stabilizer_silicone_pad_','Full_chassis_upper_intake_insert_','Intake_insert_')) for p in models)
         subprocess.run([node,'--check',str(folder/'model.js')],check=True,capture_output=True)
         family='module' if variant.startswith('modular') else 'full-chassis'
+        assert (root/('modular' if family=='module' else 'nine-u')/'front_cover.step').is_file()
+        viewer=(folder/'interactive_model.html').read_text()
+        assert 'id="coverStep"' in viewer and '/front_cover.step' in viewer
         listed=list(csv.DictReader((root/(family+'-parts-list.csv')).open()))
         actual=collections.Counter(p['drawing_family'] for p in manifest)
         assert {p['part']:int(p[variant]) for p in listed if int(p[variant])}==dict(actual)
@@ -38,6 +41,7 @@ def run(root,node):
             return 'PSU factory screw' if '#6-32' in p['specification'] else 'Case fan screw'
         expected=collections.Counter()
         for p in hardware:expected[hardware_key(p)]+=int(p['quantity'])
+        assert expected['97447A801']==12
         supplied=collections.Counter()
         for p in family_hardware:
             if int(p[variant]):supplied[hardware_key(p)]+=int(p[variant])
@@ -56,6 +60,13 @@ def run(root,node):
         assert not outside,outside
         fulltext='\n'.join(p.get_text() for p in doc)
         for phrase in ('20.32 pitch','100.5','edge offsets','opening overall','square mounting','40.64'):assert phrase in fulltext,(family,phrase)
+        for phrase in ('3 mm spacer','DIA 4.22, R2.11','DIA 3.4, R1.7','40.165','15.4','riveted cover','DIA 3.3','97447A801'):
+            assert phrase in ' '.join(fulltext.split()),(family,phrase)
+        for phrase in ('Local and assembly coordinates: crossbar-interface.csv','Mask coating at electrical bonding contacts'):
+            assert phrase not in fulltext,(family,phrase)
+        if family=='full-chassis':
+            for phrase in ('DIA 76, R38','9 long x 5.5 wide, end R2.75','138 x 57','WRX90E-SAGE SE motherboard tray (EEB)'):
+                assert phrase in ' '.join(fulltext.split()),phrase
         drawings.append(dict(family=family,pages=8,outside_text=outside,catalog_links=sum(len(p.get_links()) for p in doc),direct_dimension_labels_verified=True,rendered_review='Assembly, rear interfaces, fan patterns and all part-detail sheets reviewed after adding dimensions; no pages added.'))
     (root/'package-consistency.json').write_text(json.dumps(rows,indent=2))
     (root/'viewer-validation.json').write_text(json.dumps(rows,indent=2))

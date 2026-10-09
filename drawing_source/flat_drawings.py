@@ -35,7 +35,7 @@ def flat_pattern_pages(part_name, root, api):
         new(part_name.replace('_', ' ') + ' | flat pattern' + ('' if r['piece'] == part_name else ' | ' + r['piece'].replace('_', ' ')), part_name + '::flat')
         size = r['flat_size_mm']
         para(f"Developed blank {fmt(size[0])} × {fmt(size[1])} × {fmt(r['thickness_mm'])} thick; area {fmt(r['flat_area_mm2'])} mm². "
-             f"Bend allowance uses K-factor {r['k_factor']} and the listed inside radius. Dashed lines are bend centrelines; UP bends toward the viewer of this sheet. "
+             f"Bend allowance uses K-factor {r['k_factor']} and the listed inside radius. Dashed lines are bend centerlines; UP bends toward the viewer of this sheet. "
              f"Cut every hole and cutout in the flat blank; file flat_patterns/{r['dxf']}. Confirm radius and K-factor with the forming tooling before cutting.",
              32, H - 82, W - 64, 10)
         p, lo, hi = planar(c, face, 2, 0, (35, 150, 700, 520))

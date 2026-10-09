@@ -6,13 +6,13 @@ The full chassis body is 440 x 485 x 399.25 mm. The RM53-502 upper module is 440
 
 Exported X0 is the body left in the front view. Y0 is the fan-carrier plane and Z0 is the full-chassis underside. The front view looks toward positive Y. The exterior rear view looks toward negative Y, so X decreases to the viewer's right. In that rear view the PSU is on the left, I/O and exhaust are central, and motherboard PCIe positions are on the right. Inside-face coordinate views use positive X to the right and are labeled accordingly.
 
-The rack ears extend beyond the 440 mm body to a 482.6 mm rack face. The removable mesh cover projects 8.2144 mm forward of Y0, excluding screw heads. Rack rails or a rated shelf must support the populated chassis; the ears and OEM lid screws are not a qualified support by themselves.
+The rack ears extend beyond the 440 mm body to a 482.6 mm rack face. The removable mesh cover projects 6.2144 mm forward of Y0, excluding screw heads. Rack rails or a rated shelf must support the populated chassis; the ears and OEM lid screws are not a qualified support by themselves.
 
 ## GPU interfaces
 
 The reference Miwin MG-SW510B PCB measures 429 x 225 x 2.5 mm. Its twelve sockets span 406.4 mm: ten double-width positions on 40.64 mm pitch and one single-width socket 20.32 mm beyond each end. The carrier has twenty-one rear bracket positions on 20.32 mm pitch. Ten dual-slot GPUs occupy twenty positions; the leading single-width socket uses the remaining position. The trailing socket shares a rear position with the last GPU cooler and is usable only when that GPU is absent.
 
-Each upper rear aperture is 15.000 x 100.500 mm, leaving a 5.320 mm web. These are chassis aperture dimensions, distinct from the 18.420 mm bracket width. The M3 retention axes are at Y474.080, each 9.210 mm in positive X from its bracket centre. Four side-return holes are diameter 3.400. The integral shelf uses 1.2 mm sheet with an R1.2 inside bend and R2.4 outside bend.
+Each upper rear aperture is 15.000 x 100.500 mm, leaving a 5.320 mm web. These are chassis aperture dimensions, distinct from the 18.420 mm bracket width. The M3 retention axes are at Y474.080, each 9.210 mm in positive X from its bracket center. Four side-return holes are diameter 3.400. The integral shelf uses 1.2 mm sheet with an R1.2 inside bend and R2.4 outside bend.
 
 The shelf retains its formed M3 threads where standard press-nut edge distances cannot be met without changing the bracket interface. The nominal collar is 3.7 mm OD and extends 1.3 mm below the shelf. Its 2.5 mm tap-drill bore gives 2.5 mm total threaded length with the sheet. GPU bracket screws are M3 x 5. Qualify tightening torque and repeated service before release.
 
@@ -24,11 +24,11 @@ Standard socket pitch is an explicit design assumption. PCB holes, component loc
 
 ## GPU stabilization and service
 
-The removable crossbar sits ahead of the GPU noses. Its fixed ledges end at Y191.5; reference cards start at Y200.4. Remove the crossbar before vertical card or cartridge extraction. Four top-access M4 screws release the bar. Twenty captive M3 threads support custom printed retainers. Crossbar stiffness, contact loads and the removal path with a custom retainer require physical qualification. The card envelopes do not establish safe contact lands.
+The removable crossbar sits ahead of the GPU noses. Its fixed ledges end at Y181.5; reference cards start at Y200.4. Remove the crossbar before vertical card or cartridge extraction. Four top-access M4 screws release the bar. Twenty captive M3 threads support custom printed retainers. Crossbar stiffness, contact loads and the removal path with a custom retainer require physical qualification. The card envelopes do not establish safe contact lands.
 
 ## Lower motherboard, PSU and cooling
 
-The lower rear has eight case apertures on 20.32 mm pitch. Its I/O shield opening is 158.75 x 44.45 mm. The tray has ten nominal mounting positions selected for the WRX90 reference board: A, C, F, G, H, K, M, X, Y and Z. Confirm these against the physical motherboard and its integrated I/O shield.
+The lower rear has eight case apertures on 20.32 mm pitch. Its I/O shield opening is 158.75 x 44.45 mm. ASUS identifies the [WRX90E-SAGE SE as an EEB motherboard](https://www.asus.com/us/motherboards-components/motherboards/workstation/pro-ws-wrx90e-sage-se/techspec/), nominally 305 x 330 mm. The tray has ten nominal mounting positions selected for that board: A, C, F, G, H, K, M, X, Y and Z. Confirm these against the physical motherboard and its integrated I/O shield.
 
 The tray is not a universal ATX or SSI EEB mounting tray. ATX positions J and L are absent; their assembly coordinates are X318.65/Y301.95 and X161.17/Y229.56 mm. Seven alternate SSI EEB positions are also absent. EATX boards require a specific board drawing; the form-factor label alone does not establish hole compatibility. The audit compares the exported tray STEP against [ATX 2.2, Figures 2-3](https://analytika.sk/fileadmin/user_upload/developer_specs_atx2_2.PDF) and [SSI EEB 2011, Figure 2 and section 3.1](https://www.snia.org/sites/default/files/SSIF/2018-05-31/SSI%20EEB%202011%201.0.1.pdf). Adding these positions requires a tray revision; the present STEP retains the board-specific pattern.
 
@@ -67,3 +67,5 @@ CAD checks cover nominal solid validity, changed-part intersections, preserved i
 The 9U chassis has three complete fan plates: 6x120, 2x180 and 3x120. Each plate includes the lower AIO mounting pattern and uses ten side joints with M3 press nuts in diameter 4.22 installation holes. Side-hole axes lie at Y12 and Z22, 148, 205, 290 and 381.45 mm on both walls. Fit the nuts before installing the plate. All three plates use the same removable mesh cover. To exchange a plate, remove the mesh cover, detach the fans and radiator, and release the ten side screws.
 
 The module's three front plates share their side attachment pattern and mesh cover. Each configuration requires its matching fan plate and fan hardware. Shared STEP files preserve the formed-part handedness and store assembly placement separately.
+
+The front cover consists of a frame and stock mesh joined by 3.2 mm blind rivets with large backing washers. Each front cover uses twelve rivets. Their factory heads face inward, leaving 2.2 mm nominal clearance to the fan carrier. The outside formed tails use a 6.5 mm diameter by 3 mm clearance envelope. Verify a sample riveted joint before production.

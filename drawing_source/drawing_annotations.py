@@ -36,7 +36,7 @@ def rear_elevation(shape,c,base_z,upper=True):
                 for v in points[1:]:path.lineTo(*p(v.x,v.z))
                 c.drawPath(path)
     count=21 if upper else 8;centres=[(12.645 if upper else 13.345)+20.32*i for i in range(count)];zlo=base_z+16.68 if upper else 23.75;height=100.5 if upper else 103;zhi=zlo+height
-    # The upper panel shares the same bracket centres as the lower bank.
+    # The upper panel shares the same bracket centers as the lower bank.
     x=centres[-1]
     dimension(c,p(x+7.5,zlo),p(x-7.5,zlo),'15.000',offset=-29)
     dimension(c,p(x+7.5,zlo),p(x+7.5,zhi),f'{height:.3f}',offset=-32,vertical=True)

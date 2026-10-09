@@ -18,9 +18,21 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'cad_source'))
 from manufacturing_revision import load, save, revise, step_shape, VARIANTS
 from sheetmetal import bounds, sheet_parts
 from gpu_geometry import neutral_headers
+from catalog_hardware import assign
+from service_crossbar import round_rack_ears, bolt_on_handholds, shorten_lid_guide_screws
+from rear_mesh_closure import apply as fixed_rear_closure
 
 
 def export(parts, report, output):
+    bolt_on_handholds(parts)
+    shorten_lid_guide_screws(parts)
+    closure=fixed_rear_closure(parts)
+    if closure:report['fixed_rear_closure']=closure
+    report['service_crossbar']['removal']='Remove lid, four crossbar top screws and crossbar; disconnect all cartridge harnesses; release four front M4 and four rear-side M3 cartridge screws; lift vertically with the rear closure and its fasteners installed.'
+    retained_names={p['name'] for p in parts}
+    report['panel_threads']=[r for r in report['panel_threads'] if r['host'] in retained_names]
+    assign(parts)
+    round_rack_ears(parts)
     output.mkdir(parents=True,exist_ok=True)
     save(parts,output)
     (output/'manufacturing-changes.json').write_text(json.dumps(report,indent=2))
@@ -36,13 +48,17 @@ def export(parts, report, output):
         rows.append(dict(part=p['name'],group=p['group'],file='parts/'+target.name,
                          bounds_mm=[round(v,4) for v in bounds(p['shape'])],
                          volume_mm3=round(s.Volume(),4),solid_count=len(s.Solids()),
-                         notes=p.get('notes',''),catalog=p.get('catalog','')))
+                         notes=p.get('notes',''),catalog=p.get('catalog',''),optional=p.get('optional',False),drawing_family=p.get('drawing_family',p['name'])))
     assembly=cq.Assembly(name='chassis_assembly')
+    stabilized=cq.Assembly(name='chassis_with_gpu_stabilizers')
     included=[]
     for p in parts:
         if p['role'] not in ('fabricated','purchased'):continue
-        c=p['color'];assembly.add(step_shape(p),name=p['name'],color=cq.Color(*[int(c[i:i+2],16)/255 for i in (1,3,5)]));included.append(p['name'])
+        c=p['color'];color=cq.Color(*[int(c[i:i+2],16)/255 for i in (1,3,5)])
+        stabilized.add(step_shape(p),name=p['name'],color=color)
+        if not p.get('optional'):assembly.add(step_shape(p),name=p['name'],color=color);included.append(p['name'])
     assembly.export(str(output/'chassis_assembly.step'))
+    stabilized.export(str(output/'chassis_with_gpu_stabilizers.step'))
     cassette=cq.Assembly(name='gpu_cartridge')
     for p in parts:
         if p['moving'] and p['role'] in ('fabricated','purchased'):cassette.add(p['shape'],name=p['name'])
@@ -54,7 +70,7 @@ def export(parts, report, output):
         stl=' · <a href="'+file[:-5]+'.stl">STL for printing</a>' if r['group']=='printed_adapter' else ''
         links.append('<li><a href="'+file+'">'+name.replace('_',' ')+'</a>'+stl+'</li>')
     (folder/'index.html').write_text('<!doctype html><meta charset="utf-8"><title>Chassis part STEP files</title><style>body{font:16px system-ui;max-width:1000px;margin:40px auto;padding:20px}li{margin:12px 0}a{color:#176483}</style><a href="../interactive_model.html">3D viewer and drawings</a><h1>Chassis part STEP files</h1><p>Manufactured chassis parts. Component fit references are excluded.</p><ul>'+''.join(links)+'</ul>')
-    hardware=Counter()
+    hardware=Counter();optional_hardware=Counter()
     manufactured={p['name'] for p in sheet_parts(parts)}
     for p in parts:
         if p['role'] not in ('fabricated','purchased') or p['name'] in manufactured:continue
@@ -68,10 +84,11 @@ def export(parts, report, output):
             elif 'washer' in n:spec='M3 washer, 7 mm OD x 0.5 mm'
             elif 'ATX_male_female_standoff' in n:spec='M3 motherboard standoff, 6.5 mm body; verify purchased post and stud dimensions'
             else:spec=n
-        hardware[(spec,p.get('catalog',''))]+=1
-    with (output/'hardware.csv').open('w') as f:
-        w=csv.writer(f);w.writerow(['specification','McMaster_item','quantity'])
-        for (spec,sku),qty in sorted(hardware.items()):w.writerow([spec,sku,qty])
+        (optional_hardware if p.get('optional') else hardware)[(spec,p.get('catalog',''))]+=1
+    for filename,inventory in [('hardware.csv',hardware),('optional-hardware.csv',optional_hardware)]:
+        with (output/filename).open('w') as f:
+            w=csv.writer(f);w.writerow(['specification','McMaster_item','quantity'])
+            for (spec,sku),qty in sorted(inventory.items()):w.writerow([spec,sku,qty])
     with (output/'parts-index.csv').open('w') as f:
         w=csv.DictWriter(f,fieldnames=['part','group','file','solid_count','catalog','notes']);w.writeheader()
         for r in rows:w.writerow({k:r[k] for k in w.fieldnames})

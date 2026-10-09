@@ -22,6 +22,10 @@ The full-chassis GPU PCB underside remains at Z188. The tray top is Z171.5, foll
 
 Standard socket pitch is an explicit design assumption. PCB holes, component locations, connector keepouts, socket seating depth and latch-release access remain supplier-verification items. Miwin's electrical slot assignments must also be confirmed; a physical socket count does not establish which sockets accept GPUs.
 
+## GPU stabilization and service
+
+The removable crossbar sits ahead of the GPU noses. Its fixed ledges end at Y191.5; reference cards start at Y200.4. Remove the crossbar and optional padded fingers before vertical card or cartridge extraction. Four top-access M4 screws release the bar. Crossbar stiffness and permissible pad force require physical qualification. The optional fingers must contact verified shroud lands; the card envelopes do not define a qualified contact surface.
+
 ## Lower motherboard, PSU and cooling
 
 The lower rear has eight case apertures on 20.32 mm pitch. Its I/O shield opening is 158.75 x 44.45 mm. The ten motherboard mounting positions follow the SSI EEB layout and the selected holes in the ASUS manual. Confirm them against the physical motherboard, including its integrated I/O shield.
@@ -36,9 +40,13 @@ The AIO reserves a 394 x 120 x 28 mm radiator and 38 mm fan depth. Verify radiat
 
 Internal MCIO cables run from lower PCIe retimers through the two 195 x 65 mm forward deck openings to the backplane's long-edge connector bank. Power harnesses use the same service region with side restraints. No cable-support shelf crosses the GPU extraction path. Disconnect and park cables before lifting the cartridge.
 
-The full chassis retains an external MCIO entry. The module uses a 140 mm-wide top-open rear notch from Z424.95 to Z442.5. Removing the two upper M3 screws and brush cap exposes the 17.55 mm-high connector passage. The tested plug envelope is 35 x 14 mm, leaving 1.05 mm nominal clearance below the lid. Verify actual plug tolerances and bending space. The cap extends 9 mm behind the body.
+The full chassis retains its lower external MCIO entry. The module has a 140 x 35 mm top-open rear notch from Z407.50 to Z442.50. Remove two M3 x 5 screws and the brush cap to pass connectors. The folded cap bridges the opening after installation. Verify actual plugs, cable bend radii and brush selection. The cap extends 10.5 mm behind the body.
 
-Remove the lid and rear cover before extracting GPUs or the cartridge. The lid slides on four wall screws through L-shaped slots. Remove its two rear retention screws, slide it 10 mm rearward and lift. The wall pin threads remain directly tapped in 1.5 mm sheet to preserve lid clearance. For lower retimer screw access, also remove the external MCIO frame and brush strips.
+The rear cover stays installed during cartridge extraction. Remove the lid, crossbar, four front M4 cartridge screws and four rear-side M3 cartridge screws; disconnect and park every connected cable. The carrier rear ends at Y483.00 and the fixed rear frame starts at Y484.50, giving 1.50 mm nominal separation throughout a vertical lift. Four flush flat-head screws fasten the frame to external angles; their nuts lie outside the lift path. Manufacturing tolerances must preserve positive clearance.
+
+The lid has four M3 x 3 wall guide screws and two M3 x 3 rear retention screws. The rear guide pair and matching lid slots sit at Y455, behind the PCB edge at Y443.7. Remove the rear screws, slide the lid 10 mm rearward and lift. Its rear tab outer face is Y488, 3 mm aft of the body rear, clearing the 2 mm frame. Short screw lengths control inward projection; do not substitute longer screws. Guide threads remain tapped in 1.5 mm sheet. Lower retimer screw access still requires removal of the lower external MCIO frame and brushes.
+
+Two screw-mounted handholds have 18 x 18 mm openings with R3 corners. Four top-access M3 x 6 screws enter tray press nuts. Diameter 8 bearing relief holes clear these nuts during cartridge removal. The handholds end 6.2 mm ahead of the GPU noses. They remain attached during service, but their load capacity is unqualified.
 
 Install the module adapter and empty upper body before the side bearings, which cover four module-to-adapter screws. The OEM return profiles and screw positions are transfer-drill templates; measure the actual RM53-502 lid and check OEM internal interference before making them.
 
@@ -48,4 +56,4 @@ The formed steel models use inside bend radius equal to sheet thickness. Existin
 
 The manufacturing pass converts service-panel threads to self-clinching nuts only where the seating annulus and edge allowance fit. Remaining formed threads are listed in the package report or described above. Installation pressure, sheet hardness, coating, grounding and hardware torque require process qualification.
 
-CAD checks cover nominal solid validity, changed-part intersections, preserved interface locations, individual STEP round trips and adapter-screw access. They do not establish load capacity, acceptable printed-part creep, thermal performance, cable bend radius, electrical safety or a flawless physical installation. Use an unpowered fit prototype before powered qualification.
+CAD checks cover nominal solid validity, changed-part intersections, preserved interface locations, individual and assembly STEP round trips, screw access and sampled service motions. Conservative swept prisms check the complete 300 mm vertical cartridge path against the retained rear closure, lid guides and their fasteners. Sampled checks include the remaining fixed parts. They do not establish load capacity, acceptable printed-part creep, thermal performance, cable bend radius, electrical safety or a flawless physical installation. Use an unpowered fit prototype before powered qualification.

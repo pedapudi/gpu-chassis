@@ -2,7 +2,7 @@
 
 The manufacturing package has two drawing books: one for the full chassis and one for the upper module. Each includes all three fan options. Shared parts are drawn once instead of repeated for every configuration.
 
-Each eight-page book starts with assembly and service access. Sheet 2 pairs an annotated assembly view with the chassis parts list and modeled fastener inventory. Quantity columns cover each fan option; sheet references locate the part drawings. Matching CSV files retain the part names used for STEP exports. The inventory excludes electronics, cooling equipment and installation consumables.
+Each eight-page book starts with assembly and service access. Sheet 2 pairs an annotated assembly view with the chassis parts list and modeled fastener inventory. Quantity columns cover each fan option; sheet references locate the part drawings. The McMaster-Carr column links catalog items and distinguishes custom parts from equipment-supplied screws. Matching CSV files retain the part names used for STEP exports and the supplier URLs. Optional GPU stabilizers have separate quantities. The inventory excludes electronics, cooling equipment and installation consumables.
 
 Sheets 3 through 5 cover rear interfaces and PCB seating, printed adapters and metric hardware, and fan carriers with the stock mesh cover. Sheets 6 through 8 collect part details. Complete face contours and small formed views accompany dimensions, hole-family leaders and notes. Technical tables do not occupy standalone sheets.
 

@@ -17,8 +17,9 @@ from reportlab.lib.utils import simpleSplit
 from reportlab.lib.pagesizes import A2, landscape
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'cad_source'))
-from manufacturing_revision import load
+from manufacturing_revision import load,step_shape
 from sheetmetal import bounds, sheet_parts
+from catalog_hardware import DESCRIPTIONS
 
 W,H=landscape(A2)
 INK=HexColor('#1b2c38');BLUE=HexColor('#165d78');GREY=HexColor('#a8b3ba')
@@ -119,18 +120,19 @@ def assembly(book,parts,report,modular):
     c=book.page('Assembly and service access')
     shown=[p for p in sheet_parts(parts) if p['group'] not in ('lid','intake_grilles')]
     mp=projection(c,[p['shape'] for p in shown],(35,290,W*.65,H-395),dim=False)
-    names=['GPU_tray_two_side_bends','Printed_backplane_adapter_left','Full_width_twenty_one_slot_rear_with_side_returns','Screw_mounted_3mm_rack_ear_left']
+    names=['GPU_tray_two_side_bends','Printed_backplane_adapter_left','Full_width_twenty_one_slot_rear_with_side_returns','Screw_mounted_3mm_rack_ear_left','Removable_chassis_crossbar']
     texts=['Lift-out steel GPU cartridge; unplug all signal and power leads first.',
            '8.5 mm printed adapter, supported on steel. Board hole pattern is replaceable.',
            '21 rear bracket positions at 20.32 mm pitch; keep the PCB seating datum fixed.',
-           'Separate 3 mm rack ear; M4 side screws. Use rated rails or shelf for chassis weight.']
+           'Separate 3 mm rack ear; M4 side screws. Use rated rails or shelf for chassis weight.',
+           'Remove four top M4 x 8 screws to lift the crossbar and optional fingers together. Fixed ledges remain ahead of the GPU extraction path.']
     for i,(name,text) in enumerate(zip(names,texts)):
         p=next(p for p in parts if p['name']==name);leader(c,mp(p['shape'].Center().toTuple()),text,W*.69,H-140-i*115,W*.26)
     y=235
     height=221.75 if modular else 399.25
     for text in [f'Envelope: body 440 W x 485 D x {height:g} H. Rack face 482.6 W. Removable mesh cover projects 8.21 mm ahead of the fan plate.',
-        ('Assembly order: fit press nuts to bare panels; attach the lid adapter to the empty module before installing bearing angles; prepare the GPU cartridge on a bench; fit the PCB, then GPUs; connect cables; install rear cover, lid and front mesh.' if modular else 'Assembly order: fit press nuts to bare panels; assemble the body; install the PSU before its adjacent bearing angle; fit the motherboard tray before rear fans; prepare the GPU cartridge on a bench; fit PCB and GPUs, connect cables, then close covers.'),
-        'Backplane service: remove GPUs, undo the six top M3 x 16 screws and lift the PCB with its loose 8 mm spacers. All adapter screws are then accessible from above. No nut needs to be held beneath a fitted PCB.',
+        ('Assembly order: fit press nuts to bare panels; attach the lid adapter and fixed rear frame to the empty module before fitting bearing angles; prepare the cartridge on a bench; fit PCB and GPUs; seat the cartridge, connect cables, then fit crossbar, lid and front mesh.' if modular else 'Assembly order: fit press nuts to bare panels; assemble the body and fixed rear frame; install the PSU before its adjacent bearing angle; fit the motherboard tray before rear fans; prepare the GPU cartridge on a bench; fit PCB and GPUs, connect cables, then close covers.'),
+        'Cartridge service: remove lid and crossbar, disconnect cables, release four front M4 and four rear-side M3 screws, then lift. Rear mesh frame, brush entry and their screws stay installed. For PCB service, remove GPUs and six top M3 x 16 screws; collect the loose 8 mm spacers.',
         ('OEM RM53-502 lid attachment remains a transfer-drill template. Measure the real lid and screw locations before drilling the adapter returns. Module mass requires independent rack support.' if modular else 'Motherboard installation: fit the board tray and its metric posts before the lower rear fans. Retimers and MCIO cables occupy the lower PCIe slots. External MCIO entry remains available.')]:
         y=paragraph(c,text,55,y,W-110,12)
 
@@ -155,7 +157,7 @@ def interfaces(book,parts,report,modular):
         adapter=next(p for p in parts if p['group']=='adapter')
         projection(c,[adapter['shape']],(35,85,870,415),axis=2)
         paragraph(c,'Replacement-lid adapter: 440 x 485 ring, 1.5 sheet. OEM side returns are intentionally undrilled. Six M3 module screws locate the upper body. Transfer only verified OEM hole positions.',935,365,680,13)
-        paragraph(c,'Rear MCIO entry admits connectors with the top cap removed. Remove external cables and rear cover before GPU extraction. Brush strips close around routed cables; they are not structural restraints.',935,230,680,12)
+        paragraph(c,'Rear MCIO opening is 140 x 35 with its top cap removed. Disconnect external cables before extraction; the rear screen and entry frame stay installed. M3 x 3 base screws and M3 x 5 cap screws stay flush with or behind the inner frame face.',935,230,680,12)
     sup=report['backplane_support'];paragraph(c,f"GPU seating: tray top Z{fmt(sup['tray_top_z_mm'])} + 8.50 print + 8.00 spacer = PCB underside Z{fmt(sup['PCB_underside_z_mm'])}. Changing the printed hole pattern must not change this stack.",55,65,W-110,10)
 
 
@@ -164,11 +166,15 @@ def parts_list(book, variants, detail_parts, root, modular):
     c = book.page('Parts list and assembly identification')
     names = list(variants)
     labels = ['3x140', '3x120+5x80', '2x180'] if modular else ['6x120', '2x180', '3x120']
-    counts = {name: collections.Counter(p['name'] for p in sheet_parts(pp)) for name, pp in variants.items()}
-    unique = {p['name']: p for pp in variants.values() for p in sheet_parts(pp)}
+    counts = {name: collections.Counter(p.get('drawing_family',p['name']) for p in sheet_parts(pp)) for name, pp in variants.items()}
+    unique = {}
+    for pp in variants.values():
+        for p in sheet_parts(pp):unique.setdefault(p.get('drawing_family',p['name']),p)
     sheet = {p['name']: 6 + i // 9 for i, p in enumerate(detail_parts)}
     for name in unique:
         if name.startswith('Printed_backplane_'): sheet[name] = 4
+        elif name=='Full_width_twenty_one_slot_rear_with_side_returns':sheet[name]=3
+        elif name.startswith('Stock_hex_rear_'):sheet[name]=sheet['Fixed_rear_mesh_frame']
         elif name not in sheet: sheet[name] = 5
     rows = []
     c.setFont('Helvetica-Bold', 12); c.drawString(45, H-103, 'Chassis parts: one selected fan configuration per build')
@@ -179,9 +185,10 @@ def parts_list(book, variants, detail_parts, root, modular):
         c.setFillColor(INK); c.setFont('Helvetica-Bold', 9)
         if right:
             c.drawString(940, y, description)
+            c.drawString(1320, y, 'McMaster-Carr')
             for xx, label in zip((1465, 1528, 1605), labels): c.drawCentredString(xx, y, label)
         else:
-            c.drawString(45, y, 'Item'); c.drawString(77, y, description); c.drawString(670, y, 'Sheet')
+            c.drawString(45, y, 'Item'); c.drawString(77, y, description); c.drawString(565, y, 'McMaster-Carr'); c.drawString(670, y, 'Sheet')
             for xx, label in zip(xq, labels): c.drawCentredString(xx, y, label)
         c.setStrokeColor(GREY); c.line(935 if right else 45, y-8, W-45 if right else 878, y-8)
     headings(H-151, 'Part name')
@@ -189,19 +196,22 @@ def parts_list(book, variants, detail_parts, root, modular):
     item_numbers = {}
     for number, (name, part) in enumerate(unique.items(), 1):
         item_numbers[name] = number
-        wrapped = simpleSplit(title(name), 'Helvetica', 9, 582)
+        wrapped = simpleSplit(title(name), 'Helvetica', 9, 478)
         c.setFillColor(INK); c.setFont('Helvetica', 9)
         c.drawString(45, y, str(number))
         for j, line in enumerate(wrapped): c.drawString(77, y-j*11, line)
+        sku=part.get('catalog','')
+        c.drawString(565, y, sku or 'Custom part')
+        if sku: c.linkURL('https://www.mcmaster.com/'+sku+'/',(565,y-2,655,y+10),relative=0)
         c.drawCentredString(683, y, str(sheet[name]))
         qty = [counts[n][name] for n in names]
-        for xx, count in zip(xq, qty): c.drawCentredString(xx, y, str(count) if count else '-')
-        rows.append(dict(item=number, part=name, drawing_sheet=sheet[name], **dict(zip(names, qty))))
-        y -= max(23, len(wrapped)*11+7)
+        for xx, count in zip(xq, qty): c.drawCentredString(xx, y, (str(count)+('*' if part.get('optional') else '')) if count else '-')
+        rows.append(dict(item=number, part=name, McMaster_item=sku or 'Custom part', supplier_url='https://www.mcmaster.com/'+sku+'/' if sku else '', drawing_sheet=sheet[name],optional=part.get('optional',False), **dict(zip(names, qty))))
+        y -= max(21, len(wrapped)*11+5)
     assert y > 160, ('Parts list exceeds available height', y)
     c.setFont('Helvetica-Bold', 10); c.drawString(77, y, 'Total chassis parts, including cut stock mesh and printed adapters')
     for xx, name in zip(xq, names): c.drawCentredString(xx, y, str(sum(counts[name].values())))
-    paragraph(c, 'Choose the matching fan-variant directory for STEP files. A shared part name can have different fan cuts in each variant. Quantities are installed counts, without spares. The mesh is purchased stock, McMaster 92725T3, cut to size.', 45, y-27, 830, 10)
+    paragraph(c, 'Choose the matching fan-variant directory for STEP files. Totals include optional items marked *. Ten identical stabilizer fingers share one detail drawing. Omit these fingers if shroud contact lands are unverified. Stock mesh is McMaster 92725T3, cut to size.', 45, y-27, 830, 10)
     family = 'module' if modular else 'full-chassis'
     with (root / (family+'-parts-list.csv')).open('w') as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
@@ -214,42 +224,47 @@ def parts_list(book, variants, detail_parts, root, modular):
         p = unique[name]
         leader(c, mp(p['shape'].Center().toTuple()), f"Item {item_numbers[name]}: "+title(name), 1400, 1030-i*71, 230)
 
-    descriptions = {
-        '92871A007': '5 mm spacer, 6 OD, 3.2 bore',
-        '92871A009': '6 mm spacer, 6 OD, 3.2 bore',
-        '92871A011': '8 mm spacer, 6 OD, 3.2 bore',
-        '94459A140': 'M3 heat-set insert, 5.7 long',
-        '95185A530': 'M3 self-clinching nut',
-        '95185A590': 'M4 self-clinching nut',
-    }
-    inventories = {}
+    catalog_items = {}
+    inventories = {}; optional_inventories = {}
     for name in names:
         inventory = collections.Counter()
-        for row in csv.DictReader((root/name/'hardware.csv').open()):
+        optional_inventory = collections.Counter()
+        source_rows=[(row,False) for row in csv.DictReader((root/name/'hardware.csv').open())]
+        optional_path=root/name/'optional-hardware.csv'
+        if optional_path.exists():source_rows += [(row,True) for row in csv.DictReader(optional_path.open())]
+        for row,optional in source_rows:
             spec = row['specification']; item = row['McMaster_item']
             if spec in ('ISO 7089 M3 washer, 7 mm OD x 0.5 mm', 'M3 washer, 7 mm OD x 0.5 mm'):
                 spec = 'M3 washer, 7 OD x 0.5'
-            elif item: spec = descriptions[item]+' | '+item
+            elif item: spec = DESCRIPTIONS[item]
             elif spec.startswith('ISO 7093'): spec = 'M3 large washer, 9 OD x 0.8'
             elif spec.startswith('PSU factory'): spec = 'PSU factory #6-32 screw'
             elif spec.startswith('Short case-fan'): spec = 'Short plastic case-fan screw'
-            inventory[spec] += int(row['quantity'])
+            catalog_items[spec] = item
+            (optional_inventory if optional else inventory)[spec] += int(row['quantity'])
         inventories[name] = inventory
-    hardware = list(dict.fromkeys(spec for inv in inventories.values() for spec in inv))
+        optional_inventories[name] = optional_inventory
+    hardware = list(dict.fromkeys(spec for inv in list(inventories.values())+list(optional_inventories.values()) for spec in inv))
     c.setFont('Helvetica-Bold', 12); c.drawString(940, 710, 'Installed fasteners and spacers')
-    headings(687, 'Specification | McMaster item where selected', right=True)
+    headings(687, 'Specification', right=True)
     yy = 661
     hardware_rows = []
     for spec in hardware:
         c.setFont('Helvetica', 9); c.drawString(940, yy, spec)
+        sku=catalog_items[spec]
+        c.drawString(1320, yy, sku or 'Supplier screw')
+        if sku: c.linkURL('https://www.mcmaster.com/'+sku+'/',(1320,yy-2,1410,yy+10),relative=0)
         qty = [inventories[name][spec] for name in names]
-        for xx, count in zip((1465, 1528, 1605), qty): c.drawCentredString(xx, yy, str(count) if count else '-')
-        hardware_rows.append(dict(specification=spec, **dict(zip(names, qty))))
+        opt=[optional_inventories[name][spec] for name in names]
+        for xx, count, extra in zip((1465, 1528, 1605), qty, opt):
+            label=(str(count) if count else '')+('+' if count and extra else '')+(str(extra)+'*' if extra else '')
+            c.drawCentredString(xx, yy, label or '-')
+        hardware_rows.append(dict(specification=spec, McMaster_item=sku or 'Supplier screw', supplier_url='https://www.mcmaster.com/'+sku+'/' if sku else '', **dict(zip(names, qty)), **dict(zip((n+'_optional' for n in names),opt))))
         yy -= 21
     assert yy > 240, ('Hardware list exceeds available height', yy)
     with (root/(family+'-hardware-list.csv')).open('w') as f:
         writer = csv.DictWriter(f, fieldnames=list(hardware_rows[0])); writer.writeheader(); writer.writerows(hardware_rows)
-    paragraph(c, 'Machine screws: metric M3 x 0.5 / M4 x 0.7, pan head. See sheet 4 for press-nut holes, insert engagement and spacer stacks. Retain supplier threads for the PSU, radiator and plastic fan frames.', 940, yy-10, 690, 10)
+    paragraph(c, '* Optional ten-GPU stabilizer kit. Add 20 M3 x 6 screws, 20 M3 press nuts and ten foam pads. Metric M3 x 0.5 / M4 x 0.7 threads. Four rear-frame screws have flush 90-degree heads; other machine screws have pan heads. Retain supplier threads for equipment.', 940, yy-10, 690, 10)
     paragraph(c, 'Scope: chassis structure and modeled assembly hardware. Fans, electronics, AIO mounting screws, brush seals, cable ties and rack rails require a separate installation kit. Fan sizes are given on sheet 5. GPU and backplane quantities are fit references, not a purchasing requirement.', 940, 155, 690, 10)
     paragraph(c, 'Each quantity column covers the complete chassis or module with the indicated GPU intake option. Lower AIO and rear fan mounting hardware is common to the full-chassis options where modeled.', 45, 105, 830, 10)
 
@@ -312,7 +327,7 @@ def fans(book,variants,modular):
     for text in ['Cover construction: 1.5 mm full-face clamping frame, cut-to-size pre-perforated sheet, 5 mm spacers and 0.8 mm large washers. All mesh cut edges overlap the frame by 16 mm.',
         'Stock mesh blank '+ ' x '.join(fmt(v) for v in stock['blank_size_mm'])+' x 0.9144. Assembly holes diameter 3.4 at (X,Z): '+ '; '.join(', '.join(fmt(v) for v in pair) for pair in stock['mounting_holes_xz'])+'.',
         'The stock sheet has no controlled perforation origin. Drill only assembly holes. Do not quote individual mesh holes as laser cuts. Mask coating at electrical bonding contacts.',
-        'Rack ears are independent 3 mm folded parts, screwed to the side walls with M4 hardware. The fan plate and mesh do not carry rack loads.']:
+        'Cover outer corners R12; opening corners R8; stock mesh corners R8. Rack ears are independent 3 mm folded parts, screwed to the side walls with M4 hardware. Fan plate and mesh do not carry rack loads.']:
         y=paragraph(c,text,590,y,W-650,12)
 
 
@@ -324,10 +339,26 @@ def card(c,p,rect):
     for line in simpleSplit(name,'Helvetica-Bold',10,w-22):c.drawString(x+10,yy,line);yy-=12
     faces=[f for f in shape.Faces() if f.geomType()=='PLANE']
     largest=max(faces,key=lambda f:f.Area());normal=largest.normalAt().toTuple();axis=max(range(3),key=lambda k:abs(normal[k]))
-    mp=projection(c,[shape],(x+5,y+25,w*.58,h-58),axis=axis,face_only=True)
+    if p.get('_drawing_mesh'):
+        mp=projection(c,[shape],(x+5,y+h*.48,w*.58,h*.42),axis=1,face_only=True)
+        stock=p['_drawing_mesh']
+        projection(c,[step_shape(q) for q in stock],(x+5,y+28,w*.58,h*.37),axis=1,face_only=True)
+        sb=bounds(stock[0]['shape'])
+        paragraph(c,f'Mesh: {len(stock)} blank(s), each {fmt(sb[3]-sb[0])} x {fmt(sb[5]-sb[2])} x 0.9144; 92725T3. R3 outer corners; diameter 3.4 clamps. Upper outer notches: 22 x 11. Deburr.',x+12,y+h*.48-4,w*.54,8)
+    else:mp=projection(c,[shape],(x+5,y+25,w*.58,h-58),axis=axis,face_only=True)
+    if p['group']=='rack_ears':
+        projection(c,[shape],(x+w*.39,y+31,w*.17,h-91),axis=1,face_only=True,dim=False)
+        paragraph(c,'Rack face: R5 corners',x+w*.37,y+h-46,w*.22,8)
     c.setFont('Helvetica',8);c.drawString(x+18,y+8,'Face coordinates '+' / '.join('XYZ'[k] for k in range(3) if k!=axis)+'; dimensions in mm')
     tx=x+w*.6;tw=w*.38;yy=y+h-58
     yy=paragraph(c,'Formed envelope '+ ' x '.join(fmt(b[k+3]-b[k]) for k in range(3))+'.',tx,yy,tw,9)
+    if p['name'].startswith('Crossbar_side_ledge_'):
+        yy=paragraph(c,'Top hole axes: 9 apart. Wall hole axes: 12 apart. All four holes diameter 5.41 for M4 press nuts.',tx,yy,tw,9)
+    if p['name']=='Removable_chassis_crossbar':
+        yy=paragraph(c,'Top pairs: 9 apart, 9.5 from each end; Y offsets 10.5 / 19.5 from front edge.',tx,yy,tw,9)
+        rear=cq.Workplane(obj=shape).faces('>Y').val()
+        projection(c,[rear],(x+12,y+30,w*.56,90),axis=1,dim=False)
+        paragraph(c,'Rear face: 20 holes diameter 4.22; pairs 12 apart, repeating at 40.64.',x+15,y+99,w*.55,8)
     # Hole family leaders annotate the face, while the full CSV retains every centre.
     fs=[f for f in faces if abs(f.normalAt().toTuple()[axis])>.999]
     station=largest.Center().toTuple()[axis]
@@ -352,14 +383,17 @@ def card(c,p,rect):
 def build(root,modular):
     names=('modular','modular-120-80','modular-180') if modular else ('nine-u','nine-u-180','nine-u-120')
     variants={name:load(root/name) for name in names};parts=variants[names[0]]
+    for pp in variants.values():
+        rear=next(p for p in pp if p['group']=='rear_vent')
+        rear['_drawing_mesh']=[p for p in pp if p['group']=='rear_mesh']
     report=json.loads((root/names[0]/'manufacturing-changes.json').read_text())
     out=root/('module-drawings.pdf' if modular else 'full-chassis-drawings.pdf')
     book=Book(out,'RM53-502 upper module' if modular else '9U full chassis')
     allparts={}
     for name,pp in variants.items():
         for p in sheet_parts(pp):
-            if p['name'].startswith(('Stock_hex_', 'Printed_backplane_', 'Front_full_face_', 'Front_fan_carrier', 'Upper_module_front_carrier', 'Full_chassis_upper_intake')):continue
-            allparts.setdefault(p['name'],p)
+            if p['name'].startswith(('Stock_hex_', 'Printed_backplane_', 'Front_full_face_', 'Front_fan_carrier', 'Upper_module_front_carrier', 'Full_chassis_upper_intake','Full_width_twenty_one_slot_rear_with_side_returns')):continue
+            allparts.setdefault(p.get('drawing_family',p['name']),p)
     rows=list(allparts.values());cols=3;nr=3;cw=(W-70)/cols;ch=(H-155)/nr
     assembly(book,parts,report,modular)
     parts_list(book,variants,rows,root,modular)
@@ -372,8 +406,7 @@ def build(root,modular):
             card(c,p,(x,y,cw-10,ch-8))
     for pp in variants.values():
         for p in sheet_parts(pp):
-            if p['name'].startswith('Stock_hex_'):continue
-            for h in holes(p['shape']):feature_rows.append(dict(part=p['name'],normal_axis='XYZ'[h['axis']],diameter_mm=h['diameter'],radius_mm=h['diameter']/2,x_mm=h['centre'][0],y_mm=h['centre'][1],z_mm=h['centre'][2]))
+            for h in holes(step_shape(p)):feature_rows.append(dict(part=p['name'],normal_axis='XYZ'[h['axis']],diameter_mm=h['diameter'],radius_mm=h['diameter']/2,x_mm=h['centre'][0],y_mm=h['centre'][1],z_mm=h['centre'][2]))
     with (root/('module-feature-centres.csv' if modular else 'full-feature-centres.csv')).open('w') as f:
         w=csv.DictWriter(f,fieldnames=list(feature_rows[0]));w.writeheader();w.writerows(feature_rows)
     book.finish(out.with_suffix('.index.json'))

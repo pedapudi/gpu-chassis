@@ -20,7 +20,7 @@ def orient(shape,point,axis):
 
 def screw(point,axis,thread,length):
     # Nominal major-diameter and head envelopes; helical threads and drive recesses are omitted.
-    d,head_d,head_h={'M3':(3,5.6,2.4),'M4':(4,8,3.1),'6-32':(3.5052,6.35,2.6)}[thread]
+    d,head_d,head_h={'M3':(3,6,2.4),'M4':(4,8,3.1),'6-32':(3.5052,6.35,2.6)}[thread]
     shape=union([cyl(0,0,0,d/2,length),cyl(0,0,-head_h,head_d/2,head_h)])
     return orient(shape,point,axis)
 

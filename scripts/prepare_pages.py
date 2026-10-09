@@ -48,6 +48,10 @@ if (args.out / 'compact-package.json').is_file():
         check = json.loads((args.out / variant / 'revision-validation.json').read_text())
         if not check['pass']:
             raise SystemExit('CAD validation failed: ' + variant)
+        for name,field in (('service-validation.json','pass'),('assembly-validation.json','passed')):
+            check_path=args.out/variant/name
+            if not check_path.is_file() or not json.loads(check_path.read_text()).get(field):
+                raise SystemExit('Missing or failed '+name+': '+variant)
     missing = [name for name in required if not (args.out / name).is_file()]
     if missing:
         raise SystemExit('Missing compact viewer files: ' + ', '.join(missing))

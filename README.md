@@ -9,7 +9,9 @@ Sheet-metal models and interactive engineering viewers for a 9U full chassis and
 
 Each chassis has one compact drawing book covering its fan options. Shared parts appear once. Individual STEP files contain manufactured chassis parts and printed adapters; assembly STEP files contain chassis structure and hardware. GPUs, motherboards, fans, cables and hoses remain optional viewer references and have no separate STEP exports. Select a part in the viewer to download its STEP.
 
-Each eight-page book has a parts list on sheet 2 beside an annotated assembly view. The list gives drawing references and quantities for each fan option, including modeled fasteners and catalog spacers. Matching parts-list and hardware-list CSV files support purchasing and build preparation. Electronics, cooling equipment and installation consumables require a separate kit.
+Each eight-page book has a parts list on sheet 2 beside an annotated assembly view. The list gives drawing references, linked McMaster-Carr item numbers and quantities for each fan option, including modeled fasteners and catalog spacers. Matching parts-list and hardware-list CSV files include supplier URLs. Custom parts and equipment-supplied screws are identified separately. Electronics, cooling equipment and installation consumables require a separate kit.
+
+Rounded mesh-cover corners and rack-ear corners remove sharp plan-view points; all exposed sheet edges still require deburring. A removable crossbar ties the side walls together with four top-access M4 screws. Optional padded fingers stabilize verified rigid GPU shroud lands. The viewer and assembly STEP download offer the finger kit as an option. Remove the bar before GPU or cartridge service. The rear stock-mesh frame and its screws remain installed during cartridge extraction. Screw-mounted tray handholds remain attached; their load capacity requires qualification.
 
 Each adapter half measures 209.5 x 240 x 8.5 mm. Both fit separately on a 256 x 256 mm print bed with a 5 mm brim. The halves fasten independently to the steel tray.
 
@@ -25,6 +27,7 @@ Use a virtual environment with `cad_source/requirements.txt` and `drawing_source
 python cad_source/rebuild.py --out work/baseline --variant both
 python scripts/build_manufacturing_revision.py work/baseline work/package
 python scripts/validate_manufacturing_revision.py work/baseline work/package
+python scripts/validate_service_crossbar.py work/package/nine-u work/package/nine-u-180 work/package/nine-u-120 work/package/modular work/package/modular-120-80 work/package/modular-180
 python drawing_source/compact_drawings.py work/package
 python scripts/build_compact_viewers.py work/package path/to/local/threejs-libraries
 ```

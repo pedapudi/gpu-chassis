@@ -42,6 +42,10 @@ def step_shape(part):
     """Purchased mesh STEP controls only the cut blank and assembly holes."""
     if not part['name'].startswith('Stock_hex_'):return part['shape']
     b=bounds(part['shape']);shape=box(*b[:3],b[3]-b[0],b[4]-b[1],b[5]-b[2])
+    if part.get('corner_radius_mm'):
+        shape=cq.Workplane(obj=shape).edges('|Y').fillet(part['corner_radius_mm']).val()
+    for x,z,w,h in part.get('blank_notches_xz',[]):
+        shape=shape.cut(box(x,b[1]-1,z,w,b[4]-b[1]+2,h))
     return shape.cut(cq.Compound.makeCompound([cyl(x,b[1]-1,z,1.7,b[4]-b[1]+2,(0,1,0)) for x,z in part['mounting_holes_xz']]))
 
 
@@ -238,5 +242,7 @@ def revise(parts, modular=False):
     front=replace_grille(parts,modular)
     print('  converting panel collars',flush=True)
     pem=replace_collars(parts)
+    from service_crossbar import apply
+    service=apply(parts)
     print('  geometry revision complete',flush=True)
-    return dict(backplane_support=support,motherboard_spacer_points=motherboard,front=front,panel_threads=pem)
+    return dict(backplane_support=support,motherboard_spacer_points=motherboard,front=front,panel_threads=pem,service_crossbar=service)

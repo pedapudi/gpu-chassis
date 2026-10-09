@@ -52,6 +52,14 @@ if (args.out / 'compact-package.json').is_file():
             check_path=args.out/variant/name
             if not check_path.is_file() or not json.loads(check_path.read_text()).get(field):
                 raise SystemExit('Missing or failed '+name+': '+variant)
+        manifest=json.loads((args.out/variant/'parts-index.json').read_text())
+        for part in manifest:
+            target=(args.out/variant/part['file']).resolve()
+            if not target.is_relative_to(args.out.resolve()) or not target.is_file():
+                raise SystemExit('Missing or unsafe part STEP: '+variant+'/'+part['part'])
+    consolidation=args.out/'part-consolidation-validation.json'
+    if consolidation.exists() and not json.loads(consolidation.read_text()).get('passed'):
+        raise SystemExit('Shared part STEP validation failed')
     missing = [name for name in required if not (args.out / name).is_file()]
     if missing:
         raise SystemExit('Missing compact viewer files: ' + ', '.join(missing))

@@ -99,6 +99,29 @@ def holes(shape):
     return list(circles.values())
 
 
+def feature_dimensions(c,mp,points,box,axis):
+    """Dimension representative centre offsets and repeated pitches on a face."""
+    ij=[k for k in range(3) if k!=axis]
+    unique=sorted(set(tuple(q) for q in points))
+    if not unique:return
+    first=min(unique,key=lambda p:sum(p[k]-box[k] for k in ij))
+    for order,k in enumerate(ij):
+        edge=list(first);edge[k]=box[k]
+        gap=first[k]-box[k]
+        pa,pb=mp(edge),mp(first)
+        if gap>2 and math.dist(pa,pb)>30:
+            dimension(c,mp(edge),mp(first),fmt(gap),vertical=order==1,offset=-14)
+    rows=collections.defaultdict(list)
+    for p in unique:rows[round(p[ij[1]],3)].append(p)
+    row=max(rows.values(),key=len)
+    row=sorted(row,key=lambda p:p[ij[0]])
+    if len(row)>1:
+        gaps=[round(b[ij[0]]-a[ij[0]],3) for a,b in zip(row,row[1:])]
+        label=(f'{len(gaps)} x {fmt(gaps[0])}' if len(set(gaps))==1 and len(gaps)>1 else fmt(row[-1][ij[0]]-row[0][ij[0]]))
+        if math.dist(mp(row[0]),mp(row[-1]))>45:
+            dimension(c,mp(row[0]),mp(row[-1]),label,offset=-32)
+
+
 class Book:
     def __init__(self,path,name):
         self.c=canvas.Canvas(str(path),pagesize=(W,H));self.c.setTitle(name);self.c.setAuthor('');self.c.setCreator('');self.c._doc.info.producer='';self.name=name;self.n=0;self.index=[]
@@ -125,7 +148,7 @@ def assembly(book,parts,report,modular):
            '8.5 mm printed adapter, supported on steel. Board hole pattern is replaceable.',
            '21 rear bracket positions at 20.32 mm pitch; keep the PCB seating datum fixed.',
            'Separate 3 mm rack ear; M4 side screws. Use rated rails or shelf for chassis weight.',
-           'Remove four top M4 x 8 screws to lift the crossbar and optional fingers together. Fixed ledges remain ahead of the GPU extraction path.']
+           'Remove four top M4 x 8 screws to lift the crossbar. Twenty M3 threads accept custom printed supports; fixed ledges remain ahead of the GPU extraction path.']
     for i,(name,text) in enumerate(zip(names,texts)):
         p=next(p for p in parts if p['name']==name);leader(c,mp(p['shape'].Center().toTuple()),text,W*.69,H-140-i*115,W*.26)
     y=235
@@ -142,6 +165,14 @@ def interfaces(book,parts,report,modular):
     rear=next(p for p in parts if p['name']=='Full_width_twenty_one_slot_rear_with_side_returns')
     b=bounds(rear['shape']);mp=projection(c,[rear['shape']],(35,530,W-540,520),axis=1,reverse=True)
     c.setFont('Helvetica-Bold',12);c.drawString(60,1055,'Exterior rear view: X decreases to the right. GPU slots are not mirrored.')
+    # Aperture dimensions use the actual internal wires of the rear face.
+    face=max((f for f in rear['shape'].Faces() if f.geomType()=='PLANE' and abs(f.normalAt().y)>.999),key=lambda f:f.Area())
+    apertures=[bounds(w) for w in face.Wires() if abs(bounds(w)[3]-bounds(w)[0]-15)<.01 and abs(bounds(w)[5]-bounds(w)[2]-100.5)<.01]
+    assert len(apertures)==21,len(apertures)
+    q=sorted(apertures)[-1]
+    dimension(c,mp((q[0],q[1],q[2])),mp((q[3],q[1],q[2])),'15',offset=14)
+    dimension(c,mp((q[3],q[1],q[2])),mp((q[3],q[1],q[5])),'100.5',True,offset=-25)
+    dimension(c,mp((q[0],q[1],q[5])),mp((q[0]-20.32,q[1],q[5])),'20.32 pitch',offset=-30)
     for i,text in enumerate(['21 x aperture: 15.00 wide x 100.50 high; square cut corners R0 nominal.',
         'Slot pitch 20.32; dual-slot socket pitch 40.64. Preserve bracket/PCB alignment.',
         'Retention screw axes sit 5.08 behind the bracket plane. M3 x 5 screws.',
@@ -151,6 +182,18 @@ def interfaces(book,parts,report,modular):
     if not modular:
         lower=[p['shape'] for p in parts if p['name'].startswith(('Lower_rear_','Flat_1p2mm_IO_carrier','Lower_bank_retention','Lower_bank_toe'))]
         mp=projection(c,lower,(35,85,870,415),axis=1,reverse=True)
+        for width,height in ((15,103),(158.75,44.45)):
+            found=[]
+            for shape in lower:
+                for face in shape.Faces():
+                    if face.geomType()!='PLANE' or abs(face.normalAt().y)<.999:continue
+                    for wire in face.Wires():
+                        q=bounds(wire)
+                        if abs(q[3]-q[0]-width)<.01 and abs(q[5]-q[2]-height)<.01:found.append(q)
+            assert found,(width,height)
+            q=sorted(found)[-1]
+            dimension(c,mp((q[0],q[1],q[2])),mp((q[3],q[1],q[2])),fmt(width),offset=-18 if width>100 else 10)
+            dimension(c,mp((q[3],q[1],q[2])),mp((q[3],q[1],q[5])),fmt(height),True,offset=-18)
         leader(c,mp((354,469,154)),'PSU: 4 x diameter 3.9, R1.95. Inward-fan (X,Z): 354/154, 354/16, 428/40, 418/154. Native #6-32 screws.',55,485,815)
         paragraph(c,'Lower deck: 8 case apertures on 20.32 pitch; 15 x 103 openings. I/O shield aperture 158.75 x 44.45. Two 80 mm fan patterns: 71.5 square. PSU native screws retain the supplied thread.',935,380,680,13)
         paragraph(c,'Board underside Z16.00; PCB 1.57 thick. Standard 6 mm spacers plus 0.5 mm M3 washers sit on tray top Z9.50; M3 x 12 screws retain the board. The ten-hole tray is WRX90-specific. ATX positions J and L and seven alternate SSI EEB sites are absent. EATX compatibility requires a board-specific drawing. Verify physical board holes and I/O seating.',935,255,680,12)
@@ -180,7 +223,7 @@ def parts_list(book, variants, detail_parts, root, modular):
     rows = []
     c.setFont('Helvetica-Bold', 12); c.drawString(45, H-103, 'Chassis parts: one selected fan configuration per build')
     c.setFont('Helvetica', 9)
-    c.drawString(45, H-123, 'Item numbers identify this book. The accompanying parts-list CSV preserves the exact STEP part names.')
+    c.drawString(45, H-123, 'Item numbers identify assembly parts. The parts-list CSV links each configuration to its STEP files.')
     xq = [728, 784, 846]
     def headings(y, description, right=False):
         c.setFillColor(INK); c.setFont('Helvetica-Bold', 9)
@@ -212,8 +255,13 @@ def parts_list(book, variants, detail_parts, root, modular):
     assert y > 160, ('Parts list exceeds available height', y)
     c.setFont('Helvetica-Bold', 10); c.drawString(77, y, 'Total chassis parts, including cut stock mesh and printed adapters')
     for xx, name in zip(xq, names): c.drawCentredString(xx, y, str(sum(counts[name].values())))
-    paragraph(c, 'Choose the matching fan-variant directory for STEP files. Totals include optional items marked *. Ten identical stabilizer fingers share one detail drawing. Omit these fingers if shroud contact lands are unverified. Stock mesh is McMaster 92725T3, cut to size.', 45, y-27, 830, 10)
+    paragraph(c, 'Use the selected configuration\'s parts catalog for STEP files and quantities. Custom printed supports and their screws are not included. The crossbar carries twenty M3 captive threads. Stock mesh is McMaster 92725T3, cut to size.', 45, y-27, 830, 10)
     family = 'module' if modular else 'full-chassis'
+    for row in rows:
+        for variant in names:
+            manifest=json.loads((root/variant/'parts-index.json').read_text())
+            paths=sorted({str((Path(variant)/p['file']).as_posix()) for p in manifest if p['drawing_family']==row['part']})
+            row[variant+'_STEP_files']='; '.join(paths)
     with (root / (family+'-parts-list.csv')).open('w') as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
 
@@ -265,9 +313,29 @@ def parts_list(book, variants, detail_parts, root, modular):
     assert yy > 240, ('Hardware list exceeds available height', yy)
     with (root/(family+'-hardware-list.csv')).open('w') as f:
         writer = csv.DictWriter(f, fieldnames=list(hardware_rows[0])); writer.writeheader(); writer.writerows(hardware_rows)
-    paragraph(c, '* Optional ten-GPU stabilizer kit. Add 20 M3 x 6 screws, 20 M3 press nuts and ten foam pads. Metric M3 x 0.5 / M4 x 0.7 threads. Four rear-frame screws have flush 90-degree heads; other machine screws have pan heads. Retain supplier threads for equipment.', 940, yy-10, 690, 10)
-    paragraph(c, 'Scope: chassis structure and modeled assembly hardware. Fans, electronics, AIO mounting screws, brush seals, cable ties and rack rails require a separate installation kit. Fan sizes are given on sheet 5. GPU and backplane quantities are fit references, not a purchasing requirement.', 940, 155, 690, 10)
-    paragraph(c, 'Each quantity column covers the complete chassis or module with the indicated GPU intake option. Lower AIO and rear fan mounting hardware is common to the full-chassis options where modeled.', 45, 105, 830, 10)
+    paragraph(c, 'Twenty M3 press nuts on the crossbar are included. Custom printed supports and their screws are separate. Metric M3 x 0.5 / M4 x 0.7 threads. Four rear-frame screws have flush 90-degree heads; other machine screws have pan heads. Retain supplier threads for equipment.', 940, yy-10, 690, 10)
+    paragraph(c, 'Scope: chassis structure and modeled assembly hardware. Fans, electronics, AIO mounting screws, brush seals, cable ties and rack rails require a separate installation kit. Fan sizes are given on sheet 5. GPU and backplane quantities are fit references, not a purchasing requirement.', 940, 85, 690, 9)
+    crossbar_attachment_diagram(c)
+    paragraph(c, 'Quantities cover one selected configuration. Crossbar captive nuts are included; custom printed supports require separate design and validation.', 45, 72, 830, 10)
+
+
+def crossbar_attachment_diagram(c):
+    """Crossbar rear face in local coordinates for custom printed supports."""
+    x,y,scale=1000,136,1.35
+    c.setStrokeColor(INK);c.setFillColor(INK);c.setLineWidth(.6)
+    c.rect(x,y,431*scale,20*scale,stroke=1,fill=0)
+    for pair in range(10):
+        for dx in (13.075,25.075):
+            c.circle(x+(dx+pair*40.64)*scale,y+8.5*scale,2.11*scale,stroke=1,fill=0)
+    c.setFont('Helvetica-Bold',10)
+    c.drawString(940,226,'Custom support interface: crossbar rear face, local origin at lower-left corner')
+    dimension(c,(x+13.075*scale,y+8.5*scale),(x+25.075*scale,y+8.5*scale),'12',offset=35)
+    dimension(c,(x+53.715*scale,y+8.5*scale),(x+94.355*scale,y+8.5*scale),'40.64',offset=35)
+    dimension(c,(x,y),(x,y+8.5*scale),'8.5',vertical=True,offset=18)
+    c.setFont('Helvetica',9)
+    c.drawString(940,205,'20 x M3 captive threads; sheet installation holes DIA 4.22. Hole pairs repeat at 40.64 mm.')
+    c.drawString(940,188,'First pair: X13.075 / X25.075. All axes Z8.5 on rear face Y30. Bar envelope: 431 x 30 x 20.')
+    c.drawString(1215,112,'Local and assembly coordinates: crossbar-interface.csv')
 
 
 def adapter_hardware(book,parts,report):
@@ -344,12 +412,33 @@ def fans(book,variants,modular):
         centres=collections.defaultdict(list)
         for p in fans:
             bb=bounds(p['shape']);centres[round((bb[2]+bb[5])/2,3)].append(round((bb[0]+bb[3])/2,3))
+        for z,xs in sorted(centres.items()):
+            xs=sorted(xs)
+            dimension(c,mp((xs[0],0,z)),mp((xs[1],0,z)),fmt(xs[1]-xs[0])+' centres',offset=-16)
+            size=next(round(bounds(p['shape'])[3]-bounds(p['shape'])[0]) for p in fans if abs((bounds(p['shape'])[2]+bounds(p['shape'])[5])/2-z)<.01)
+            pitch={80:71.5,120:105,140:124.5,180:165}[size]
+            dimension(c,mp((xs[0]-pitch/2,0,z-pitch/2)),mp((xs[0]+pitch/2,0,z-pitch/2)),fmt(pitch),offset=8)
+            # Place frame and aperture measurements inside each circular opening.
+            c.setFillColor(BLUE);c.setFont('Helvetica',9)
+            px,py=mp((xs[-1],0,z));c.drawCentredString(px,py-12,f'{fmt(pitch)} square mounting')
         text=' + '.join(f'{n} x {size} mm' for size,n in sizes.items())
         paragraph(c,text+'. Fan screw patterns: 120 -> 105 square; 140 -> 124.5 square; 180 -> 165 square; 80 -> 71.5 square.',xx+20,530,columns-55,11)
         paragraph(c,'Fan centres: '+'; '.join('Z'+fmt(z)+', X'+', '.join(fmt(x) for x in sorted(xs)) for z,xs in sorted(centres.items()))+'.',xx+20,448,columns-55,10)
         paragraph(c,'Direct case fans: short thread-forming screws through the carrier into plastic. Remove mesh for access. Radiator screws must match the cooler and the assumed 38 mm fan depth.',xx+20,386,columns-55,10)
         radii=sorted({round(q['diameter']/2,3) for p in shown for q in holes(p['shape'])})
-        paragraph(c,'Circular cut radii R'+', R'.join(fmt(r) for r in radii[:12])+'. Slot end radii and spacing follow the actual cut paths in the part STEP.',xx+20,320,columns-55,9)
+        label='Circular cut radii R'+', R'.join(fmt(r) for r in radii[:12])+'.'
+        if not modular:label+=' GPU slots: 5.5 wide, R2.75 ends; outer length 9; shared length '+('24.5' if name=='nine-u-180' else '24')+'. AIO slots: 4.8 wide, R2.4; lengths 9 / 24.'
+        paragraph(c,label,xx+20,320,columns-55,9)
+        if not modular:
+            z=270 if name!='nine-u' else 210
+            sx=45.5 if name=='nine-u-180' else 47.5
+            pitch=165 if name=='nine-u-180' else 105
+            tx,ty=mp((90 if name=='nine-u-180' else 62,0,z-24))
+            leader(c,mp((sx,0,z-pitch/2)),'Slot 9 x 5.5; R2.75',tx,ty,125)
+            ax,ay=mp((128 if name=='nine-u-180' else 100,0,z+28))
+            c.setFillColor(BLUE);c.setFont('Helvetica',9);c.drawCentredString(ax,ay,'DIA 175' if name=='nine-u-180' else 'DIA 116')
+            dimension(c,mp((47.5,0,32.5)),mp((152.5,0,32.5)),'105 AIO',offset=-18)
+            dimension(c,mp((100,0,85)),mp((220,0,85)),'120 AIO centres',offset=-12)
     parts=next(iter(variants.values()));cover=[p['shape'] for p in sheet_parts(parts) if p['group']=='intake_grilles']
     projection(c,cover,(40,65,255,240),axis=1,face_only=True)
     front_cover_section(c,parts)
@@ -396,19 +485,53 @@ def card(c,p,rect):
     hh=[v for v in holes(shape) if v['axis']==axis and abs(v['centre'][axis]-station)<1e-4]
     families=collections.defaultdict(list)
     for item in hh:families[item['diameter']].append(item)
+    if not p.get('_drawing_mesh') and p['name']!='Removable_chassis_crossbar':
+        feature_dimensions(c,mp,[v['centre'] for v in hh],b,axis)
     for diameter,group in sorted(families.items())[:5]:
         label=f'{len(group)} x diameter {fmt(diameter)} (R{fmt(diameter/2)})'
         if abs(diameter-4.22)<.001:label=f'{len(group)} M3 press-nut holes: diameter 4.22 +0.08/-0.00'
         elif abs(diameter-5.41)<.001:label=f'{len(group)} M4 press-nut holes: diameter 5.41 +0.08/-0.00'
         elif abs(diameter-2.5)<.001:label=f'{len(group)} M3 x 0.5 tapped centres; diameter 2.5 pilot'
         elif p['name'].startswith('U_shaped_body') and diameter>15:label=f'{len(group)} formed boss bases diameter {fmt(diameter)}; M3 tapped centres. Do not drill the boss outline.'
+        ij=[k for k in range(3) if k!=axis]
+        coords=[]
+        for k in ij:
+            values=sorted({round(v['centre'][k]-b[k],3) for v in group})
+            coords.append('XYZ'[k]+' '+', '.join(fmt(v) for v in values))
+        label+='; edge offsets '+ '; '.join(coords)+'.'
         yy=leader(c,mp(group[0]['centre']),label,tx,yy,tw);yy-=2
+    # Dimension internal rectangular openings and rounded slots at their contours.
+    ij=[k for k in range(3) if k!=axis]
+    apertures={}
+    for wire in largest.Wires():
+        if wire.isSame(largest.outerWire()):continue
+        wb=bounds(wire);size=[wb[k+3]-wb[k] for k in ij]
+        if min(size)<1 or not any(e.geomType()=='LINE' for e in wire.Edges()):continue
+        key=tuple(round(v,3) for v in size)
+        apertures.setdefault(key,[]).append(wb)
+    for size,ww in sorted(apertures.items(),key=lambda item:-item[0][0]*item[0][1])[:2]:
+        wb=ww[0];point=tuple((wb[k]+wb[k+3])/2 for k in range(3))
+        label=f'{len(ww)} x opening overall {fmt(size[0])} x {fmt(size[1])}'
+        if yy>y+60:
+            yy=leader(c,mp(point),label,tx,yy,tw);yy-=2
     other=[e for e in largest.Edges() if e.geomType()=='CIRCLE' and abs(e.Length()-2*math.pi*e.radius())>1e-4]
     if other:yy=paragraph(c,'Arc/slot-end radii: '+', '.join('R'+fmt(v) for v in sorted(set(round(e.radius(),3) for e in other)))+'.',tx,yy,tw,9)
     if p.get('notes'):yy=paragraph(c,p['notes'],tx,yy,tw,9)
     if len(families)>5:yy=paragraph(c,'Additional features are defined in the part STEP and feature-centres.csv.',tx,yy,tw,9)
-    # Small axonometric view restores folded side returns absent from the face view.
-    if yy>y+75:projection(c,[shape],(tx,y+12,tw,min(yy-y-16,85)),dim=False)
+    # A second orthographic view exposes mounting holes on folded returns.
+    secondary=[q for q in holes(shape) if q['axis']!=axis]
+    if secondary and yy>y+150 and p['group']!='rack_ears' and p['name']!='Removable_chassis_crossbar':
+        sa=collections.Counter(q['axis'] for q in secondary).most_common(1)[0][0]
+        sp=projection(c,[shape],(tx,y+13,tw,min(yy-y-30,115)),axis=sa,dim=False)
+        for diameter,items in __import__('itertools').groupby(sorted((q for q in secondary if q['axis']==sa),key=lambda q:q['diameter']),key=lambda q:q['diameter']):
+            items=list(items)
+            # Opposite face copies share the same projected mounting centre.
+            points=sorted(set(tuple(v for k,v in enumerate(q['centre']) if k!=sa) for q in items))
+            caption=f'{len(points)} projected centres DIA {fmt(diameter)}'
+            c.setFillColor(BLUE);c.setFont('Helvetica',7);c.drawString(tx,y+8,caption)
+            feature_dimensions(c,sp,[q['centre'] for q in items],b,sa)
+            break
+    elif yy>y+75:projection(c,[shape],(tx,y+12,tw,min(yy-y-16,85)),dim=False)
 
 
 def build(root,modular):

@@ -1,8 +1,8 @@
 """Rounded stock-mesh cover and a removable sheet-metal chassis tie.
 
 The tie mounts ahead of the reference GPUs. Its fixed ledges stay outside
-their vertical extraction path. Optional fingers touch verified shroud lands;
-they are not a shipping restraint or a substitute for bracket retention.
+their vertical extraction path. Captive M3 threads support GPU-specific
+printed retainers, whose contact geometry requires separate validation.
 """
 import cadquery as cq
 from mounting_hardware import box, cyl, screw, union
@@ -153,33 +153,39 @@ def apply(parts):
             add(parts,f'Crossbar_wall_M4x8_{side}_{zz:.2f}',screw((outside,180,zz),axis,'M4',8),'crossbar_mounts',thread_host=nut_name)
         add(parts,name,bracket,'crossbar_mounts','fabricated',color='#aebbc6',thickness_mm=1.5,drawing_family='Crossbar_side_ledge_left',
             notes='Two identical 1.5 steel ledges; rotate 180 degrees for the opposite wall. R1.5 bend. Install before rack insertion with two side M4 x 8 screws per ledge. Fixed ledges stay ahead of the GPU extraction path.')
-    finger_centres=[]
+    support_centres=[]
     for i,gpu in enumerate(gpus,1):
         b=bounds(gpu['shape']); x=(b[0]+b[3])/2
-        finger_centres.append(x)
-        # Two parallel vertical slots prevent a finger from pivoting about one screw.
-        bottom=gpu_top+1.5875
-        finger=union([box(x-11,195,bottom,22,1.5,top-1.5-bottom),box(x-11,195,bottom,22,25,1.5)])
-        finger=fold(finger,[],'x',(195,bottom),(1,1),1.5)
+        support_centres.append(x)
+        # Two M3 attachment points per card support custom printed retainers.
         for sx in (x-6,x+6):
             beam=beam.cut(cyl(sx,192,334+shift,4.22/2,5,(0,1,0)))
-            tool=union([cyl(sx,194,330+shift,1.7,4,(0,1,0)),cyl(sx,194,338+shift,1.7,4,(0,1,0)),box(sx-1.7,194,330+shift,3.4,4,8)])
-            finger=finger.cut(tool)
-            nut_name=f'Stabilizer_PEM_M3_{i}_{sx:.3f}'
-            add(parts,nut_name,clinch_shape((sx,193.5,334+shift),(0,1,0),'M3'),'gpu_stabilizers',catalog='95185A530',thread_host='Removable_chassis_crossbar',optional=True)
-            add(parts,f'Stabilizer_M3x6_{i}_{sx:.3f}',screw((sx,196.5,334+shift),(0,-1,0),'M3',6),'gpu_stabilizers',thread_host=nut_name,optional=True)
-        add(parts,f'GPU_stabilizer_finger_{i}',finger,'gpu_stabilizers','fabricated',color='#b39a6b',optional=True,drawing_family='GPU_stabilizer_finger_1',thickness_mm=1.5,
-            notes='OPTIONAL: ten identical 1.5 steel fingers. R1.5 bend; two 3.4 x 11.4 slots, axes 12 apart. Adjustment +/-4 vertical. Set foam to light contact on a verified rigid shroud land; do not load vents or PCB.')
-        add(parts,f'Stabilizer_silicone_pad_{i}',box(x-10,204,gpu_top,20,12,1.5875),'gpu_stabilizers',color='#4a555c',optional=True,
-            specification='Silicone foam pad 20 x 12 x 1.5875; cut from 86235K311',catalog='86235K311')
+            nut_name=f'Custom_support_PEM_M3_{i}_{sx:.3f}'
+            add(parts,nut_name,clinch_shape((sx,193.5,334+shift),(0,1,0),'M3'),'crossbar',catalog='95185A530',thread_host='Removable_chassis_crossbar')
     add(parts,'Removable_chassis_crossbar',beam,'crossbar','fabricated',color='#879baa',thickness_mm=1.5,
-        notes='431 x 30 x 20 inverted U; 1.5 steel, two R1.5 bends. Four diameter 4.5 top holes; remove four M4 x 8 screws and lift. Twenty diameter 4.22 rear holes accept optional M3 press nuts. No captive nut access is needed for service.')
+        notes='431 x 30 x 20 inverted U; 1.5 steel, two R1.5 bends. Four diameter 4.5 top holes; remove four M4 x 8 screws and lift. Twenty diameter 4.22 rear holes carry M3 press nuts for custom printed supports. Ten pairs: 12 mm within each pair, 40.64 mm pair pitch. No captive nut access is needed for service.')
     return dict(cover_outer_radius_mm=12,cover_opening_radius_mm=8,stock_mesh_radius_mm=8,
                 top_z_mm=top,channel_mm=[431,30,20,1.5],span_x_mm=[4.5,435.5],span_y_mm=[165,195],
                 top_fixing_points=[[x,y,top] for x in (14,426) for y in (175.5,184.5)],
                 release_screws='Four top-access M4 x 8',fixed_bracket_y_mm=[168.5,191.5],
                 gpu_nose_y_mm=bounds(gpus[0]['shape'])[1],gpu_top_z_mm=gpu_top,
-                optional_finger_centres_x_mm=finger_centres,finger_adjustment_mm=4,
-                foam_stock='86235K311',foam_pad_mm=[20,12,1.5875],
-                contact='Nominal zero compression on envelope only; verify shroud contact land and set by hand. Not a shipping restraint.',
-                removal='Lid off; disconnect harnesses if removing cards; remove four top crossbar screws; lift bar and attached fingers at least 40 mm; move forward and lift clear; release GPU or cartridge retention screws. The manufacturing export provides a fixed rear frame clear of the lift path.')
+                custom_support_pair_centres_x_mm=support_centres,
+                contact='Custom printed supports require GPU-specific contact lands, cable clearance and service-path checks. No support shape or contact load is qualified by the bare crossbar.',
+                removal='Lid off; disconnect harnesses if removing cards; remove four top crossbar screws and lift the crossbar before card or cartridge extraction. Qualify the removal path with any custom supports installed.')
+
+
+def custom_support_interface(parts, report):
+    """Retain the crossbar attachment pattern and standard captive M3 nuts."""
+    from crossbar_interface import describe
+    parts[:] = [p for p in parts if not p['name'].startswith(('GPU_stabilizer_finger_', 'Stabilizer_silicone_pad_', 'Stabilizer_M3x6_'))]
+    for p in parts:
+        if p['name'].startswith('Stabilizer_PEM_M3_'):
+            p['name']='Custom_support_PEM_M3_'+p['name'][len('Stabilizer_PEM_M3_'):]
+        if p['name'].startswith('Custom_support_PEM_M3_'):
+            p['group']='crossbar';p['optional']=False
+    bar=next(p for p in parts if p['name']=='Removable_chassis_crossbar')
+    bar['notes']='431 x 30 x 20 inverted U; 1.5 steel, R1.5 bends. Four M4 x 8 top screws release the bar. Twenty M3 captive threads in ten pairs, 12 mm pair width and 40.64 mm pair pitch, accept custom printed supports. Printed supports and their screws are not supplied; select for the actual GPU.'
+    for key in ('optional_finger_centres_x_mm','finger_adjustment_mm','foam_stock','foam_pad_mm'):
+        report.pop(key,None)
+    report['custom_support_interface']=describe(parts)
+    report['contact']='Custom supports require verified shroud lands and separate interference, temperature and service-path checks.'

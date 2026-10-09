@@ -19,12 +19,18 @@ from manufacturing_revision import load, save, revise, step_shape, VARIANTS
 from sheetmetal import bounds, sheet_parts
 from gpu_geometry import neutral_headers
 from catalog_hardware import assign
-from service_crossbar import round_rack_ears, bolt_on_handholds, shorten_lid_guide_screws
+from service_crossbar import round_rack_ears, bolt_on_handholds, shorten_lid_guide_screws, custom_support_interface
 from rear_mesh_closure import apply as fixed_rear_closure
 from inward_psu import apply as inward_psu
+from front_carrier_fasteners import apply as front_carrier_fasteners
+from complete_front_plate import apply as complete_front_plate
 
 
 def export(parts, report, output):
+    custom_support_interface(parts,report['service_crossbar'])
+    joints=front_carrier_fasteners(parts)
+    if joints:report['front_carrier_side_joints']=joints
+    complete_front_plate(parts,report)
     bolt_on_handholds(parts)
     shorten_lid_guide_screws(parts)
     closure=fixed_rear_closure(parts)
@@ -53,20 +59,23 @@ def export(parts, report, output):
                          volume_mm3=round(s.Volume(),4),solid_count=len(s.Solids()),
                          notes=p.get('notes',''),catalog=p.get('catalog',''),optional=p.get('optional',False),drawing_family=p.get('drawing_family',p['name'])))
     assembly=cq.Assembly(name='chassis_assembly')
-    stabilized=cq.Assembly(name='chassis_with_gpu_stabilizers')
     included=[]
     for p in parts:
         if p['role'] not in ('fabricated','purchased'):continue
         c=p['color'];color=cq.Color(*[int(c[i:i+2],16)/255 for i in (1,3,5)])
-        stabilized.add(step_shape(p),name=p['name'],color=color)
         if not p.get('optional'):assembly.add(step_shape(p),name=p['name'],color=color);included.append(p['name'])
     assembly.export(str(output/'chassis_assembly.step'))
-    stabilized.export(str(output/'chassis_with_gpu_stabilizers.step'))
     cassette=cq.Assembly(name='gpu_cartridge')
     for p in parts:
         if p['moving'] and p['role'] in ('fabricated','purchased'):cassette.add(p['shape'],name=p['name'])
     cassette.export(str(output/'gpu_cartridge.step'))
     (output/'parts-index.json').write_text(json.dumps(rows,indent=2))
+    interface=report['service_crossbar']['custom_support_interface']
+    (output/'crossbar-interface.json').write_text(json.dumps(interface,indent=2))
+    with (output/'crossbar-interface.csv').open('w') as f:
+        writer=csv.writer(f);writer.writerow(['pair','hole','local_x_mm','local_y_mm','local_z_mm','assembly_x_mm','assembly_y_mm','assembly_z_mm','thread'])
+        for i,(local,assembly_point) in enumerate(zip(interface['hole_centres_local_mm'],interface['hole_centres_assembly_mm'])):
+            writer.writerow([i//2+1,i%2+1,*local,*assembly_point,interface['thread']])
     links=[]
     for r in rows:
         name=html.escape(r['part']);file=html.escape(Path(r['file']).name)

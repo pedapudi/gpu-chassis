@@ -17,7 +17,15 @@ from validate_manufacturing_revision import overlap,BOUND_CACHE
 def run(folder):
     BOUND_CACHE.clear()
     parts=load(folder)
-    rear=cq.importers.importStep(str(folder/'parts/Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns.step')).val()
+    manifest={r['part']:r for r in json.loads((folder/'parts-index.json').read_text())}
+    def exported_part(name):
+        row=manifest[name]
+        shape=cq.importers.importStep(str(folder/row['file'])).val()
+        if 'assembly_from_part' in row:
+            from consolidate_part_steps import rigid_transform
+            shape=rigid_transform(shape,row['assembly_from_part'])
+        return shape
+    rear=exported_part('Lower_rear_1p2mm_IO_eight_slots_exhaust_side_returns')
     # Rear-view datum transform for the inward orientation, independent of the
     # construction rotation: X=434-v, Z=160-u from the standard PSU rear face.
     expected=[(434-v,160-u) for u,v in ATX_REAR_HOLES]
@@ -28,7 +36,7 @@ def run(folder):
         centres.append(dict(x=x,z=z,error_mm=error))
     air=box(332,314,17,16,136,136)
     blockers=[p['name'] for p in parts if p['role']!='clearance' and overlap(air,p['shape'])>.001]
-    body=cq.importers.importStep(str(folder/'parts/U_shaped_body_1p5mm_two_longitudinal_bends.step')).val()
+    body=exported_part('U_shaped_body_1p5mm_two_longitudinal_bends')
     skin=box(438.5,320,25,1.5,120,120)
     missing=skin.cut(body).Volume()
     joint_hits=[]
@@ -39,7 +47,7 @@ def run(folder):
     fan=next(p for p in parts if p['name']=='ASUS_3000P_fan_grille_photo_reference')
     fan_bounds=bounds(fan['shape'])
     assemblies=[]
-    for name,optional in [('chassis_assembly',False),('chassis_with_gpu_stabilizers',True),('gpu_cartridge',False)]:
+    for name,optional in [('chassis_assembly',False),('gpu_cartridge',False)]:
         pp=[p for p in parts if p['role'] in ('fabricated','purchased') and (optional or not p.get('optional')) and (name!='gpu_cartridge' or p['moving'])]
         source=cq.Compound.makeCompound([step_shape(p) for p in pp])
         exported=cq.importers.importStep(str(folder/(name+'.step'))).val()

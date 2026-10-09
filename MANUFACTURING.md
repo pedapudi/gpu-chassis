@@ -50,7 +50,7 @@ All custom chassis joints use metric threads, principally M3 x 0.5 and M4 x 0.7.
 
 A 431 x 30 x 20 mm inverted channel spans the chassis at Y165 to Y195. It uses 1.5 mm steel and two bends with R1.5 inside radii. Two folded side ledges attach through the walls with M4 screws into self-clinching nuts. Install those ledges before placing the chassis in the rack. Four top-access M4 x 8 screws secure the crossbar to the ledges; routine crossbar removal needs no access outside or beneath the chassis.
 
-The ledges end at Y191.5, ahead of the reference GPU noses at Y200.4. They remain outside the cards' vertical extraction path. Remove the lid, undo the four top screws and lift the crossbar with any fitted fingers. With the bar raised 40 mm, move it forward and lift clear. Disconnect signal and power cables and release card or cartridge screws before lifting. The fixed rear frame, stock mesh and entry hardware remain installed.
+The ledges end at Y191.5, ahead of the reference GPU noses at Y200.4. They remain outside the cards' vertical extraction path. Remove the lid, undo the four top screws and lift the crossbar with any fitted custom supports. With the bar raised 40 mm, move it forward and lift clear. Disconnect signal and power cables and release card or cartridge screws before lifting. The fixed rear frame, stock mesh and entry hardware remain installed.
 
 The crossbar ties the walls together but has no established lifting or transport load rating. Do not lift a populated chassis by this bar. Structural qualification requires a loaded prototype.
 
@@ -64,15 +64,15 @@ The module has 61.14 mm from the GPU envelope top to the lid underside, so an 80
 
 The two tray handholds bolt to captive M3 tray nuts with four top-access M3 x 6 screws. Their grip openings are 18 x 18 mm with R3 corners; deburr all grip edges. They sit 6.2 mm ahead of the reference GPU noses and stay with the cartridge. Diameter 8 holes in the front bearing clear the captive nuts and screw tips. These handholds have no established lifting load rating.
 
-## Optional padded fingers stabilize the GPU noses
+## Custom printed supports attach to the crossbar
 
-Ten identical folded steel fingers attach to the crossbar's rear face. Each uses two M3 x 6 screws and captive M3 nuts. Parallel 3.4 x 11.4 mm slots permit 8 mm total vertical adjustment while preventing rotation about one screw. The fingers and their hardware are optional; the drawing parts list marks their quantities with an asterisk.
+The crossbar rear face has ten pairs of captive M3 x 0.5 threads. Each pair is 12 mm wide; pair centres repeat at 40.64 mm. Twenty McMaster 95185A530 press nuts are included in the assembly. The package contains no generic finger, foam pad or support screw.
 
-Each finger carries a 20 x 12 x 1.5875 mm adhesive-backed silicone foam pad cut from [McMaster 86235K311](https://www.mcmaster.com/86235K311/). The catalog identifies the foam as flame-retardant; that rating does not include its adhesive. The [catalog specification](https://www.mcmaster.com/products/flame-retardant-silicone-foam/) controls the purchased sheet.
+The attachment axes are 8.5 mm above the crossbar bottom, on its rear face at local Y30. Pair centres start at local X19.075; hole positions are X13.075 and X25.075 plus multiples of 40.64. Local origin is the lower-front-left corner of the crossbar envelope. Each configuration includes crossbar-interface.csv and crossbar-interface.json with local and assembly coordinates. The sheet-2 drawing shows the interface on the bar.
 
-The pads meet the nominal GPU envelope at zero compression. On the actual cards, identify a rigid shroud land clear of vents, fan blades, circuitry and connectors before using the kit. Adjust to light contact without bending a card or forcing its socket. The fingers limit upward movement at the nose; they do not replace rear bracket screws or provide a qualified shipping restraint. Omit the kit if the actual shroud has no suitable contact land.
+Design the printed support for a verified rigid GPU shroud land, leaving vents, connectors and cable bends clear. Choose support thickness, padding and screw length together; verify thread engagement against the actual press nut. Install the nuts before closing the channel. The supports screw on from the rear face and require no loose nut behind the crossbar.
 
-The viewer has a GPU-stabilizer option. Its assembly download switches between the chassis with a bare crossbar and the chassis with the finger kit. The OpenSCAD `gpu_stabilizers` parameter controls the same option. Individual part files retain all optional fingers; one shared drawing describes their identical geometry.
+Custom supports must clear the lid and permit removal of the bar before GPU extraction. Their geometry, thermal performance and contact loads require separate validation. The chassis clearance checks cover the bare crossbar and installed press nuts.
 
 ## Catalog purchase specifications
 
@@ -88,7 +88,7 @@ The viewer has a GPU-stabilizer option. Its assembly download switches between t
 | M3 x 3 pan-head Phillips screw | [92005A111](https://www.mcmaster.com/92005A111/) | Lid guides, rear retention and mesh clamps |
 | M3 x 6 flat-head Phillips screw, 90 degrees | [92010A116](https://www.mcmaster.com/92010A116/) | Four rear-frame fixings |
 | M3 x 5 pan-head Phillips screw | [92005A114](https://www.mcmaster.com/92005A114/) | Per configuration |
-| M3 x 6 pan-head Phillips screw | [92005A116](https://www.mcmaster.com/92005A116/) | Per configuration; add 20 for stabilizers |
+| M3 x 6 pan-head Phillips screw | [92005A116](https://www.mcmaster.com/92005A116/) | Per configuration; custom-support screws depend on printed thickness |
 | M3 x 8 pan-head Phillips screw | [92005A118](https://www.mcmaster.com/92005A118/) | Per configuration |
 | M3 x 12 pan-head Phillips screw | [92005A122](https://www.mcmaster.com/92005A122/) | Per configuration |
 | M3 x 16 pan-head Phillips screw | [92005A126](https://www.mcmaster.com/92005A126/) | Per configuration |
@@ -96,7 +96,6 @@ The viewer has a GPU-stabilizer option. Its assembly download switches between t
 | M4 x 10 pan-head Phillips screw | [92005A220](https://www.mcmaster.com/92005A220/) | Per configuration |
 | M3 washer, 3.2 ID x 7 OD | [90965A130](https://www.mcmaster.com/90965A130/), 316 stainless, 0.4-0.6 mm thick | Modeled at 0.5 mm nominal |
 | M3 large washer, 3.2 ID x 9 OD | [91116A120](https://www.mcmaster.com/91116A120/), 18-8 stainless, 0.7-0.9 mm thick | Modeled at 0.8 mm nominal |
-| Optional stabilizer foam | [86235K311](https://www.mcmaster.com/86235K311/), adhesive silicone foam, 1.5875 mm thick | Ten cut pads per kit |
 
 The parts list on sheet 2 of each drawing book has a linked McMaster-Carr column. The companion CSVs include the same item numbers and supplier URLs. Quantities count installed pieces, not sales packs; round purchases to the catalog pack sizes. Custom sheet-metal and printed components are marked “Custom part.” PSU and plastic fan screws are marked “Supplier screw” because their threads and permitted penetration depend on the purchased equipment.
 
@@ -108,9 +107,21 @@ Catalog dimensions were checked on 2026-10-08. Stock availability changes. The M
 
 1. Verify the purchased backplane mounting coordinates and the OEM lid interface. Fixture the rear slot bank to the PCB socket datums before fastening the adapter.
 2. Cut and bend the panels. Install press nuts while both sheet faces are accessible. Assemble the body, fixed rear frame, stock rear mesh and rack ears. For the upper module, fasten the lid adapter to the empty body before fitting the bearing angles that cover four adapter screws.
-3. In the full chassis, install the PSU before its adjacent bearing angle. Fit the motherboard tray, board, cooler and retimers. Install the lower rear fans after tightening the tray screws. Complete the GPU tray supports before inserting the cartridge.
+3. In the full chassis, install the PSU before its adjacent bearing angle. Fit the motherboard tray, board, cooler and retimers. Install the lower rear fans after tightening the tray screws. Complete the GPU tray supports before inserting the cartridge. Install the external MCIO entry frame after the retimers; remove that frame for straight-driver access to the lower card-bracket screws.
 4. Prepare the GPU cartridge on a bench. Install the two printed adapters, inserts and six spacers, then the backplane. Fit the GPUs and rear bracket screws.
 5. Seat the cartridge, secure it and connect the power and MCIO harnesses. Keep connectors and bend allowances clear of the cartridge lifting path.
-6. Install the crossbar after fitting cards and routing cables. If using the finger kit, adjust its pads on verified shroud lands before tightening the clamp screws. Fit the lid and front mesh cover; the fixed rear closure is already installed. Provide separately rated rack rails or a shelf. OEM lid screws locate the upper module; they do not establish its load capacity.
+6. Install the crossbar after fitting cards and routing cables. Validate any custom supports against the actual GPU and the crossbar removal path. Fit the lid and front mesh cover; the fixed rear closure is already installed. Provide separately rated rack rails or a shelf. OEM lid screws locate the upper module; they do not establish its load capacity.
 
 The STEP assemblies contain chassis structure and assembly hardware. Individual part files contain the manufactured chassis components and printed adapters. GPUs, motherboards, cables, hoses, fans and the OEM chassis are viewer-only fit references and have no individual STEP files in this package.
+
+The shared `parts/` directory contains one STEP file per distinct manufactured geometry across both designs and their fan options. Use the selected configuration's `parts-catalog.csv` for quantities. Repeated stiffeners, handholds and reversible mounting angles share files. Power-side and signal-side cable restraint angles retain separate formed-part files because they are handed. Individual files use local part coordinates; `parts-index.json` records the transform for each installed occurrence. Complete assembly STEP files preserve all occurrences.
+
+## Screw access depends on assembly order
+
+The fastener audit checks a straight 100 mm driver shaft, with a 3 mm radius for M3 screws and 4 mm for M4 and fan screws. Stock mesh is treated as a removable cover rather than an arbitrary tool-access opening. The audit lists every intersecting part; it does not assume all screws remain accessible in a populated chassis.
+
+Remove the front mesh and frame to reach fan screws. Each 9U fan configuration uses a complete plate with common side mounts and lower AIO fixings. Remove the lid for upper card brackets and crossbar release screws. Disconnect and park GPU power and MCIO cables before releasing cartridge screws or handholds. Remove GPUs before backplane screws, and remove the backplane before printed-adapter screws.
+
+Install the motherboard tray before the motherboard and lower rear fans. Install motherboard screws before retimers and routed cables. The lower card-bracket screws require the external MCIO entry frame removed for the checked straight-driver path. Its accessible fasteners allow that service step; the fixed upper rear mesh frame stays installed during GPU-cartridge extraction.
+
+Custom printed supports, actual cable bends, rack-post access and equipment-specific screw penetration require physical verification. The numeric reports establish nominal geometry and identify access dependencies; they do not qualify production tolerances or every possible tool.

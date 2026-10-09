@@ -56,7 +56,7 @@ def run(folder):
             s=p['shape'].translate((0,0,dz))
             for q in fixed:
                 if overlap(s,q['shape'])>.01:hits.append([p['name'],q['name']])
-        checks['motion'].append(dict(operation='lift crossbar and fingers, lid removed',lift_mm=dz,collisions=hits))
+        checks['motion'].append(dict(operation='lift crossbar, lid removed',lift_mm=dz,collisions=hits))
     removable={'lid','lid_screws','crossbar','gpu_stabilizers','hold_downs','rear_release','power','mcio','external_route','board_alternatives','io_shield','oem_reference','oem_cage'}
     active=[p for p in parts if p['role']!='clearance' and p['group'] not in removable]
     fixed=[p for p in active if not p['moving']]
@@ -92,7 +92,7 @@ def run(folder):
     rear=next(p for p in parts if p['group']=='rear_vent')
     checks['clearances']['rear_frame_to_cartridge_mm']=bounds(rear['shape'])[1]-max(bounds(p['shape'])[4] for p in cartridge)
     checks['clearances']['handhold_to_GPU_nose_mm']=min(bounds(p['shape'])[1] for p in cards)-max(bounds(p['shape'])[4] for p in parts if p['name'].startswith('Tray_handhold_'))
-    checks['conditions']=['Reference envelopes, nominal formed dimensions, no manufacturing tolerances.','Stock mesh excluded from broad static audit; clamped overlap is intentional.','Foam touches the nominal GPU envelope at zero compression; actual shroud contact must be checked.','Motion is sampled; the straight GPU paths also have disjoint fixed-ledge Y intervals.','Cartridge removal requires lid, crossbar, four front M4 screws, four rear-side M3 screws and connected harnesses released. Rear cover, entry frame, lid guide pins and their fasteners stay installed.','Existing PSU and module adapter assembly-order constraints remain in the service notes.']
+    checks['conditions']=['Reference envelopes, nominal formed dimensions, no manufacturing tolerances.','Stock mesh excluded from broad static audit; clamped overlap is intentional.','Custom printed supports are not included; validate their contact geometry and removal paths separately.','Motion is sampled; the straight GPU paths also have disjoint fixed-ledge Y intervals.','Cartridge removal requires lid, crossbar, four front M4 screws, four rear-side M3 screws and connected harnesses released. Rear cover, entry frame, lid guide pins and their fasteners stay installed.','Existing PSU and module adapter assembly-order constraints remain in the service notes.']
     checks['pass']=not sweep_hits and not checks['static_structure_collisions'] and not checks['component_structure_collisions'] and all(not r['obstructions'] for r in checks['screw_access']) and all(not r['collisions'] for r in checks['motion']) and all(r['hole_to_face_boundary_mm']>=3 and r['hole_to_rounded_free_edge_mm']>=5 for r in checks['rack_ear_edge_clearances'])
     (folder/'service-validation.json').write_text(json.dumps(checks,indent=2))
     print(folder.name,'service pass',checks['pass'],json.dumps({k:v for k,v in checks.items() if k.endswith('collisions') or k=='clearances'}),flush=True)

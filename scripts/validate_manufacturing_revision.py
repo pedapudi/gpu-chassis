@@ -45,8 +45,13 @@ def run(base,out,variant):
         if p['name'].startswith(('GPU_socket_','Backplane_auxiliary_','Miwin_','Full_width_twenty_one_slot_rear','WRX90','Lower_rear_')) and p['name'] in prior:
             error=max(abs(x-y) for x,y in zip(bounds(p['shape']),bounds(prior[p['name']]['shape'])))
             checks['preserved_interfaces'].append(dict(part=p['name'],bounds_error_mm=error))
+    manifest={r['part']:r for r in json.loads((folder/'parts-index.json').read_text())}
     for p in sheet_parts(parts):
-        path=folder/'parts'/(p['name']+'.step');shape=cq.importers.importStep(str(path)).val()
+        row=manifest[p['name']]
+        path=folder/row['file'];shape=cq.importers.importStep(str(path)).val()
+        if 'assembly_from_part' in row:
+            from consolidate_part_steps import rigid_transform
+            shape=rigid_transform(shape,row['assembly_from_part'])
         source=step_shape(p)
         error=max(abs(x-y) for x,y in zip(bounds(source),bounds(shape)))
         vol=abs(shape.Volume()-source.Volume())/source.Volume()

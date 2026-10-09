@@ -24,7 +24,7 @@ Standard socket pitch is an explicit design assumption. PCB holes, component loc
 
 ## GPU stabilization and service
 
-The removable crossbar sits ahead of the GPU noses. Its fixed ledges end at Y191.5; reference cards start at Y200.4. Remove the crossbar and optional padded fingers before vertical card or cartridge extraction. Four top-access M4 screws release the bar. Crossbar stiffness and permissible pad force require physical qualification. The optional fingers must contact verified shroud lands; the card envelopes do not define a qualified contact surface.
+The removable crossbar sits ahead of the GPU noses. Its fixed ledges end at Y191.5; reference cards start at Y200.4. Remove the crossbar before vertical card or cartridge extraction. Four top-access M4 screws release the bar. Twenty captive M3 threads support custom printed retainers. Crossbar stiffness, contact loads and the removal path with a custom retainer require physical qualification. The card envelopes do not establish safe contact lands.
 
 ## Lower motherboard, PSU and cooling
 
@@ -61,3 +61,9 @@ The formed steel models use inside bend radius equal to sheet thickness. Existin
 The manufacturing pass converts service-panel threads to self-clinching nuts only where the seating annulus and edge allowance fit. Remaining formed threads are listed in the package report or described above. Installation pressure, sheet hardness, coating, grounding and hardware torque require process qualification.
 
 CAD checks cover nominal solid validity, changed-part intersections, preserved interface locations, individual and assembly STEP round trips, screw access and sampled service motions. Conservative swept prisms check the complete 300 mm vertical cartridge path against the retained rear closure, lid guides and their fasteners. Sampled checks include the remaining fixed parts. They do not establish load capacity, acceptable printed-part creep, thermal performance, cable bend radius, electrical safety or a flawless physical installation. Use an unpowered fit prototype before powered qualification.
+
+## Fan-carrier interfaces
+
+The 9U chassis has three complete fan plates: 6x120, 2x180 and 3x120. Each plate includes the lower AIO mounting pattern and uses ten side joints with M3 press nuts in diameter 4.22 installation holes. Side-hole axes lie at Y12 and Z22, 148, 205, 290 and 381.45 mm on both walls. Fit the nuts before installing the plate. All three plates use the same removable mesh cover. To exchange a plate, remove the mesh cover, detach the fans and radiator, and release the ten side screws.
+
+The module's three front plates share their side attachment pattern and mesh cover. Each configuration requires its matching fan plate and fan hardware. Shared STEP files preserve the formed-part handedness and store assembly placement separately.

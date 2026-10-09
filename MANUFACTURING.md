@@ -58,8 +58,8 @@ Catalog dimensions were checked on 2026-10-08. Stock availability changes. The M
 ## Installation and inspection
 
 1. Verify the purchased backplane mounting coordinates and the OEM lid interface. Fixture the rear slot bank to the PCB socket datums before fastening the adapter.
-2. Cut and bend the panels. Install press nuts while both sheet faces are accessible. Assemble the body, side bearings and rack ears.
-3. Fit the lower motherboard tray, board, PSU, cooler and retimers. Install the lower rear fans after the tray screws are tightened.
+2. Cut and bend the panels. Install press nuts while both sheet faces are accessible. Assemble the body and rack ears. For the upper module, fasten the lid adapter to the empty body before fitting the bearing angles that cover four adapter screws.
+3. In the full chassis, install the PSU before its adjacent bearing angle. Fit the motherboard tray, board, cooler and retimers. Install the lower rear fans after tightening the tray screws. Complete the GPU tray supports before inserting the cartridge.
 4. Prepare the GPU cartridge on a bench. Install the two printed adapters, inserts and six spacers, then the backplane. Fit the GPUs and rear bracket screws.
 5. Seat the cartridge, secure it and connect the power and MCIO harnesses. Keep connectors and bend allowances clear of the cartridge lifting path.
 6. Install the rear cover and lid, followed by the front mesh cover. Provide separately rated rack rails or a shelf. OEM lid screws locate the upper module; they do not establish its load capacity.

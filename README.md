@@ -9,6 +9,8 @@ Sheet-metal models and interactive engineering viewers for a 9U full chassis and
 
 Each chassis has one compact drawing book covering its fan options. Shared parts appear once. Individual STEP files contain manufactured chassis parts and printed adapters; assembly STEP files contain chassis structure and hardware. GPUs, motherboards, fans, cables and hoses remain optional viewer references and have no separate STEP exports. Select a part in the viewer to download its STEP.
 
+Each eight-page book has a parts list on sheet 2 beside an annotated assembly view. The list gives drawing references and quantities for each fan option, including modeled fasteners and catalog spacers. Matching parts-list and hardware-list CSV files support purchasing and build preparation. Electronics, cooling equipment and installation consumables require a separate kit.
+
 Each adapter half measures 209.5 x 240 x 8.5 mm. Both fit separately on a 256 x 256 mm print bed with a 5 mm brim. The halves fasten independently to the steel tray.
 
 The full chassis offers six 120 mm, two 180 mm or three 120 mm intake fans. The upper module offers three 140 mm, three 120 mm with five 80 mm fans, or two 180 mm fans. Fan toggles preserve the camera position.

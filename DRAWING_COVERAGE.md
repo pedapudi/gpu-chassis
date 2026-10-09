@@ -2,7 +2,9 @@
 
 The manufacturing package has two drawing books: one for the full chassis and one for the upper module. Each includes all three fan options. Shared parts are drawn once instead of repeated for every configuration.
 
-Each book groups related information into assembly and service access, rear interfaces and PCB seating, the printed adapter and metric hardware, fan carriers and the stock mesh cover, and compact part-detail sheets. Complete face contours and small formed views accompany dimensions, hole-family leaders and notes. Technical tables do not occupy standalone sheets.
+Each eight-page book starts with assembly and service access. Sheet 2 pairs an annotated assembly view with the chassis parts list and modeled fastener inventory. Quantity columns cover each fan option; sheet references locate the part drawings. Matching CSV files retain the part names used for STEP exports. The inventory excludes electronics, cooling equipment and installation consumables.
+
+Sheets 3 through 5 cover rear interfaces and PCB seating, printed adapters and metric hardware, and fan carriers with the stock mesh cover. Sheets 6 through 8 collect part details. Complete face contours and small formed views accompany dimensions, hole-family leaders and notes. Technical tables do not occupy standalone sheets.
 
 The CSV feature schedules contain exact circular-feature centres and diameters. Nominal part STEP geometry defines the complete formed contours, including slots, reliefs and bends. The books summarize those details for human review; the STEP files and CSVs supply data for CAD inspection. Production flat patterns must use the selected fabricator's material thickness, bend tooling and tolerances.
 

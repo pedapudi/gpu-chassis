@@ -5,7 +5,7 @@ from sheetmetal import bounds
 COVER_SPACER_MM = 3.0
 COVER_SPACER_CATALOG = '92871A003'
 COVER_SCREW_MM = 12
-CROSSBAR_FRONT_Y_MM = 155.0
+CROSSBAR_FRONT_Y_MM = 133.2
 
 
 def apply(parts, report):
@@ -51,11 +51,11 @@ def apply(parts, report):
     for p in parts:
         if p['name'].startswith(('Crossbar_ledge_PEM_M4_','Crossbar_release_M4x8_')):
             old=p['name']; b=bounds(p['shape'])
-            location='front' if (b[1]+b[4])/2<170 else 'rear'
+            location='front' if (b[1]+b[4])/2<CROSSBAR_FRONT_Y_MM+15 else 'rear'
             p['name']=old.rsplit('_',1)[0]+'_'+location
             renamed[old]=p['name']
     for p in parts:
         if p.get('thread_host') in renamed:p['thread_host']=renamed[p['thread_host']]
     service['crossbar_to_GPU_nose_y_clearance_mm']=service['gpu_nose_y_mm']-bounds(bar['shape'])[4]
-    assert abs(service['crossbar_to_GPU_nose_y_clearance_mm']-15.4)<1e-5
+    assert abs(service['crossbar_to_GPU_nose_y_clearance_mm']-37.2)<1e-5
     assert wall['shape'].isValid()

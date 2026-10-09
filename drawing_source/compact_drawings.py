@@ -27,6 +27,8 @@ INK=HexColor('#1b2c38');BLUE=HexColor('#165d78');GREY=HexColor('#a8b3ba')
 
 def fmt(v):return f'{v:.2f}'.rstrip('0').rstrip('.')
 def title(name):
+    if name.startswith('U_shaped_body_'):
+        return '1.5 mm U-shaped body with integral rear returns'
     if name=='WRX90_board_specific_replaceable_tray':
         return 'WRX90E-SAGE SE motherboard tray (EEB)'
     return name.replace('_',' ').replace('1p5mm','1.5 mm').replace('1p2mm','1.2 mm')
@@ -151,13 +153,13 @@ def assembly(book,parts,report,modular):
            '8.5 mm printed adapter, supported on steel. Board hole pattern is replaceable.',
            '21 rear bracket positions at 20.32 mm pitch; keep the PCB seating datum fixed.',
            'Separate 3 mm rack ear; M4 side screws. Use rated rails or shelf for chassis weight.',
-           'Remove four top M4 x 8 screws to lift the crossbar. Bar rear face Y185 leaves 15.4 to GPU noses; ledges end at Y181.5. Twenty M3 threads accept custom printed supports.']
+           'Remove four top M4 x 8 screws to lift the crossbar. Bar centered above cable angles at Y148.2; rear face Y163.2 leaves 37.2 to GPU noses; ledges end at Y159.7. Twenty M3 threads accept custom printed supports.']
     for i,(name,text) in enumerate(zip(names,texts)):
         p=next(p for p in parts if p['name']==name);leader(c,mp(p['shape'].Center().toTuple()),text,W*.69,H-140-i*115,W*.26)
     y=235
     height=221.75 if modular else 399.25
-    for text in [f'Envelope: body 440 W x 485 D x {height:g} H. Rack face 482.6 W. Front frame face projects 6.21 mm ahead of the fan plate; fastener envelopes reach 9.21 mm.',
-        ('Assembly order: fit press nuts to bare panels; attach the lid adapter and fixed rear frame to the empty module before fitting bearing angles; prepare the cartridge on a bench; fit PCB and GPUs; seat the cartridge, connect cables, then fit crossbar, lid and front mesh.' if modular else 'Assembly order: fit press nuts to bare panels; assemble the body and fixed rear frame; install the PSU before its adjacent bearing angle; fit the motherboard tray before rear fans; prepare the GPU cartridge on a bench; fit PCB and GPUs, connect cables, then close covers.'),
+    for text in [f'Nominal footprint 440 W x 485 D; height {height:g}. Rear returns add 6.5 depth; lid adds 10; module cable cap adds 17.5. Rack face 482.6 W. Front frame projects 6.21; front fastener envelopes reach 9.21.',
+        ('Assembly order: fit press nuts to bare panels; attach the lid adapter and rivet the rear frame to the empty module before fitting bearing angles; prepare the cartridge on a bench; fit PCB and GPUs; seat the cartridge, connect cables, then fit crossbar, lid and front mesh.' if modular else 'Assembly order: fit press nuts to bare panels; rivet the rear frame to the empty body; install the PSU before its adjacent bearing angle; fit the motherboard tray before rear fans; prepare the GPU cartridge on a bench; fit PCB and GPUs, connect cables, then close covers.'),
         'Cartridge service: remove lid and crossbar, disconnect cables, release four front M4 and four rear-side M3 screws, then lift. Rear mesh frame, brush entry and their screws stay installed. For PCB service, remove GPUs and six top M3 x 16 screws; collect the loose 8 mm spacers.',
         ('OEM RM53-502 lid attachment remains a transfer-drill template. Measure the real lid and screw locations before drilling the adapter returns. Module mass requires independent rack support.' if modular else 'Motherboard installation: fit the board tray and its metric posts before the lower rear fans. Retimers and MCIO cables occupy the lower PCIe slots. External MCIO entry remains available.')]:
         y=paragraph(c,text,55,y,W-110,12)
@@ -320,7 +322,7 @@ def parts_list(book, variants, detail_parts, root, modular):
     assert yy > 260, ('Hardware list exceeds available height', yy)
     with (root/(family+'-hardware-list.csv')).open('w') as f:
         writer = csv.DictWriter(f, fieldnames=list(hardware_rows[0])); writer.writeheader(); writer.writerows(hardware_rows)
-    paragraph(c, 'Twenty M3 press nuts on the crossbar are included. Custom printed supports and their screws are separate. Metric M3 x 0.5 / M4 x 0.7 threads. Four rear-frame screws have flush 90-degree heads; other machine screws have pan heads. Retain supplier threads for equipment.', 940, yy-10, 690, 10)
+    paragraph(c, 'Twenty M3 press nuts on the crossbar are included. Custom printed supports and their screws are separate. Metric M3 x 0.5 / M4 x 0.7 threads. Four 3.2 mm blind rivets attach the rear frame to body returns. Machine screws have pan heads. Retain supplier threads for equipment.', 940, yy-10, 690, 10)
     paragraph(c, 'Scope: chassis structure and modeled assembly hardware. Fans, electronics, AIO mounting screws, brush seals, cable ties and rack rails require a separate installation kit. Fan sizes are given on sheet 5. GPU and backplane quantities are fit references, not a purchasing requirement.', 940, 85, 690, 9)
     crossbar_attachment_diagram(c)
     paragraph(c, 'Quantities cover one selected configuration. Crossbar captive nuts are included; custom printed supports require separate design and validation.', 45, 72, 830, 10)
@@ -517,7 +519,7 @@ def card(c,p,rect):
         yy=paragraph(c,'Top pairs: 9 apart, 9.5 from each end; Y offsets 10.5 / 19.5 from front edge.',tx,yy,tw,9)
         rear=cq.Workplane(obj=shape).faces('>Y').val()
         projection(c,[rear],(x+12,y+30,w*.56,90),axis=1,dim=False)
-        paragraph(c,'Rear face: 20 holes diameter 4.22; pairs 12 apart, pitch 40.64. Installed Y185; GPU noses Y200.4: gap 15.4.',x+15,y+99,w*.55,8)
+        paragraph(c,'Rear face: 20 holes diameter 4.22; pairs 12 apart, pitch 40.64. Installed Y163.2; GPU noses Y200.4: gap 37.2.',x+15,y+99,w*.55,8)
     # Hole family leaders annotate the face, while the full CSV retains every center.
     fs=[f for f in faces if abs(f.normalAt().toTuple()[axis])>.999]
     station=largest.Center().toTuple()[axis]
@@ -573,6 +575,39 @@ def card(c,p,rect):
     elif yy>y+75:projection(c,[shape],(tx,y+12,tw,min(yy-y-16,85)),dim=False)
 
 
+
+def rear_joint_diagram(c, parts, rect):
+    """Show the permanent joint and cartridge clearance beside its dimensions."""
+    from mounting_hardware import box
+    x,y,w,h=rect
+    c.setStrokeColor(GREY);c.rect(x,y,w,h)
+    c.setFillColor(INK);c.setFont('Helvetica-Bold',10)
+    c.drawString(x+12,y+h-18,'Rear frame riveted to integral body returns')
+    frame=next(p for p in parts if p['group']=='rear_vent')
+    body=next(p for p in parts if p['name'].startswith(('U_shaped_body_', 'Upper_module_U_body_')))
+    rivet=next(p for p in parts if p['name']=='Rear_frame_rivet_1')
+    z=bounds(frame['shape'])[2]+12
+    section=box(-1,483,z-.1,24,15,.2)
+    shapes=[p['shape'].intersect(section) for p in (body,frame,rivet)]
+    mp=projection(c,shapes,(x+12,y+78,w*.49,h-115),axis=2,dim=False)
+    leader(c,mp((1.5,488.5,z)),'Body return: R1.5 inside bend',x+18,y+70,w*.45)
+    leader(c,mp((8,490,z)),'Rivet hole DIA 3.4 +0/-0.1; R1.7',x+18,y+40,w*.46)
+    leader(c,mp((8,493.9,z)),'Factory head outside',x+210,y+h-42,w*.28)
+    leader(c,mp((20,492.5,z)),'2 mm rear frame',x+285,y+100,w*.24)
+    leader(c,mp((8,487.5,z)),'Formed tail envelope',x+220,y+70,w*.25)
+    c.setStrokeColor(BLUE);c.setDash(3,3)
+    c.line(*mp((1.8,483,z)),*mp((22,483,z)));c.setDash()
+    leader(c,mp((20,483,z)),'Cartridge rear limit Y483',x+270,y+40,w*.25)
+    text=('Top section through left rivet; right side mirrors it. Body thickness 1.5; frame thickness 2. '
+          'Return width 15. Hole axis X8 from left wall (X432 at right), 12 from each return end. '
+          'Four rivets 97525A218; grip 3.5. Factory head outside; formed tail inside. '
+          'Rivet before installing cartridge, mesh or lid. Inside tail envelope DIA 6.5 x 4.5. '
+          'Cartridge rear Y483; bend tangent Y488.5; rivet tail Y485.5; frame front Y491.5. '
+          'Nominal clearances: bend 5.5, tail 2.5, frame 8.5. Qualify bend tolerances and set rivets.')
+    end=paragraph(c,text,x+w*.57,y+h-48,w*.39,11)
+    assert end>y+10, ('Rear joint detail overflow',end,y)
+
+
 def build(root,modular):
     names=('modular','modular-120-80','modular-180') if modular else ('nine-u','nine-u-180','nine-u-120')
     variants={name:load(root/name) for name in names};parts=variants[names[0]]
@@ -597,6 +632,8 @@ def build(root,modular):
         for j,p in enumerate(rows[i:i+cols*nr]):
             x=35+(j%cols)*cw;y=65+(nr-1-j//cols)*ch
             card(c,p,(x,y,cw-10,ch-8))
+        if i+cols*nr>=len(rows):
+            rear_joint_diagram(c,parts,(35+cw,65,2*cw-10,ch-8))
     for pp in variants.values():
         for p in sheet_parts(pp):
             for h in holes(step_shape(p)):feature_rows.append(dict(part=p['name'],normal_axis='XYZ'[h['axis']],diameter_mm=h['diameter'],radius_mm=h['diameter']/2,x_mm=h['centre'][0],y_mm=h['centre'][1],z_mm=h['centre'][2]))

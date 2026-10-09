@@ -42,11 +42,12 @@ def run(root,node):
         expected=collections.Counter()
         for p in hardware:expected[hardware_key(p)]+=int(p['quantity'])
         assert expected['97447A801']==12
+        assert expected['97525A218']==4
         supplied=collections.Counter()
         for p in family_hardware:
             if int(p[variant]):supplied[hardware_key(p)]+=int(p[variant])
         assert supplied==expected,(variant,supplied-expected,expected-supplied)
-        for filename,field in [('revision-validation.json','pass'),('service-validation.json','pass'),('fastener-audit.json','nominal_alignment_passed')]:
+        for filename,field in [('revision-validation.json','pass'),('service-validation.json','pass'),('fastener-audit.json','nominal_alignment_passed'),('front-clearance-validation.json','passed'),('rear-rivet-validation.json','passed'),('assembly-validation.json','passed')]:
             assert json.loads((folder/filename).read_text())[field],(variant,filename)
         rows.append(dict(configuration=variant,manufactured_occurrences=len(manifest),distinct_part_STEP_files=len(catalog),parts_list_quantities_match=True,hardware_quantities_match=True,mesh_count=len(models),part_links_valid=True,javascript_syntax_valid=True))
     drawings=[]
@@ -60,7 +61,7 @@ def run(root,node):
         assert not outside,outside
         fulltext='\n'.join(p.get_text() for p in doc)
         for phrase in ('20.32 pitch','100.5','edge offsets','opening overall','square mounting','40.64'):assert phrase in fulltext,(family,phrase)
-        for phrase in ('3 mm spacer','DIA 4.22, R2.11','DIA 3.4, R1.7','40.165','15.4','riveted cover','DIA 3.3','97447A801'):
+        for phrase in ('3 mm spacer','DIA 4.22, R2.11','DIA 3.4, R1.7','40.165','37.2','97525A218','R1.5 inside bend','riveted cover','DIA 3.3','97447A801'):
             assert phrase in ' '.join(fulltext.split()),(family,phrase)
         for phrase in ('Local and assembly coordinates: crossbar-interface.csv','Mask coating at electrical bonding contacts'):
             assert phrase not in fulltext,(family,phrase)

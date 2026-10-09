@@ -62,7 +62,7 @@ def run(folder):
     fixed=[p for p in active if not p['moving']]
     cards=[p for p in parts if p['group']=='gpus']
     cartridge=[p for p in active if p['moving']]
-    rear_fixed=[p for p in fixed if p['group'] in ('rear_vent','rear_mesh','rear_frame_mounts','lid_guides','external_entry','entry_fasteners','brush') or p['name'].startswith(('Rear_frame_','Rear_mesh_','Rear_angle_'))]
+    rear_fixed=[p for p in fixed if p['group'] in ('rear_vent','rear_mesh','rear_frame_mounts','lid_guides','external_entry','entry_fasteners','brush','shell') or p['name'].startswith(('Rear_frame_','Rear_mesh_','Rear_angle_'))]
     sweep_hits=[]
     for p in cartridge:
         b=bounds(p['shape'])

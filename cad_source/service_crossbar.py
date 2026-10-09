@@ -184,7 +184,7 @@ def custom_support_interface(parts, report):
         if p['name'].startswith('Custom_support_PEM_M3_'):
             p['group']='crossbar';p['optional']=False
     bar=next(p for p in parts if p['name']=='Removable_chassis_crossbar')
-    bar['notes']='431 x 30 x 20 inverted U; 1.5 steel, R1.5 bends. Four M4 x 8 top screws release the bar. Twenty M3 captive threads in ten pairs, 12 mm pair width and 40.64 mm pair pitch, accept custom printed supports. Printed supports and their screws are not supplied; select for the actual GPU.'
+    bar['notes']='431 x 30 x 20 inverted U; 1.5 steel, R1.5 bends. Four M4 x 8 top screws release the bar. Twenty M3 captive threads in ten pairs, 12 mm pair width and 40.64 mm pair pitch, accept printed cable guides or GPU supports. Printed supports and their screws are not supplied; select for the actual GPU.'
     for key in ('optional_finger_centres_x_mm','finger_adjustment_mm','foam_stock','foam_pad_mm'):
         report.pop(key,None)
     report['custom_support_interface']=describe(parts)

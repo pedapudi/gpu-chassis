@@ -26,6 +26,7 @@ from front_carrier_fasteners import apply as front_carrier_fasteners
 from complete_front_plate import apply as complete_front_plate
 from front_clearance import apply as front_clearance
 from riveted_front_cover import apply as riveted_front_cover
+from riveted_rear_frame import apply as riveted_rear_frame
 
 
 def export(parts, report, output):
@@ -39,6 +40,7 @@ def export(parts, report, output):
     shorten_lid_guide_screws(parts)
     closure=fixed_rear_closure(parts)
     if closure:report['fixed_rear_closure']=closure
+    riveted_rear_frame(parts,report)
     psu=inward_psu(parts)
     if psu:report['inward_psu']=psu
     report['service_crossbar']['removal']='Remove lid, four crossbar top screws and crossbar; disconnect all cartridge harnesses; release four front M4 and four rear-side M3 cartridge screws; lift vertically with the rear closure and its fasteners installed.'

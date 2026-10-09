@@ -51,12 +51,12 @@ def run(folder):
         if not p['name'].startswith('Crossbar_wall_M4x8_'):continue
         b=bounds(p['shape']);y,z=(b[1]+b[4])/2,(b[2]+b[5])/2
         x=0 if b[0]<0 else 438.5
-        assert abs(y-170)<1e-6
+        assert abs(y-148.2)<1e-6
         assert overlap(cyl(x,y,z,2.24,1.5,(1,0,0)),wall['shape'])<.001
         assert abs(overlap(cyl(x,180,z,2.24,1.5,(1,0,0)),wall['shape'])-3.141592653589793*2.24**2*1.5)<.001
     gpu_front=min(bounds(p['shape'])[1] for p in parts if p['group']=='gpus')
     clearance=gpu_front-bounds(bar['shape'])[4]
-    assert abs(clearance-15.4)<1e-5
+    assert abs(clearance-37.2)<1e-5
     assert abs(bounds(mesh['shape'])[4]+3.8)<1e-6
     assert abs(bounds(frame['shape'])[1]+6.2144)<1e-6
     assert len(screws)==(5 if folder.name.startswith('modular') else 8)
@@ -79,8 +79,8 @@ def run(folder):
         assert not hits,(travel,hits)
         removal.append(dict(forward_travel_mm=travel,intersections=hits))
     result=dict(passed=True,mesh_to_carrier_mm=3.8,mesh_to_fan_screw_head_mm=round(head_gap,4),
-        cover_projection_mm=6.2144,cover_screws=reach,crossbar_y_mm=[155,185],
-        crossbar_to_GPU_nose_y_mm=round(clearance,4),crossbar_wall_screw_y_mm=170,
+        cover_projection_mm=6.2144,cover_screws=reach,crossbar_y_mm=[133.2,163.2],
+        crossbar_to_GPU_nose_y_mm=round(clearance,4),crossbar_wall_screw_y_mm=148.2,
         obsolete_wall_holes_filled=True,cover_interference=contacts,
         rivet_count=len(rivets),rivet_grip_stack_mm=3.2144,rivet_head_to_carrier_mm=2.2,
         cover_internal_interference=internal,

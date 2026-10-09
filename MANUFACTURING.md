@@ -1,6 +1,6 @@
 # Chassis construction and service
 
-The manufacturing package contains a 9U full chassis and a 5U GPU module for the SilverStone RM53-502. The full chassis body measures 440 x 485 x 399.25 mm. The upper module measures 440 x 485 x 221.75 mm and starts at Z222.25 in the combined assembly. The GPU carrier retains twenty-one rear bracket positions, including ten dual-slot card positions and one single-width position.
+The manufacturing package contains a 9U full chassis and a 5U GPU module for the SilverStone RM53-502. Both designs have a nominal 440 x 485 mm footprint. The full chassis is 399.25 mm high; the module is 221.75 mm high and starts at Z222.25 in the combined assembly. Rear body returns add 6.5 mm beyond the footprint; the lid adds 10 mm, and the module cable cap adds 17.5 mm. The GPU carrier retains twenty-one rear bracket positions, including ten dual-slot card positions and one single-width position.
 
 Each chassis has one drawing book covering its fan variants. Drawings show complete part outlines, critical interface dimensions and hole-family callouts. The feature-centers CSV supplies exact circular-feature coordinates without hundreds of schedule pages. Nominal formed STEP geometry controls the remaining cut paths. Production tolerances, bend tooling and supplier interfaces require approval before cutting metal.
 
@@ -56,15 +56,17 @@ All custom chassis joints use metric threads, principally M3 x 0.5 and M4 x 0.7.
 
 ## The removable crossbar ties the side walls together
 
-A 431 x 30 x 20 mm inverted channel spans the chassis at Y155 to Y185. It uses 1.5 mm steel and two bends with R1.5 inside radii. Two folded side ledges attach through the walls with M4 screws into self-clinching nuts. Install those ledges before placing the chassis in the rack. Four top-access M4 x 8 screws secure the crossbar to the ledges; routine crossbar removal needs no access outside or beneath the chassis.
+A 431 x 30 x 20 mm inverted channel spans the chassis at Y133.2 to Y163.2, centered above the cable-restraint angles. Its captive M3 threads accept printed cable guides. It uses 1.5 mm steel and two bends with R1.5 inside radii. Two folded side ledges attach through the walls with M4 screws into self-clinching nuts. Install those ledges before placing the chassis in the rack. Four top-access M4 x 8 screws secure the crossbar to the ledges; routine crossbar removal needs no access outside or beneath the chassis.
 
-The ledges end at Y181.5, ahead of the reference GPU noses at Y200.4. They remain outside the cards' vertical extraction path. Remove the lid, undo the four top screws and lift the crossbar with any fitted custom supports. With the bar raised 40 mm, move it forward and lift clear. Disconnect signal and power cables and release card or cartridge screws before lifting. The fixed rear frame, stock mesh and entry hardware remain installed.
+The ledges end at Y159.7, ahead of the reference GPU noses at Y200.4. They remain outside the cards' vertical extraction path. Remove the lid, undo the four top screws and lift the crossbar with any fitted custom supports. With the bar raised 40 mm, move it forward and lift clear. Disconnect signal and power cables and release card or cartridge screws before lifting. The fixed rear frame, stock mesh and entry hardware remain installed.
 
 The crossbar ties the walls together but has no established lifting or transport load rating. Do not lift a populated chassis by this bar. Structural qualification requires a loaded prototype.
 
 ## The rear uses stock mesh on a fixed frame
 
-A 2 mm steel perimeter frame carries the rear closure loads. Cut the rear screens from the same 0.9144 mm, 79% open-area stock as the front cover. The mesh itself has no structural duty. Two external folded angles fasten the frame to the walls; four M3 x 6 countersunk screws enter outward-facing press nuts. Flush inside heads preserve the cartridge lift path. The external angles place the frame 1.5 mm behind the carrier rear. Their bend radii clear the body rear edges.
+A 2 mm steel perimeter frame carries the rear closure loads. Cut the rear screens from the same 0.9144 mm, 79% open-area stock as the front cover. The mesh itself has no structural duty. Four 3.2 mm stainless blind rivets fasten the flat frame to rear-facing returns formed into the body walls. Each return is 15 mm wide with an R1.5 inside bend. The bend begins at Y488.5, behind the cartridge rear at Y483. The frame front face is Y491.5.
+
+Set the rivets from outside the body before installing the cartridge, rear mesh, cable-entry cap or lid. The factory heads face outward. The formed tails face inward and must fit within the modeled diameter 6.5 x 4.5 mm envelope. Use McMaster 97525A218 with a 3.5 mm grip stack and diameter 3.4 holes. Use a stainless-rivet-rated tool. Confirm tool access and the formed tail on a coupon. The rear frame is permanent; its mesh and MCIO cap remain separately serviceable.
 
 M3 x 3 screws and 9 mm washers clamp the mesh into tapped frame holes. Mesh upper-corner notches clear the lid tabs. The module has two screen blanks separated by a 140 x 35 mm cable entry. Its folded removable cap restores a connection across the opening. Geometry alone does not establish torsional stiffness; qualify the frame and threaded joints with a loaded prototype.
 
@@ -74,7 +76,7 @@ The two tray handholds bolt to captive M3 tray nuts with four top-access M3 x 6 
 
 ## Custom printed supports attach to the crossbar
 
-The crossbar occupies Y155-185; its rear face is 15.4 mm ahead of the reference GPU noses at Y200.4. The fixed ledges end at Y181.5, leaving 18.9 mm to the GPU noses. Its underside remains 16.39 mm above the GPU envelope. These are nominal envelope clearances, before fabrication tolerances.
+The crossbar occupies Y133.2-163.2; its rear face is 37.2 mm ahead of the reference GPU noses at Y200.4. The fixed ledges end at Y159.7, leaving 40.7 mm to the GPU noses. Its underside remains 16.39 mm above the GPU envelope. These are nominal envelope clearances, before fabrication tolerances.
 
 The crossbar rear face has ten pairs of captive M3 x 0.5 threads. Each pair is 12 mm wide; pair centers repeat at 40.64 mm. Twenty McMaster 95185A530 press nuts are included in the assembly. The package contains no generic finger, foam pad or support screw.
 
@@ -97,7 +99,7 @@ Custom supports must clear the lid and permit removal of the bar before GPU extr
 | Front-cover blind rivet | [97447A801](https://www.mcmaster.com/97447A801/), 3.2 mm aluminum, 1.5–3.5 mm grip | Twelve per front cover |
 | Front-cover metric spacer | [92871A003](https://www.mcmaster.com/92871A003/), 3 mm long, 6 mm OD, 3.2 mm bore | One per cover fixing |
 | M3 x 3 pan-head Phillips screw | [92005A111](https://www.mcmaster.com/92005A111/) | Lid guides, rear retention and mesh clamps |
-| M3 x 6 flat-head Phillips screw, 90 degrees | [92010A116](https://www.mcmaster.com/92010A116/) | Four rear-frame fixings |
+| 3.2 mm stainless blind rivet, 3-5 mm grip | [97525A218](https://www.mcmaster.com/97525A218/) | Four permanent rear-frame joints |
 | M3 x 5 pan-head Phillips screw | [92005A114](https://www.mcmaster.com/92005A114/) | Per configuration |
 | M3 x 6 pan-head Phillips screw | [92005A116](https://www.mcmaster.com/92005A116/) | Per configuration; custom-support screws depend on printed thickness |
 | M3 x 8 pan-head Phillips screw | [92005A118](https://www.mcmaster.com/92005A118/) | Per configuration |
@@ -110,7 +112,7 @@ Custom supports must clear the lid and permit removal of the bar before GPU extr
 
 The parts list on sheet 2 of each drawing book has a linked McMaster-Carr column. The companion CSVs include the same item numbers and supplier URLs. Quantities count installed pieces, not sales packs; round purchases to the catalog pack sizes. Custom sheet-metal and printed components are marked “Custom part.” PSU and plastic fan screws are marked “Supplier screw” because their threads and permitted penetration depend on the purchased equipment.
 
-The selected zinc-plated Phillips screws use M3 x 0.5 and M4 x 0.7 threads. M3 head envelopes are 6 mm diameter x 2.4 mm high; M4 heads are 8 mm diameter x 3.1 mm high. Pan-head screw length is measured below the head. The four M3 x 6 flat-head rear-frame screws include the head in their 6 mm length. Their heads are 5.6 mm diameter x 1.65 mm high. Measure the motherboard height washers and select or shim them to the 6.5 mm seating datum; the catalog thickness tolerance is not an exact 0.5 mm height guarantee.
+The selected zinc-plated Phillips screws use M3 x 0.5 and M4 x 0.7 threads. M3 head envelopes are 6 mm diameter x 2.4 mm high; M4 heads are 8 mm diameter x 3.1 mm high. Pan-head screw length is measured below the head. Measure the motherboard height washers and select or shim them to the 6.5 mm seating datum; the catalog thickness tolerance is not an exact 0.5 mm height guarantee.
 
 Catalog dimensions were checked on 2026-10-08. Stock availability changes. The M3 and M4 press nuts are described in the [manufacturer's self-clinching nut catalog](https://products.pemnet.com/sku/wp-content/uploads/sites/9/2023/11/cldata-5.pdf). The [perforated sheet catalog](https://www.mcmaster.com/products/perforated-steel/) and [metric spacer catalog](https://www.mcmaster.com/products/90138A216/) provide the selected stock dimensions. The specific spacer item numbers in the table identify the 6 mm OD series.
 

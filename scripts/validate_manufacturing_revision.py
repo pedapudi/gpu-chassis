@@ -26,7 +26,7 @@ def run(base,out,variant):
     checks=dict(configuration=variant,invalid_shapes=[],new_collisions=[],step_roundtrips=[],preserved_interfaces=[],service_checks=[])
     for p in parts:
         if not p['shape'].isValid():checks['invalid_shapes'].append(p['name'])
-    changed=[p for p in parts if p['name'] not in prior or abs(p['shape'].Volume()-prior[p['name']]['shape'].Volume())>1e-4]
+    changed=[p for p in parts if p['name'] not in prior or abs(p['shape'].Volume()-prior[p['name']]['shape'].Volume())>1e-4 or max(abs(a-b) for a,b in zip(bounds(p['shape']),bounds(prior[p['name']]['shape'])))>1e-4]
     seen=set()
     for i,p in enumerate(changed):
         if p['name'].startswith('Stock_hex_'):continue

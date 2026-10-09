@@ -1,6 +1,6 @@
 # Chassis interfaces and qualification
 
-The full chassis body is 440 x 485 x 399.25 mm. The RM53-502 upper module is 440 x 485 x 221.75 mm; its base starts at Z222.25 and its top is at Z444 in the combined assembly. The full chassis includes the ASUS WRX90E-SAGE SE motherboard, XE360-TR5 radiator and ASUS Pro WS 3000P fit references. Construction and purchased hardware are specified in [MANUFACTURING.md](MANUFACTURING.md).
+The full chassis and RM53-502 module share a nominal 440 x 485 mm footprint. Their heights are 399.25 mm and 221.75 mm, respectively. The module base starts at Z222.25 and its top is at Z444 in the combined assembly. Rear returns, the lid and cable-entry hardware extend beyond the footprint as specified below. The full chassis includes the ASUS WRX90E-SAGE SE motherboard, XE360-TR5 radiator and ASUS Pro WS 3000P fit references. Construction and purchased hardware are specified in [MANUFACTURING.md](MANUFACTURING.md).
 
 ## Coordinate system and handedness
 
@@ -24,7 +24,7 @@ Standard socket pitch is an explicit design assumption. PCB holes, component loc
 
 ## GPU stabilization and service
 
-The removable crossbar sits ahead of the GPU noses. Its fixed ledges end at Y181.5; reference cards start at Y200.4. Remove the crossbar before vertical card or cartridge extraction. Four top-access M4 screws release the bar. Twenty captive M3 threads support custom printed retainers. Crossbar stiffness, contact loads and the removal path with a custom retainer require physical qualification. The card envelopes do not establish safe contact lands.
+The removable crossbar is centered above the cable-restraint angles at Y148.2. Its M3 attachment points accept custom printed cable guides and supports. Its fixed ledges end at Y159.7; reference cards start at Y200.4. Remove the crossbar before vertical card or cartridge extraction. Four top-access M4 screws release the bar. Twenty captive M3 threads support custom printed retainers. Crossbar stiffness, contact loads and the removal path with a custom retainer require physical qualification. The card envelopes do not establish safe contact lands.
 
 ## Lower motherboard, PSU and cooling
 
@@ -44,11 +44,11 @@ The AIO reserves a 394 x 120 x 28 mm radiator and 38 mm fan depth. Verify radiat
 
 Internal MCIO cables run from lower PCIe retimers through the two 195 x 65 mm forward deck openings to the backplane's long-edge connector bank. Power harnesses use the same service region with side restraints. No cable-support shelf crosses the GPU extraction path. Disconnect and park cables before lifting the cartridge.
 
-The full chassis retains its lower external MCIO entry. The module has a 140 x 35 mm top-open rear notch from Z407.50 to Z442.50. Remove two M3 x 5 screws and the brush cap to pass connectors. The folded cap bridges the opening after installation. Verify actual plugs, cable bend radii and brush selection. The cap extends 10.5 mm behind the body.
+The full chassis retains its lower external MCIO entry. The module has a 140 x 35 mm top-open rear notch from Z407.50 to Z442.50. Remove two M3 x 5 screws and the brush cap to pass connectors. The folded cap bridges the opening after installation. Verify actual plugs, cable bend radii and brush selection. The cap extends 17.5 mm behind the nominal 485 mm body depth.
 
-The rear cover stays installed during cartridge extraction. Remove the lid, crossbar, four front M4 cartridge screws and four rear-side M3 cartridge screws; disconnect and park every connected cable. The carrier rear ends at Y483.00 and the fixed rear frame starts at Y484.50, giving 1.50 mm nominal separation throughout a vertical lift. Four flush flat-head screws fasten the frame to external angles; their nuts lie outside the lift path. Manufacturing tolerances must preserve positive clearance.
+The rear cover stays installed during cartridge extraction. Remove the lid, crossbar, four front M4 cartridge screws and four rear-side M3 cartridge screws; disconnect and park every connected cable. The carrier rear ends at Y483.00 and the fixed rear frame starts at Y491.50, giving 8.50 mm nominal separation throughout a vertical lift. Integral body returns begin bending at Y488.50, 5.50 mm behind the carrier. Four metric blind rivets join the returns to the frame. Their factory heads face outward. The conservative formed-tail envelope starts at Y485.50, 2.50 mm behind the carrier. Manufacturing tolerances must preserve positive clearance.
 
-The lid has four M3 x 3 wall guide screws and two M3 x 3 rear retention screws. The rear guide pair and matching lid slots sit at Y455, behind the PCB edge at Y443.7. Remove the rear screws, slide the lid 10 mm rearward and lift. Its rear tab outer face is Y488, 3 mm aft of the body rear, clearing the 2 mm frame. Short screw lengths control inward projection; do not substitute longer screws. Guide threads remain tapped in 1.5 mm sheet. Lower retimer screw access still requires removal of the lower external MCIO frame and brushes.
+The lid has four M3 x 3 wall guide screws and two M3 x 3 rear retention screws. The rear guide pair and matching lid slots sit at Y455, behind the PCB edge at Y443.7. Remove the rear screws, slide the lid 10 mm rearward and lift. Its rear tab outer face is Y495, 10 mm aft of the nominal body rear. The body returns extend to Y491.5 and the frame to Y493.5. Rear fasteners and the module cable cap extend farther; use the assembly STEP for the complete envelope. Short screw lengths control inward projection; do not substitute longer screws. Guide threads remain tapped in 1.5 mm sheet. Lower retimer screw access still requires removal of the lower external MCIO frame and brushes.
 
 Two screw-mounted handholds have 18 x 18 mm openings with R3 corners. Four top-access M3 x 6 screws enter tray press nuts. Diameter 8 bearing relief holes clear these nuts during cartridge removal. The handholds end 6.2 mm ahead of the GPU noses. They remain attached during service, but their load capacity is unqualified.
 

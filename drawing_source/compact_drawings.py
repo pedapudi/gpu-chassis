@@ -151,8 +151,9 @@ def interfaces(book,parts,report,modular):
     if not modular:
         lower=[p['shape'] for p in parts if p['name'].startswith(('Lower_rear_','Flat_1p2mm_IO_carrier','Lower_bank_retention','Lower_bank_toe'))]
         mp=projection(c,lower,(35,85,870,415),axis=1,reverse=True)
+        leader(c,mp((354,469,154)),'PSU: 4 x diameter 3.9, R1.95. Inward-fan (X,Z): 354/154, 354/16, 428/40, 418/154. Native #6-32 screws.',55,485,815)
         paragraph(c,'Lower deck: 8 case apertures on 20.32 pitch; 15 x 103 openings. I/O shield aperture 158.75 x 44.45. Two 80 mm fan patterns: 71.5 square. PSU native screws retain the supplied thread.',935,380,680,13)
-        paragraph(c,'The motherboard underside is at Z16.00 and its PCB is 1.57 thick. Standard 6 mm metric spacers plus 0.5 mm M3 washers sit on the tray top at Z9.50. M3 x 12 screws retain the board. Confirm the actual board hole pattern and I/O shield seating before fabrication.',935,255,680,12)
+        paragraph(c,'Board underside Z16.00; PCB 1.57 thick. Standard 6 mm spacers plus 0.5 mm M3 washers sit on tray top Z9.50; M3 x 12 screws retain the board. The ten-hole tray is WRX90-specific. ATX positions J and L and seven alternate SSI EEB sites are absent. EATX compatibility requires a board-specific drawing. Verify physical board holes and I/O seating.',935,255,680,12)
     else:
         adapter=next(p for p in parts if p['group']=='adapter')
         projection(c,[adapter['shape']],(35,85,870,415),axis=2)
@@ -302,6 +303,35 @@ def adapter_hardware(book,parts,report):
 def box_section(x,y,z):return cq.Solid.makeBox(18,.2,25.5,cq.Vector(x-9,y-.1,z-1.5))
 
 
+def front_cover_section(c,parts):
+    """Assembled front-cover fastening section, scaled from the CAD datums."""
+    x,y,scale=330,165,15
+    # Horizontal positions are Y coordinates; outside is on the left.
+    def px(v):return x+(v+11)*scale
+    c.setFont('Helvetica-Bold',10);c.setFillColor(INK)
+    c.drawString(315,290,'Front-cover fixing section: outside at left')
+    carrier=2 if any(p['name'].startswith('Upper_module_front_carrier') for p in parts) else 3.5
+    colors=['#304553','#88949a','#ad976e','#c2aa78','#d0d7dc','#b39451']
+    # Panel, mesh, washer and spacer share the same M3 screw axis.
+    layers=[(-8.2144,1.5,9),(-6.7144,.9144,9),(-5.8,.8,9),(-5,5,6),(0,carrier,9),(carrier,1.5,6.35)]
+    for (start,t,h),color in zip(layers,colors):
+        c.setFillColor(HexColor(color));c.setStrokeColor(INK)
+        c.rect(px(start),y-h*scale/2,t*scale,h*scale,fill=1,stroke=1)
+    # Clearance bore and screw shank are schematic; do not scale threads.
+    c.setFillColor(HexColor('#ffffff'));c.rect(px(-8.2144),y-1.7*scale,(8.2144+carrier+1.5)*scale,3.4*scale,fill=1,stroke=0)
+    c.setFillColor(HexColor('#70818d'));c.rect(px(-10.6144),y-3*scale,2.4*scale,6*scale,fill=1,stroke=1)
+    c.rect(px(-8.2144),y-1.5*scale,16*scale,3*scale,fill=1,stroke=1)
+    labels=[((-9.4,y/scale),'M3 x 16 screw',315,263),
+            ((-7.4644,(y+55)/scale),'1.5 frame',405,263),
+            ((-6.25,(y+50)/scale),'0.914 mesh',490,263),
+            ((-5.4,(y-62)/scale),'0.8 washer',315,70),
+            ((-2.5,(y-42)/scale),'5 mm spacer',430,70),
+            ((1,(y+60)/scale),f'{fmt(carrier)} carrier joint',570,263),
+            ((carrier+.75,(y-40)/scale),'M3 press nut',570,70)]
+    for (yy,zz),label,tx,ty in labels:
+        leader(c,(px(yy),zz*scale),label,tx,ty,105)
+
+
 def fans(book,variants,modular):
     c=book.page('Fan plates, removable stock mesh and rack ears')
     columns=(W-90)/3
@@ -321,14 +351,15 @@ def fans(book,variants,modular):
         radii=sorted({round(q['diameter']/2,3) for p in shown for q in holes(p['shape'])})
         paragraph(c,'Circular cut radii R'+', R'.join(fmt(r) for r in radii[:12])+'. Slot end radii and spacing follow the actual cut paths in the part STEP.',xx+20,320,columns-55,9)
     parts=next(iter(variants.values()));cover=[p['shape'] for p in sheet_parts(parts) if p['group']=='intake_grilles']
-    projection(c,cover,(40,65,510,240),axis=1,face_only=True)
+    projection(c,cover,(40,65,255,240),axis=1,face_only=True)
+    front_cover_section(c,parts)
     stock=next(p for p in parts if p['name'].startswith('Stock_hex_'))
     y=280
-    for text in ['Cover construction: 1.5 mm full-face clamping frame, cut-to-size pre-perforated sheet, 5 mm spacers and 0.8 mm large washers. All mesh cut edges overlap the frame by 16 mm.',
+    for text in ['Cover construction: M3 x 16 screws pass through the 1.5 frame, stock mesh, 0.8 washers and 5 mm spacers into captive carrier threads. Eight fixings on 9U; five on module. Remove frame and mesh for fan access. Mesh edges overlap the frame by 16 mm.',
         'Stock mesh blank '+ ' x '.join(fmt(v) for v in stock['blank_size_mm'])+' x 0.9144. Assembly holes diameter 3.4 at (X,Z): '+ '; '.join(', '.join(fmt(v) for v in pair) for pair in stock['mounting_holes_xz'])+'.',
         'The stock sheet has no controlled perforation origin. Drill only assembly holes. Do not quote individual mesh holes as laser cuts. Mask coating at electrical bonding contacts.',
         'Cover outer corners R12; opening corners R8; stock mesh corners R8. Rack ears are independent 3 mm folded parts, screwed to the side walls with M4 hardware. Fan plate and mesh do not carry rack loads.']:
-        y=paragraph(c,text,590,y,W-650,12)
+        y=paragraph(c,text,700,y,W-755,11)
 
 
 def card(c,p,rect):

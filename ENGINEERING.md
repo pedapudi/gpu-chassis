@@ -28,11 +28,15 @@ The removable crossbar sits ahead of the GPU noses. Its fixed ledges end at Y191
 
 ## Lower motherboard, PSU and cooling
 
-The lower rear has eight case apertures on 20.32 mm pitch. Its I/O shield opening is 158.75 x 44.45 mm. The ten motherboard mounting positions follow the SSI EEB layout and the selected holes in the ASUS manual. Confirm them against the physical motherboard, including its integrated I/O shield.
+The lower rear has eight case apertures on 20.32 mm pitch. Its I/O shield opening is 158.75 x 44.45 mm. The tray has ten nominal mounting positions selected for the WRX90 reference board: A, C, F, G, H, K, M, X, Y and Z. Confirm these against the physical motherboard and its integrated I/O shield.
+
+The tray is not a universal ATX or SSI EEB mounting tray. ATX positions J and L are absent; their assembly coordinates are X318.65/Y301.95 and X161.17/Y229.56 mm. Seven alternate SSI EEB positions are also absent. EATX boards require a specific board drawing; the form-factor label alone does not establish hole compatibility. The audit compares the exported tray STEP against [ATX 2.2, Figures 2-3](https://analytika.sk/fileadmin/user_upload/developer_specs_atx2_2.PDF) and [SSI EEB 2011, Figure 2 and section 3.1](https://www.snia.org/sites/default/files/SSIF/2018-05-31/SSI%20EEB%202011%201.0.1.pdf). Adding these positions requires a tray revision; the present STEP retains the board-specific pattern.
 
 The motherboard underside is Z16.00, above a tray top at Z9.50. Standard 6 mm metric spacers and 0.5 mm M3 washers provide the 6.5 mm seating height. PCB thickness is 1.57 mm. M3 x 12 screws pass through upper washers, the board and spacers into the existing formed threads in the tray. The motherboard tray sits on four embossed floor bosses. The GPU tray has no embossed rail bosses or sliding nut tracks.
 
-The PSU envelope is 175 x 150 x 86 mm, oriented with its fan facing the side intake. Its native rear pattern and supplied #6-32 screws remain supplier-controlled exceptions to the metric chassis joints. Install the PSU before the adjacent bearing angle; remove that angle for PSU replacement.
+The PSU envelope is 175 x 150 x 86 mm, with its fan facing inward and a solid chassis side wall. A 180-degree rotation about its depth axis also rotates the rear aperture and mounting tabs. Four diameter 3.9 clearance holes lie at assembly (X,Z) coordinates (354,154), (354,16), (428,40) and (418,154) mm. The pattern matches the standard rear screw locations in [ATX Figure 9](https://scidyne.com/ftp/ref_info/atx_201.pdf); use the supplied #6-32 screws.
+
+The cradle's inner return stops at Z16 alongside the intake. A 16 mm-deep intake clearance box is unobstructed in the nominal assembly; the nearest rear-fan frame is 17 mm from the intake face. Keep cables out of this space. Cooling performance with warm chassis air requires testing. Install the PSU before the adjacent bearing angle; remove that angle for PSU replacement.
 
 The AIO reserves a 394 x 120 x 28 mm radiator and 38 mm fan depth. Verify radiator thread, screw length, penetration and hose routing against the actual cooler. The selected PSU has four native GPU 16-pin cables and four 8-pin GPU cables; the ten modeled GPU power routes are service envelopes, not a qualified power-distribution plan.
 

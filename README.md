@@ -28,6 +28,7 @@ python cad_source/rebuild.py --out work/baseline --variant both
 python scripts/build_manufacturing_revision.py work/baseline work/package
 python scripts/validate_manufacturing_revision.py work/baseline work/package
 python scripts/validate_service_crossbar.py work/package/nine-u work/package/nine-u-180 work/package/nine-u-120 work/package/modular work/package/modular-120-80 work/package/modular-180
+python scripts/validate_inward_psu.py work/package/nine-u work/package/nine-u-180 work/package/nine-u-120
 python drawing_source/compact_drawings.py work/package
 python scripts/build_compact_viewers.py work/package path/to/local/threejs-libraries
 ```

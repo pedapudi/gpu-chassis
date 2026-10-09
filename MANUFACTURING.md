@@ -26,6 +26,8 @@ The 3 mm rack ears have R5 exposed front corners and R3 corners at the rear ends
 
 A 1.5 mm perimeter frame overlaps all mesh edges by 16 mm. Standard 5 mm spacers and 0.8 mm large M3 washers hold the mesh behind the frame and clear the fan screw heads. M3 x 16 screws retain the cover. The frame projects 8.2144 mm forward of the carrier, excluding its screw heads. Remove the frame and mesh to reach the fan screws.
 
+Insert each cover screw from the front through the frame and mesh. Add its large washer and 5 mm spacer behind the mesh, then thread the screw into the carrier's captive M3 nut. Start every screw before tightening the cover evenly. The 9U cover uses eight screws; the module uses five. Sheet 5 shows the assembled joint in section. The fans fasten separately to the carrier.
+
 The cover has R12 outside corners and an R8 opening. The stock mesh has R8 outside corners, maintaining a concealed cut edge behind the frame. These radii apply to the cut outline, not a rolled sheet edge. Deburr the mesh before clamping it.
 
 The stock specification is 0.9144 mm steel, 6.35 mm hexagonal openings and 79% nominal open area. This is purchased 20-gauge stock expressed in metric dimensions. Pattern phase at cut edges is illustrative in the viewer. Its STEP file defines the cut blank and assembly holes; the supplier's repeated perforations are specified by the stock number and drawing. Use the frame as an assembly-hole template; deburr the cut edges. Mask coating at the intended electrical bonding contacts.

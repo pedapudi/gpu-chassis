@@ -21,6 +21,7 @@ from gpu_geometry import neutral_headers
 from catalog_hardware import assign
 from service_crossbar import round_rack_ears, bolt_on_handholds, shorten_lid_guide_screws
 from rear_mesh_closure import apply as fixed_rear_closure
+from inward_psu import apply as inward_psu
 
 
 def export(parts, report, output):
@@ -28,6 +29,8 @@ def export(parts, report, output):
     shorten_lid_guide_screws(parts)
     closure=fixed_rear_closure(parts)
     if closure:report['fixed_rear_closure']=closure
+    psu=inward_psu(parts)
+    if psu:report['inward_psu']=psu
     report['service_crossbar']['removal']='Remove lid, four crossbar top screws and crossbar; disconnect all cartridge harnesses; release four front M4 and four rear-side M3 cartridge screws; lift vertically with the rear closure and its fasteners installed.'
     retained_names={p['name'] for p in parts}
     report['panel_threads']=[r for r in report['panel_threads'] if r['host'] in retained_names]
